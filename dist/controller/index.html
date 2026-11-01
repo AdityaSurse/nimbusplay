@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nimbus Wand — Controller (Phase 2)</title>
+  <style>
+    :root {
+      --bg: #0b1329;
+      --card: #16203d;
+      --border: #28375f;
+      --text: #f8fafc;
+      --text-muted: #8fa0c7;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { font-size: 20px; font-weight: 700; color: var(--accent); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--border);
+    }
+    .badge.connected { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+    .badge.disconnected { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+    .badge.reconnecting { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .room-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .input-code {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #090e1e;
+      color: #38bdf8;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .btn {
+      padding: 12px 18px;
+      background: var(--accent);
+      color: #0b1329;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.8; transform: scale(0.98); }
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .status-item {
+      background: rgba(0,0,0,0.25);
+      padding: 8px;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .status-item span:first-child { color: var(--text-muted); font-size: 11px; }
+    .status-item span:last-child { font-weight: bold; }
+
+    .test-zone {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+    }
+    .button-pad {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .pad-btn {
+      height: 70px;
+      font-size: 22px;
+      font-weight: 900;
+      border-radius: 12px;
+      background: #253358;
+      color: white;
+      border: 2px solid #3b4d7c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pad-btn:active {
+      background: #38bdf8;
+      color: #0b1329;
+    }
+
+    .log-box {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      background: #090e1e;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      height: 90px;
+      overflow-y: auto;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/controller-CKrGsl2P.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/constants-h_hzzWQa.js">
+</head>
+<body>
+  <header>
+    <h1>Nimbus Wand</h1>
+    <div style="display: flex; gap: 6px;">
+      <span id="ctrl-relay-status" class="badge connecting">Connecting...</span>
+      <span id="ctrl-console-status" class="badge disconnected">Console: Offline</span>
+    </div>
+  </header>
+
+  <div class="card">
+    <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Active Room Session</div>
+    <div class="room-row">
+      <input type="text" id="input-room" class="input-code" maxlength="4" placeholder="CODE" />
+      <button id="btn-join" class="btn btn-secondary">Join</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="status-grid">
+      <div class="status-item">
+        <span>RTT Latency</span>
+        <span id="ctrl-rtt">-- ms</span>
+      </div>
+      <div class="status-item">
+        <span>Frames Sent</span>
+        <span id="ctrl-sent">0</span>
+      </div>
+      <div class="status-item">
+        <span>Motion Sensor</span>
+        <span id="sensor-state">Standby</span>
+      </div>
+      <div class="status-item">
+        <span>Haptic Support</span>
+        <span id="haptic-state">Checking...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="test-zone">
+    <div class="button-pad">
+      <button id="btn-pad-a" class="pad-btn">A</button>
+      <button id="btn-pad-b" class="pad-btn">B (Trigger)</button>
+    </div>
+    <button id="btn-toggle-motion" class="btn">Start Continuous Motion Stream</button>
+    <button id="btn-send-test" class="btn btn-secondary">Send Single Test Packet</button>
+  </div>
+
+  <div id="ctrl-log" class="log-box">Initialized controller. Waiting for connection...</div>
+
+</body>
+</html>

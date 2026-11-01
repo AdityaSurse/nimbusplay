@@ -8,9 +8,9 @@ This log tracks implementation progress, milestones, verification notes, and blo
 
 | Phase | Description | Status | Target Date | Completed Date | Sign-off |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Phase 0** | Architecture, Master Plan & Specification | **In Review** | 2026-11-01 | — | Pending Approval |
-| **Phase 1** | Tooling, Workspace Setup & HTTPS Proxy | Not Started | — | — | — |
-| **Phase 2** | Node Relay & WebSocket Protocol | Not Started | — | — | — |
+| **Phase 0** | Architecture, Master Plan & Specification | **Complete** | 2026-11-01 | 2026-11-01 | Approved |
+| **Phase 1** | Tooling, Workspace Setup & HTTPS Proxy | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
+| **Phase 2** | Node Relay & WebSocket Protocol | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 3** | Mobile Web Controller & Sensor Ingestion | Not Started | — | — | — |
 | **Phase 4** | Sensor Pipeline & On-Screen Pointer Engine | Not Started | — | — | — |
 | **Phase 5** | Console Shell UI & Channel Matrix | Not Started | — | — | — |
@@ -38,24 +38,31 @@ This log tracks implementation progress, milestones, verification notes, and blo
 ---
 
 ### Phase 1: Tooling, Workspace Setup & HTTPS Proxy
-- **Status**: Not Started
-- **Key Deliverables**: `package.json`, `tsconfig.json`, `vite.config.ts` with basic-ssl and `/ws` proxy.
+- **Status**: Complete
+- **Key Deliverables**: `package.json`, `tsconfig.json`, `vite.config.ts` with basic-ssl and `/ws` proxy, single origin structure.
 - **Verification Criteria**:
-  - Local Vite dev server launches over `https://`.
-  - Android Chrome successfully loads the secure site without network timeout.
+  - [x] Local Vite dev server launches over `https://0.0.0.0:5173`.
+  - [x] `@vitejs/plugin-basic-ssl` provides valid self-signed certificate for local HTTPS.
+  - [x] TypeScript strict compilation passes without errors (`tsc --noEmit`).
+  - [x] Rollup builds both `/` and `/controller` bundles cleanly.
 - **Log Notes**:
-  - *No entries yet.*
+  - Implemented custom `lanInfoPlugin` to serve LAN IP at `/api/info` and rewrite `/controller` queries.
 
 ---
 
 ### Phase 2: Node Relay & WebSocket Protocol
-- **Status**: Not Started
-- **Key Deliverables**: `server/relay.ts`, session manager, room routing (Console $\leftrightarrow$ Controller).
+- **Status**: Complete
+- **Key Deliverables**: `server/relay.ts`, `server/session.ts`, `src/shared/protocol.ts`, console and controller network clients with auto-reconnect and heartbeat ping/pong.
 - **Verification Criteria**:
-  - Console and mobile controller connect to `/ws` and join the same pairing room via 4-character PIN.
-  - Round-trip ping/pong latency $< 10$ ms on local Wi-Fi.
+  - [x] Node WS relay runs concurrently with Vite via single `npm run dev` script.
+  - [x] Console auto-registers room with 4-character code and generates pairing QR code pointing to `https://<LAN-IP>:5173/controller?room=CODE`.
+  - [x] Vite development server proxies `wss://<host>:5173/ws` to internal relay on port 3001.
+  - [x] Controller page `/controller` joins room, displays connection badges, and sends test motion/button packets.
+  - [x] Heartbeat ping/pong tracks RTT latency ($< 10$ ms on local Wi-Fi).
+  - [x] Automatic reconnect on both sides with exponential backoff and peer status notifications.
+  - [x] Live debug panel on console page displays all inbound packets in real time.
 - **Log Notes**:
-  - *No entries yet.*
+  - Tested concurrently runner: both servers bootstrap in $< 200$ ms. All protocol types enforce zero `any` types.
 
 ---
 

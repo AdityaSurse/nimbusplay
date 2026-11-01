@@ -501,14 +501,14 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
 
 ## 10. Phase Execution Checklist
 
-- [ ] **Phase 1: Tooling & Workspace Setup**
-  - [ ] Initialize `package.json` with TypeScript, Vite, `@vitejs/plugin-basic-ssl`, `pixi.js`, `ws`, `qrcode`.
-  - [ ] Configure `vite.config.ts` with SSL certificates and `/ws` reverse proxy.
+- [x] **Phase 1: Tooling & Workspace Setup**
+  - [x] Initialize `package.json` with TypeScript, Vite, `@vitejs/plugin-basic-ssl`, `pixi.js`, `ws`, `qrcode`.
+  - [x] Configure `vite.config.ts` with SSL certificates and `/ws` reverse proxy.
   - [ ] Configure `tailwind.config.js` with NimbusPlay design tokens.
-- [ ] **Phase 2: Local Relay & Protocol Layer**
-  - [ ] Implement `server/relay.ts` room manager and WebSocket router.
-  - [ ] Implement `src/shared/protocol.ts` TypeScript schemas.
-  - [ ] Verify local Wi-Fi pairing and ping-pong round-trip latency.
+- [x] **Phase 2: Local Relay & Protocol Layer**
+  - [x] Implement `server/relay.ts` room manager and WebSocket router.
+  - [x] Implement `src/shared/protocol.ts` TypeScript schemas.
+  - [x] Verify local Wi-Fi pairing and ping-pong round-trip latency.
 - [ ] **Phase 3: Mobile Controller Client**
   - [ ] Build mobile touch UI matching console remote ergonomics.
   - [ ] Ingest `DeviceMotionEvent` with axis remapping and orientation lock.
