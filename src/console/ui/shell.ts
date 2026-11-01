@@ -73,6 +73,10 @@ export class ConsoleShell {
     return this.activeDialogGame;
   }
 
+  public getPointerElement(): HTMLElement {
+    return this.pointerEl;
+  }
+
   public getIsPointerPressed(): boolean {
     return this.isPointerPressed;
   }
@@ -120,6 +124,16 @@ export class ConsoleShell {
     if (overlay) overlay.classList.remove('open');
   }
 
+  public openSettingsScreen(): void {
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) overlay.classList.add('open');
+  }
+
+  public closeSettingsScreen(): void {
+    const overlay = document.getElementById('settings-overlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+
   public openCalibrationScreen(): void {
     const overlay = document.getElementById('calibration-overlay');
     if (overlay) overlay.classList.add('open');
@@ -142,26 +156,16 @@ export class ConsoleShell {
     if (overlay) overlay.classList.remove('open');
   }
 
+  public changePage(delta: number): void {
+    this.currentPage = (this.currentPage + delta + this.maxPages) % this.maxPages;
+    const pips = document.querySelectorAll('.pagination-pips .pip');
+    pips.forEach((pip, idx) => {
+      pip.classList.toggle('active', idx === this.currentPage);
+    });
+  }
+
   private initPointerTracking(): void {
-    window.addEventListener('mousemove', (e: MouseEvent) => {
-      const stageRect = this.stageEl.getBoundingClientRect();
-      const x = e.clientX - stageRect.left;
-      const y = e.clientY - stageRect.top;
-
-      this.pointerEl.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(-12deg)`;
-      this.pointerEl.style.setProperty('--ptr-x', `${x}px`);
-      this.pointerEl.style.setProperty('--ptr-y', `${y}px`);
-    });
-
-    window.addEventListener('mousedown', () => {
-      this.isPointerPressed = true;
-      this.pointerEl.classList.add('active-click');
-    });
-
-    window.addEventListener('mouseup', () => {
-      this.isPointerPressed = false;
-      this.pointerEl.classList.remove('active-click');
-    });
+    // Pointer tracking & hit testing is driven by InteractionManager
   }
 
   private initClock(): void {
@@ -267,7 +271,7 @@ export class ConsoleShell {
         } else if (action === 'calibration') {
           this.openCalibrationScreen();
         } else if (action === 'settings') {
-          this.openPairingScreen();
+          this.openSettingsScreen();
         }
       });
     });
@@ -278,14 +282,6 @@ export class ConsoleShell {
 
     prevBtn?.addEventListener('click', () => this.changePage(-1));
     nextBtn?.addEventListener('click', () => this.changePage(1));
-  }
-
-  private changePage(delta: number): void {
-    this.currentPage = (this.currentPage + delta + this.maxPages) % this.maxPages;
-    const pips = document.querySelectorAll('.pagination-pips .pip');
-    pips.forEach((pip, idx) => {
-      pip.classList.toggle('active', idx === this.currentPage);
-    });
   }
 
   private renderPairingQr(): void {

@@ -1,13 +1,13 @@
 import { ConsoleShell } from './ui/shell.js';
 import { ConsoleNetworkClient, type NetworkStatus } from './core/network.js';
 import { DebugOverlay } from './core/debug-overlay.js';
+import { InteractionManager } from './pointer/interaction-manager.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
 import { 
   isCompactPacket,
   type NimbusNetworkMessage, 
   type HapticFeedbackCommand, 
-  type MotionInputFrame,
-  BUTTON_MASKS 
+  type MotionInputFrame
 } from '../shared/protocol.js';
 
 interface LanInfo {
@@ -22,7 +22,7 @@ let frameCounter = 0;
 let networkClient: ConsoleNetworkClient | null = null;
 let shell: ConsoleShell | null = null;
 let debugOverlay: DebugOverlay | null = null;
-let wasHomePressed = false;
+let interaction: InteractionManager | null = null;
 
 // DOM Elements
 const stageEl = document.getElementById('stage') as HTMLElement;
@@ -125,14 +125,7 @@ function initNetwork(): void {
       // Handle Compact 60Hz Packet
       if (isCompactPacket(message)) {
         debugOverlay?.ingestPacket(message);
-
-        const isHome = (message.b & BUTTON_MASKS.HOME) !== 0;
-        if (isHome && !wasHomePressed) {
-          wasHomePressed = true;
-          shell?.togglePauseOverlay();
-        } else if (!isHome) {
-          wasHomePressed = false;
-        }
+        interaction?.ingestFrame(message);
         return;
       }
 
@@ -140,13 +133,7 @@ function initNetwork(): void {
       if (message.type === 'INPUT_FRAME') {
         const frame = message as MotionInputFrame;
         debugOverlay?.ingestPacket(frame);
-
-        if (frame.buttons.home && !wasHomePressed) {
-          wasHomePressed = true;
-          shell?.togglePauseOverlay();
-        } else if (!frame.buttons.home) {
-          wasHomePressed = false;
-        }
+        interaction?.ingestFrame(frame);
         return;
       }
 
@@ -167,7 +154,7 @@ function bindModalButtons(): void {
   btnPairingClose?.addEventListener('click', () => shell?.closePairingScreen());
   diskSettings?.addEventListener('click', (e) => {
     e.preventDefault();
-    shell?.openPairingScreen();
+    shell?.openSettingsScreen();
   });
 
   diskMessages?.addEventListener('click', (e) => {
@@ -181,6 +168,7 @@ function bindModalButtons(): void {
   btnPauseCalibrate?.addEventListener('click', () => {
     shell?.closePauseOverlay();
     shell?.openCalibrationScreen();
+    interaction?.startCalibrationRoutine();
   });
   btnPausePairing?.addEventListener('click', () => {
     shell?.closePauseOverlay();
@@ -191,7 +179,10 @@ function bindModalButtons(): void {
   });
   btnPauseClose?.addEventListener('click', () => shell?.closePauseOverlay());
 
-  btnCalibBack?.addEventListener('click', () => shell?.closeCalibrationScreen());
+  btnCalibBack?.addEventListener('click', () => {
+    interaction?.stopCalibrationRoutine();
+    shell?.closeCalibrationScreen();
+  });
 
   btnPairingTestVibrate?.addEventListener('click', () => {
     if (networkClient) {
@@ -205,12 +196,37 @@ function bindModalButtons(): void {
       appendLog('[Action] Sent COMMAND_HAPTIC to controller');
     }
   });
+
+  window.addEventListener('resize', () => {
+    interaction?.updateViewport(stageEl.clientWidth, stageEl.clientHeight);
+  });
 }
 
 // Bootstrap Console
 async function boot(): Promise<void> {
   shell = new ConsoleShell(stageEl, handPointerEl);
   debugOverlay = new DebugOverlay();
+
+  interaction = new InteractionManager(stageEl, handPointerEl, {
+    openLaunchDialog: (id) => shell?.openLaunchDialog(id),
+    closeLaunchDialog: () => shell?.closeLaunchDialog(),
+    openSettings: () => shell?.openSettingsScreen(),
+    closeSettings: () => shell?.closeSettingsScreen(),
+    openPairing: () => shell?.openPairingScreen(),
+    closePairing: () => shell?.closePairingScreen(),
+    openCalibration: () => {
+      shell?.openCalibrationScreen();
+      interaction?.startCalibrationRoutine();
+    },
+    closeCalibration: () => {
+      interaction?.stopCalibrationRoutine();
+      shell?.closeCalibrationScreen();
+    },
+    togglePause: () => shell?.togglePauseOverlay(),
+    closePause: () => shell?.closePauseOverlay(),
+    changePage: (delta) => shell?.changePage(delta)
+  });
+
   bindModalButtons();
   await fetchLanInfo();
   initNetwork();

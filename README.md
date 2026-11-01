@@ -522,10 +522,16 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
   - [x] High-frequency 60Hz compact JSON packet streaming (`{ t: 'F', s, ts, b, r, a }`).
   - [x] Implement Screen Wake Lock, portrait lock, fullscreen, and haptic feedback (`navigator.vibrate`).
   - [x] Live sensor telemetry debug HUD on console toggled via **`D`** key.
-- [ ] **Phase 5: Sensor-to-Pointer Pipeline**
-  - [ ] Implement One Euro ($1€$) filter and deadzone mathematics.
-  - [ ] Convert gyro angular velocity ($\omega_\alpha, \omega_\beta$) into screen-space pointer velocity.
-  - [ ] Add Recenter command handling.
+- [x] **Phase 5: Sensor-to-Pointer Pipeline**
+  - [x] Implement One Euro ($1€$) adaptive low-pass filter and deadzone mathematics.
+  - [x] Decouple aim axes using gravity vector compensation ($\hat{g}$) for roll-invariant pointing.
+  - [x] Integrate angular velocities ($\omega_{\text{yaw}}, \omega_{\text{pitch}}$) to screen-space coordinates with edge soft-stop.
+  - [x] Full-menu interaction driver: A = click, B = back, D-Pad = tile focus navigation.
+  - [x] Gyro bias calibration routine (60 samples over 1s) with radar progress arc.
+  - [x] Settings channel dialog with sensitivity & smoothing sliders persisted in localStorage.
+  - [x] Recenter action handling (Home long-press, Recenter button, or Spacebar).
+  - [x] Desktop mouse fallback for local testing without physical phone.
+  - [x] Pure TypeScript unit test suite (12 passing tests).
 - [ ] **Phase 6: Web Audio Procedural Synthesizer**
   - [ ] Synthesize UI chirps, clicks, and launch chimes.
   - [ ] Synthesize game sound effects (sword slash, laser blaster, bowling pin strike).

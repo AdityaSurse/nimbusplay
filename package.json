@@ -8,6 +8,7 @@
     "dev:relay": "tsx server/relay.ts",
     "dev": "concurrently -k -p \"[{name}]\" -n \"VITE,RELAY\" -c \"cyan.bold,magenta.bold\" \"npm run dev:vite\" \"npm run dev:relay\"",
     "build": "tsc && vite build",
+    "test": "tsx --test tests/**/*.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

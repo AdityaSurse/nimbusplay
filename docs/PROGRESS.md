@@ -13,7 +13,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase 2** | Node Relay & WebSocket Protocol | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 3** | Console Shell UI & Authentic Channel Matrix | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 4** | Mobile Web Controller & Sensor Ingestion | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
-| **Phase 5** | Sensor Pipeline & On-Screen Pointer Engine | Not Started | — | — | — |
+| **Phase 5** | Sensor Pipeline & On-Screen Pointer Engine | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 6** | Web Audio Sound Synthesis Engine | Not Started | — | — | — |
 | **Phase 7** | Game 1: Slice Party (Fruit Slicing) | Not Started | — | — | — |
 | **Phase 8** | Game 2: Star Defender (Aim-and-Shoot) | Not Started | — | — | — |
@@ -115,13 +115,36 @@ This log tracks implementation progress, milestones, verification notes, and blo
 ---
 
 ### Phase 5: Sensor Pipeline & On-Screen Pointer Engine
-- **Status**: Not Started
-- **Key Deliverables**: `src/console/pointer/` module, dead zone calculation, One Euro filter, sensitivity scaling, recentering.
+- **Status**: Complete
+- **Key Deliverables**:
+  - `src/console/pointer/one-euro-filter.ts`: Pure mathematical implementation of the One Euro ($1€$) adaptive low-pass filter (Casiez et al., CHI 2012) providing rock-solid stability at rest and lag-free tracking during fast motions.
+  - `src/console/pointer/aim-mapper.ts`: Gravity-compensated aim mapping using the accelerometer gravity vector $\hat{g}$ to decouple yaw and pitch from wrist roll, ensuring tilting or rolling the wand does not rotate the aim axes.
+  - `src/console/pointer/pipeline.ts`: `PointerPipeline` orchestrating aim mapping, gyro bias subtraction, radial deadzone ($0.6^\circ/\text{s}$), sensitivity scaling, edge damping with soft stop, One Euro filtering, and `recenter()`.
+  - `src/console/pointer/calibration.ts`: `CalibrationManager` sampling 60 gyro readings over 1000ms while user holds the wand steady, checking variance, computing drift bias, and persisting to `localStorage`.
+  - `src/console/pointer/settings-manager.ts`: Persistent settings manager storing user sensitivity, jitter smoothing, and deadzone values in `localStorage`.
+  - `src/console/pointer/interaction-manager.ts`: Full-menu interaction driver:
+    - Drives `#hand-pointer` transform and hover hit-testing across channels and modal buttons.
+    - **A Button**: Click focused/hovered element.
+    - **B Button**: Back action (closes active modal/pause HUD).
+    - **D-Pad**: Directional focus navigation across channel tiles.
+    - **Recenter Action**: Home long-press (>450ms), Recenter button, or Spacebar resets cursor to $(W/2, H/2)$.
+    - Calibration screen wiring with circular radar SVG progress arc ($527 \to 0$ stroke dashoffset) and center confirmation.
+    - Settings channel dialog with interactive sliders and reset defaults.
+    - Desktop mouse fallback for local testing without mobile hardware.
+  - `tests/pointer.test.ts`: Complete unit test suite (12 tests) covering One Euro filtering, AimMapper roll invariance, dead zone suppression, edge clamping, and calibration.
 - **Verification Criteria**:
-  - Smooth pointer movement on desktop screen mimicking infrared remote pointing.
-  - Zero visible resting jitter; immediate response during rapid swings.
+  - [x] All 12 unit tests pass in `npm test`.
+  - [x] Phone gyro input translates to smooth cursor movement on desktop console.
+  - [x] Resting jitter eliminated by deadzone and low-pass filter; rapid swipes respond with zero perceptible lag.
+  - [x] A-button triggers tile clicks and dialog openings.
+  - [x] B-button closes open dialogs, modals, and pause HUD.
+  - [x] D-Pad moves focus between channel tiles.
+  - [x] Calibration screen measures 60 samples, displays real-time circular progress arc, computes bias, and confirms center.
+  - [x] Settings channel provides sensitivity, smoothing, and deadzone sliders with localStorage persistence.
+  - [x] Desktop mouse fallback allows testing without physical phone.
+  - [x] Strict TypeScript check and Vite build pass with 0 errors.
 - **Log Notes**:
-  - *No entries yet.*
+  - Pure modular TypeScript (<250 lines/file), zero `any` types, zero external npm math dependencies. Node 24 native test runner executes all unit tests in $< 100$ ms.
 
 ---
 

@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>NimbusPlay — Domestic Console Hub</title>
-  <script type="module" crossorigin src="/assets/main-CVvVAcGv.js"></script>
+  <script type="module" crossorigin src="/assets/main-DNgsrQMi.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/protocol-DruKBLqt.js">
-  <link rel="stylesheet" crossorigin href="/assets/main-Dk8gx2cz.css">
+  <link rel="stylesheet" crossorigin href="/assets/main-DDBCgQkH.css">
 </head>
 <body>
 
@@ -339,8 +339,93 @@
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #51606a; font-weight: 600; padding: 4px 4px 0;">
-          <span>Sensor Bar Position: <strong style="color: #111d28;">Above TV</strong></span>
-          <span>Resting Gyro Drift: <strong style="color: #22c55e;">0.02 deg/s (Calibrated)</strong></span>
+          <span id="calib-status-text">Status: <strong style="color: #006688;">Point at center and hold steady...</strong></span>
+          <span id="calib-drift-text">Resting Drift: <strong style="color: #22c55e;">Measuring...</strong></span>
+        </div>
+
+        <div style="display: flex; justify-content: center; margin-top: 14px;">
+          <button id="btn-calib-confirm" class="pill-btn pill-btn-primary" style="height: 44px; padding: 0 28px; font-size: 15px; display: none;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">check_circle</span>
+            <span>Confirm Center Position</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Settings Modal (Pointer Sensitivity, Jitter Smoothing & Dead Zone) -->
+    <div id="settings-overlay" class="modal-overlay">
+      <div class="modal-dialog-pod" style="max-width: 640px; padding: 28px 36px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border-seam); padding-bottom: 12px; margin-bottom: 16px;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 800; color: #111d28; line-height: 1.2;">Pointer & System Settings</h2>
+            <p style="font-size: 13px; color: #51606a; margin-top: 2px;">
+              Tune sensitivity and adaptive 1€ smoothing. Persisted locally.
+            </p>
+          </div>
+          <button id="btn-settings-close" class="pill-btn pill-btn-secondary" style="height: 38px; padding: 0 18px; font-size: 13px;">
+            Close
+          </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 18px; margin: 12px 0 20px;">
+          <!-- Sensitivity Slider -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="setting-sensitivity" style="font-size: 14px; font-weight: 700; color: #111d28;">Pointer Sensitivity</label>
+              <span id="label-val-sensitivity" class="badge" style="background: rgba(0, 102, 136, 0.12); color: #006688; font-weight: 800; font-size: 13px; padding: 2px 10px; border-radius: 999px;">1.2x</span>
+            </div>
+            <input type="range" id="setting-sensitivity" min="0.5" max="3.0" step="0.1" value="1.2" style="width: 100%; accent-color: #006688; cursor: pointer;" />
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #8a96a3; font-weight: 600; margin-top: 2px;">
+              <span>0.5x (Precision)</span>
+              <span>1.2x (Standard)</span>
+              <span>3.0x (Fast)</span>
+            </div>
+          </div>
+
+          <!-- Smoothing / Min Cutoff Slider -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="setting-smoothing" style="font-size: 14px; font-weight: 700; color: #111d28;">Jitter Reduction (Rest Filter)</label>
+              <span id="label-val-smoothing" class="badge" style="background: rgba(0, 102, 136, 0.12); color: #006688; font-weight: 800; font-size: 13px; padding: 2px 10px; border-radius: 999px;">1.2 Hz</span>
+            </div>
+            <input type="range" id="setting-smoothing" min="0.5" max="3.0" step="0.1" value="1.2" style="width: 100%; accent-color: #006688; cursor: pointer;" />
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #8a96a3; font-weight: 600; margin-top: 2px;">
+              <span>0.5 Hz (Ultra Smooth)</span>
+              <span>1.2 Hz (Balanced)</span>
+              <span>3.0 Hz (Raw / Quick)</span>
+            </div>
+          </div>
+
+          <!-- Dead Zone Slider -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label for="setting-deadzone" style="font-size: 14px; font-weight: 700; color: #111d28;">Resting Dead Zone</label>
+              <span id="label-val-deadzone" class="badge" style="background: rgba(0, 102, 136, 0.12); color: #006688; font-weight: 800; font-size: 13px; padding: 2px 10px; border-radius: 999px;">0.6 deg/s</span>
+            </div>
+            <input type="range" id="setting-deadzone" min="0.2" max="1.5" step="0.1" value="0.6" style="width: 100%; accent-color: #006688; cursor: pointer;" />
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #8a96a3; font-weight: 600; margin-top: 2px;">
+              <span>0.2 deg/s (Sensitive)</span>
+              <span>0.6 deg/s (Standard)</span>
+              <span>1.5 deg/s (Wide)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Row -->
+        <div style="display: flex; gap: 10px; justify-content: space-between; border-top: 1px solid var(--color-border-seam); padding-top: 14px;">
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-settings-calibrate" class="pill-btn pill-btn-primary" style="height: 42px; padding: 0 16px; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">tune</span>
+              <span>Calibrate Gyro</span>
+            </button>
+            <button id="btn-settings-recenter" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 16px; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">my_location</span>
+              <span>Recenter</span>
+            </button>
+          </div>
+          <button id="btn-settings-reset" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 16px; font-size: 13px; color: #51606a;">
+            Reset Defaults
+          </button>
         </div>
       </div>
     </div>
