@@ -29,14 +29,12 @@ export class BossMothership {
 
   private attackTimer = 2.0;
   private minionTimer = 4.0;
-  private waveNumber = 5;
 
   constructor() {
     this.container.addChild(this.g);
   }
 
   public spawn(waveNumber: number): void {
-    this.waveNumber = waveNumber;
     this.maxHp = waveNumber * 22;
     this.hp = this.maxHp;
     this.x = 960;

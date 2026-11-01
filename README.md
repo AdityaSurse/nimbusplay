@@ -482,7 +482,7 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
 - [x] **Recenter Action**: Home button instantly snaps pointer back to screen center.
 - [x] **Audio Initialization**: Web Audio starts smoothly on first user gesture with zero console errors.
 - [x] **Game 1 (Slice Party)**: Flying fruit arcs intersect blade line segments cleanly; split halves render with slice angle; bombs deduct lives.
-- [ ] **Game 2 (Star Defender)**: Reticle tracks pointer; B trigger fires rapid laser pulses; enemies explode with synthesized sound.
+- [x] **Game 2 (Star Defender)**: Reticle tracks pointer; A fires rate-limited lasers, B fires charged plasma blast; mothership boss every 5 waves; aim assist lead prediction.
 - [ ] **Game 3 (Bowl Blitz)**: Backswing $\to$ forward swing $\to$ B release accurately measures arm velocity and spin hook.
 - [x] **Home Overlay HUD**: Pressing Home button cleanly pauses active game; selecting Console Menu restores hub cleanly without memory leaks.
 
@@ -537,8 +537,9 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
   - [x] Synthesize game sound effects (sword slash, splat, bomb boom, combo chimes).
 - [x] **Phase 7: Game 1 — Slice Party**
   - [x] Build fruit physics, blade trail geometry, line intersection, and combo scoring.
-- [ ] **Phase 8: Game 2 — Star Defender**
-  - [ ] Build starfield parallax, target crosshair, laser pooling, and enemy wave combat.
+- [x] **Phase 8: Game 2 — Star Defender**
+  - [x] Build starfield parallax, target crosshair, laser pooling, and enemy wave combat.
+  - [x] Build mothership boss every 5 waves, power-ups, lead aim assist toggle, and haptic rumble.
 - [ ] **Phase 9: Game 3 — Bowl Blitz**
   - [ ] Build perspective lane, swing/release gesture detector, and pin cluster physics.
 - [ ] **Phase 10: Performance Tuning & Final Polish**

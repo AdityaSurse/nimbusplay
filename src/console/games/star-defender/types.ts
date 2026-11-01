@@ -66,3 +66,4 @@ export interface AimPrediction {
   leadY: number;
   hasLead: boolean;
 }
+

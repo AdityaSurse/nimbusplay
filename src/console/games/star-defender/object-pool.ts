@@ -67,3 +67,4 @@ export class ObjectPool<T extends { alive: boolean }> {
     this.activeCount = 0;
   }
 }
+

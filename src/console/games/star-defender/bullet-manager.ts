@@ -6,7 +6,7 @@
 
 import { Container, Graphics } from 'pixi.js';
 import { ObjectPool } from './object-pool.js';
-import type { StarBullet, BulletType } from './types.js';
+import type { StarBullet } from './types.js';
 
 export class BulletManager {
   public container = new Container();

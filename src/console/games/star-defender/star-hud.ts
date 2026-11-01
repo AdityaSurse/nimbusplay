@@ -24,7 +24,6 @@ export class StarHud {
   private highScore = 0;
   private lives = 3;
   private waveBannerTimer = 0;
-  private currentWave = 1;
 
   constructor() {
     this.container.addChild(this.g);
@@ -99,7 +98,6 @@ export class StarHud {
   }
 
   public showWaveBanner(wave: number): void {
-    this.currentWave = wave;
     this.waveBannerTimer = 2.4;
     const isBoss = wave % 5 === 0;
     this.waveBannerText.text = isBoss ? `BOSS SECTOR ${wave}` : `SECTOR 0${wave}`;
@@ -170,7 +168,6 @@ export class StarHud {
     for (let i = 0; i < buffs.length; i++) {
       const b = buffs[i];
       const pct = Math.max(0, b.remainingMs / b.durationMs);
-      const name = b.type === 'spread_shot' ? 'SPREAD' : b.type === 'shield' ? 'SHIELD' : 'SLOW-MO';
       const color = b.type === 'spread_shot' ? 0xef4444 : b.type === 'shield' ? 0x0284c7 : 0x7c3aed;
 
       this.g.roundRect(40, badgeY, 130, 24, 6).fill(0x0f172a).stroke({ width: 1.5, color });
