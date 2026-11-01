@@ -1,127 +1,142 @@
+/**
+ * NimbusPlay — Mobile Controller Main Controller Loop
+ * 60Hz compact packet transmission, device immersion, and sensor orchestration.
+ * Strictly typed with zero `any`.
+ */
+
 import { ControllerNetworkClient, type ControllerNetworkStatus } from './network.js';
+import { SensorManager, type SensorStatus } from './sensors.js';
+import { TouchInputManager, type ButtonName } from './touch.js';
+import { DeviceImmersion } from './device.js';
 import { WS_PATH } from '../shared/constants.js';
-import type { 
-  NimbusNetworkMessage, 
-  MotionInputFrame, 
-  ControllerButtonState, 
-  HapticFeedbackCommand 
+import { 
+  isCompactPacket,
+  type NimbusNetworkMessage, 
+  type CompactMotionPacket, 
+  type HapticFeedbackCommand 
 } from '../shared/protocol.js';
 
 let activeRoomId = 'AUTO';
-let isStreamingMotion = false;
-let framesSent = 0;
+let isStreaming = false;
+let packetSequence = 0;
 let networkClient: ControllerNetworkClient | null = null;
+let streamIntervalId: ReturnType<typeof setInterval> | null = null;
 
-// Hardware state
-const buttons: ControllerButtonState = {
-  a: false,
-  b: false,
-  dpadUp: false,
-  dpadDown: false,
-  dpadLeft: false,
-  dpadRight: false,
-  plus: false,
-  minus: false,
-  home: false,
-  btn1: false,
-  btn2: false
-};
-
-let currentRotation = { alpha: 0, beta: 0, gamma: 0 };
-let currentAccel = { x: 0, y: 0, z: 0 };
+// Subsystem instances
+const immersion = new DeviceImmersion();
+let sensors: SensorManager;
+let touch: TouchInputManager;
 
 // DOM Elements
-const ctrlRelayStatusEl = document.getElementById('ctrl-relay-status') as HTMLSpanElement;
-const ctrlConsoleStatusEl = document.getElementById('ctrl-console-status') as HTMLSpanElement;
-const inputRoom = document.getElementById('input-room') as HTMLInputElement;
-const btnJoin = document.getElementById('btn-join') as HTMLButtonElement;
-const ctrlRtt = document.getElementById('ctrl-rtt') as HTMLSpanElement;
-const ctrlSent = document.getElementById('ctrl-sent') as HTMLSpanElement;
-const sensorState = document.getElementById('sensor-state') as HTMLSpanElement;
-const hapticState = document.getElementById('haptic-state') as HTMLSpanElement;
-const btnPadA = document.getElementById('btn-pad-a') as HTMLButtonElement;
-const btnPadB = document.getElementById('btn-pad-b') as HTMLButtonElement;
-const btnToggleMotion = document.getElementById('btn-toggle-motion') as HTMLButtonElement;
-const btnSendTest = document.getElementById('btn-send-test') as HTMLButtonElement;
-const ctrlLog = document.getElementById('ctrl-log') as HTMLDivElement;
+const statusRelayText = document.getElementById('status-relay-text') as HTMLSpanElement;
+const statusRelayOrb = document.getElementById('status-relay-orb') as HTMLDivElement;
+const statusConsolePill = document.getElementById('status-console-pill') as HTMLDivElement;
+const labelRoomCode = document.getElementById('label-room-code') as HTMLSpanElement;
+const labelRtt = document.getElementById('label-rtt') as HTMLSpanElement;
+const labelSensorStatus = document.getElementById('label-sensor-status') as HTMLSpanElement;
+const bannerEnableMotion = document.getElementById('banner-enable-motion') as HTMLDivElement;
+const btnEnableMotion = document.getElementById('btn-enable-motion') as HTMLButtonElement;
+const toastEl = document.getElementById('toast') as HTMLDivElement;
+const toastTextEl = document.getElementById('toast-text') as HTMLSpanElement;
 
-function log(msg: string): void {
-  const time = new Date().toLocaleTimeString();
-  ctrlLog.textContent = `[${time}] ${msg}\n` + ctrlLog.textContent;
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+function showToast(text: string, durationMs = 1200): void {
+  if (toastTimer) clearTimeout(toastTimer);
+  if (toastTextEl) toastTextEl.textContent = text;
+  if (toastEl) {
+    toastEl.classList.remove('opacity-0');
+    toastEl.classList.add('opacity-100');
+    toastTimer = setTimeout(() => {
+      toastEl.classList.remove('opacity-100');
+      toastEl.classList.add('opacity-0');
+    }, durationMs);
+  }
 }
 
-function updateHapticSupport(): void {
-  const supported = 'vibrate' in navigator && typeof navigator.vibrate === 'function';
-  hapticState.textContent = supported ? 'Supported' : 'Not Supported';
-  hapticState.style.color = supported ? '#22c55e' : '#f59e0b';
+function updateSensorUI(status: SensorStatus, detail?: string): void {
+  if (!labelSensorStatus) return;
+
+  switch (status) {
+    case 'active':
+      labelSensorStatus.textContent = '60Hz Gyro Active';
+      labelSensorStatus.className = 'font-label-sm text-[11px] text-emerald-500 font-bold';
+      bannerEnableMotion?.classList.add('hidden');
+      break;
+    case 'no-sensor-data':
+      labelSensorStatus.textContent = 'No Sensor Data';
+      labelSensorStatus.className = 'font-label-sm text-[11px] text-amber-500 font-bold';
+      break;
+    case 'denied':
+      labelSensorStatus.textContent = 'Motion Denied';
+      labelSensorStatus.className = 'font-label-sm text-[11px] text-rose-500 font-bold';
+      break;
+    case 'unsupported':
+      labelSensorStatus.textContent = 'Hardware Unsupported';
+      labelSensorStatus.className = 'font-label-sm text-[11px] text-rose-500 font-bold';
+      break;
+    case 'standby':
+    default:
+      labelSensorStatus.textContent = 'Sensors Standby';
+      labelSensorStatus.className = 'font-label-sm text-[11px] text-tertiary';
+      break;
+  }
+  if (detail) console.log(`[SensorUI] ${status}: ${detail}`);
 }
 
-function sendInputFrame(): void {
-  if (!networkClient) return;
+function send60HzFrame(): void {
+  if (!networkClient || !isStreaming) return;
 
-  const frame: MotionInputFrame = {
-    type: 'INPUT_FRAME',
-    seq: ++framesSent,
-    timestamp: Date.now(),
-    roomId: activeRoomId,
-    buttons: { ...buttons },
-    rotationRate: { ...currentRotation },
-    acceleration: { ...currentAccel },
-    interval: 16.6
+  const telemetry = sensors.getTelemetry();
+  const bitmask = touch.getBitmask();
+
+  const packet: CompactMotionPacket = {
+    t: 'F',
+    s: ++packetSequence,
+    ts: Date.now(),
+    b: bitmask,
+    r: [
+      telemetry.rotationRate.alpha,
+      telemetry.rotationRate.beta,
+      telemetry.rotationRate.gamma
+    ],
+    a: [
+      telemetry.acceleration.x,
+      telemetry.acceleration.y,
+      telemetry.acceleration.z
+    ]
   };
 
-  networkClient.send(frame);
-  ctrlSent.textContent = framesSent.toString();
+  networkClient.send(packet);
 }
 
-function handleMotionEvent(event: DeviceMotionEvent): void {
-  if (event.rotationRate) {
-    currentRotation = {
-      alpha: event.rotationRate.alpha ?? 0,
-      beta: event.rotationRate.beta ?? 0,
-      gamma: event.rotationRate.gamma ?? 0
-    };
-  }
-  if (event.acceleration) {
-    currentAccel = {
-      x: event.acceleration.x ?? 0,
-      y: event.acceleration.y ?? 0,
-      z: event.acceleration.z ?? 0
-    };
-  }
-
-  if (isStreamingMotion) {
-    sendInputFrame();
-  }
+function startStreamingLoop(): void {
+  if (streamIntervalId) return;
+  isStreaming = true;
+  // Exact 60 Hz interval (~16.67ms)
+  streamIntervalId = setInterval(send60HzFrame, 16);
 }
 
-async function startMotionSensors(): Promise<boolean> {
-  if (!('DeviceMotionEvent' in window)) {
-    log('DeviceMotionEvent not available in this browser');
-    sensorState.textContent = 'Unavailable';
-    return false;
+function stopStreamingLoop(): void {
+  if (streamIntervalId) {
+    clearInterval(streamIntervalId);
+    streamIntervalId = null;
   }
+  isStreaming = false;
+}
 
-  // iOS Safari 13+ requires explicit permission request; Chrome Android does not require permission on HTTPS
-  const dme = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<'granted' | 'denied'> };
-  if (typeof dme.requestPermission === 'function') {
-    try {
-      const res = await dme.requestPermission();
-      if (res !== 'granted') {
-        log('Motion permission denied');
-        return false;
-      }
-    } catch (err) {
-      log('Permission request error: ' + String(err));
-      return false;
-    }
+async function handleEnableMotion(): Promise<void> {
+  // Activate device immersion on user gesture
+  await immersion.activateImmersion();
+
+  // Start hardware sensors
+  const ok = await sensors.start();
+  if (ok) {
+    showToast('Motion Sensors Activated');
+    startStreamingLoop();
+  } else {
+    showToast('Sensor Activation Failed');
   }
-
-  window.addEventListener('devicemotion', handleMotionEvent, { passive: true });
-  sensorState.textContent = 'Active (60Hz)';
-  sensorState.style.color = '#22c55e';
-  log('Motion sensor listener registered');
-  return true;
 }
 
 function initNetwork(): void {
@@ -130,33 +145,51 @@ function initNetwork(): void {
   const wsUrl = `${wsProto}//${window.location.host}${WS_PATH}`;
 
   networkClient = new ControllerNetworkClient(wsUrl, activeRoomId, {
-    onStatusChange: (status: ControllerNetworkStatus, details?: string) => {
-      ctrlRelayStatusEl.className = `badge ${status}`;
-      ctrlRelayStatusEl.textContent = status.toUpperCase();
-      log(`Relay status: ${status} ${details || ''}`);
+    onStatusChange: (status: ControllerNetworkStatus) => {
+      if (statusRelayText) {
+        statusRelayText.textContent = status === 'connected' ? 'CONNECTED' : status.toUpperCase();
+      }
+      if (statusRelayOrb) {
+        statusRelayOrb.className = `w-2.5 h-2.5 rounded-full ${
+          status === 'connected' 
+            ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' 
+            : status === 'connecting' || status === 'reconnecting'
+            ? 'bg-amber-400 animate-ping shadow-[0_0_8px_#fbbf24]'
+            : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'
+        }`;
+      }
     },
     onRoomJoined: (roomId: string, peerConnected: boolean) => {
       activeRoomId = roomId;
-      inputRoom.value = roomId;
-      ctrlConsoleStatusEl.className = `badge ${peerConnected ? 'connected' : 'disconnected'}`;
-      ctrlConsoleStatusEl.textContent = peerConnected ? 'Console: Online' : 'Console: Offline';
-      log(`Joined room ${roomId}. Console is ${peerConnected ? 'Online' : 'Offline'}`);
+      if (labelRoomCode) labelRoomCode.textContent = roomId;
+      if (statusConsolePill) {
+        statusConsolePill.textContent = peerConnected ? 'TV: Linked' : 'TV: Waiting';
+        statusConsolePill.className = `font-label-sm text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+          peerConnected ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-500'
+        }`;
+      }
     },
     onConsoleStatus: (connected: boolean) => {
-      ctrlConsoleStatusEl.className = `badge ${connected ? 'connected' : 'disconnected'}`;
-      ctrlConsoleStatusEl.textContent = connected ? 'Console: Online' : 'Console: Offline';
-      log(`Console status: ${connected ? 'Connected' : 'Disconnected'}`);
+      if (statusConsolePill) {
+        statusConsolePill.textContent = connected ? 'TV: Linked' : 'TV: Waiting';
+        statusConsolePill.className = `font-label-sm text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+          connected ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-500'
+        }`;
+      }
+      if (connected) {
+        showToast('Console Linked');
+        startStreamingLoop();
+      } else {
+        stopStreamingLoop();
+      }
     },
     onLatencyUpdate: (rttMs: number) => {
-      ctrlRtt.textContent = `${rttMs} ms`;
+      if (labelRtt) labelRtt.textContent = `${rttMs}ms`;
     },
     onMessage: (message: NimbusNetworkMessage) => {
-      if (message.type === 'COMMAND_HAPTIC') {
+      if (!isCompactPacket(message) && message.type === 'COMMAND_HAPTIC') {
         const cmd = message as HapticFeedbackCommand;
-        if ('vibrate' in navigator) {
-          navigator.vibrate(cmd.pattern);
-          log(`Haptic feedback triggered: [${cmd.pattern.join(', ')}] ms`);
-        }
+        immersion.vibrate(cmd.pattern);
       }
     }
   });
@@ -164,76 +197,42 @@ function initNetwork(): void {
   networkClient.connect();
 }
 
-// Button Events
-btnPadA.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  buttons.a = true;
-  if ('vibrate' in navigator) navigator.vibrate(20);
-  sendInputFrame();
-  log('Button [A] Pressed');
-});
-btnPadA.addEventListener('pointerup', () => {
-  buttons.a = false;
-  sendInputFrame();
-});
-
-btnPadB.addEventListener('pointerdown', (e) => {
-  e.preventDefault();
-  buttons.b = true;
-  if ('vibrate' in navigator) navigator.vibrate(20);
-  sendInputFrame();
-  log('Button [B] Pressed');
-});
-btnPadB.addEventListener('pointerup', () => {
-  buttons.b = false;
-  sendInputFrame();
-});
-
-btnToggleMotion.addEventListener('click', async () => {
-  if (!isStreamingMotion) {
-    const started = await startMotionSensors();
-    if (started) {
-      isStreamingMotion = true;
-      btnToggleMotion.textContent = 'Stop Motion Stream';
-      btnToggleMotion.style.background = '#ef4444';
-      log('Motion stream started');
-    }
-  } else {
-    isStreamingMotion = false;
-    btnToggleMotion.textContent = 'Start Continuous Motion Stream';
-    btnToggleMotion.style.background = 'var(--accent)';
-    sensorState.textContent = 'Paused';
-    log('Motion stream paused');
+// Recenter special handler
+function handleButtonChange(_bitmask: number, pressedButton: ButtonName | null): void {
+  if (pressedButton === 'recenter') {
+    showToast('Pointer Recenter Sent', 800);
   }
-});
+}
 
-btnSendTest.addEventListener('click', () => {
-  currentRotation = { alpha: Math.random() * 2, beta: Math.random() * 2, gamma: Math.random() * 2 };
-  currentAccel = { x: Math.random(), y: Math.random(), z: 9.8 };
-  sendInputFrame();
-  log('Sent test motion input frame');
-});
-
-btnJoin.addEventListener('click', () => {
-  const code = inputRoom.value.trim().toUpperCase();
-  if (code && networkClient) {
-    activeRoomId = code;
-    networkClient.setRoomId(code);
-    log(`Joining room ${code}...`);
-  }
-});
-
-// Boot
+// Bootstrap
 function boot(): void {
-  updateHapticSupport();
+  // Initialize sensors and touch subsystems
+  sensors = new SensorManager(updateSensorUI);
+  touch = new TouchInputManager(handleButtonChange, (ms) => immersion.vibrate(ms));
+  touch.bindButtons();
+
+  // Read URL query params
   const params = new URLSearchParams(window.location.search);
   const roomParam = params.get('room');
   if (roomParam) {
     activeRoomId = roomParam.trim().toUpperCase();
-    inputRoom.value = activeRoomId;
+    if (labelRoomCode) labelRoomCode.textContent = activeRoomId;
   }
+
+  // Bind enable motion action
+  btnEnableMotion?.addEventListener('click', handleEnableMotion);
+
+  // Initialize network connection
   initNetwork();
+
+  // Auto-attempt sensor start if non-gesture environment allows
+  sensors.start().then((started) => {
+    if (started) {
+      startStreamingLoop();
+    }
+  }).catch(() => {
+    // Requires gesture
+  });
 }
 
-boot();
-
+window.addEventListener('DOMContentLoaded', boot);

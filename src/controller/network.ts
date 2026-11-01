@@ -3,13 +3,14 @@ import {
   RECONNECT_DELAY_MS, 
   MAX_RECONNECT_ATTEMPTS 
 } from '../shared/constants.js';
-import type { 
-  NimbusNetworkMessage, 
-  JoinRoomRequest, 
-  JoinRoomAck, 
-  PeerStatusUpdate, 
-  PingMessage, 
-  PongMessage 
+import { 
+  isCompactPacket,
+  type NimbusNetworkMessage, 
+  type JoinRoomRequest, 
+  type JoinRoomAck, 
+  type PeerStatusUpdate, 
+  type PingMessage, 
+  type PongMessage 
 } from '../shared/protocol.js';
 
 export type ControllerNetworkStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
@@ -118,6 +119,11 @@ export class ControllerNetworkClient {
   }
 
   private handleMessage(msg: NimbusNetworkMessage): void {
+    if (isCompactPacket(msg)) {
+      this.callbacks.onMessage(msg);
+      return;
+    }
+
     switch (msg.type) {
       case 'JOIN_ROOM_ACK': {
         const ack = msg as JoinRoomAck;

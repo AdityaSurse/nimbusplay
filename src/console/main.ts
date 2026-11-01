@@ -1,7 +1,14 @@
 import { ConsoleShell } from './ui/shell.js';
 import { ConsoleNetworkClient, type NetworkStatus } from './core/network.js';
+import { DebugOverlay } from './core/debug-overlay.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
-import type { NimbusNetworkMessage, HapticFeedbackCommand, MotionInputFrame } from '../shared/protocol.js';
+import { 
+  isCompactPacket,
+  type NimbusNetworkMessage, 
+  type HapticFeedbackCommand, 
+  type MotionInputFrame,
+  BUTTON_MASKS 
+} from '../shared/protocol.js';
 
 interface LanInfo {
   lanIp: string;
@@ -14,6 +21,8 @@ let lanPort = window.location.port ? Number(window.location.port) : 5173;
 let frameCounter = 0;
 let networkClient: ConsoleNetworkClient | null = null;
 let shell: ConsoleShell | null = null;
+let debugOverlay: DebugOverlay | null = null;
+let wasHomePressed = false;
 
 // DOM Elements
 const stageEl = document.getElementById('stage') as HTMLElement;
@@ -105,6 +114,7 @@ function initNetwork(): void {
       if (pairingRttVal) {
         pairingRttVal.textContent = `${rttMs} ms`;
       }
+      debugOverlay?.updateLatency(rttMs);
     },
     onMessage: (message: NimbusNetworkMessage) => {
       frameCounter++;
@@ -112,12 +122,32 @@ function initNetwork(): void {
         pairingFramesVal.textContent = `${frameCounter} frames`;
       }
 
+      // Handle Compact 60Hz Packet
+      if (isCompactPacket(message)) {
+        debugOverlay?.ingestPacket(message);
+
+        const isHome = (message.b & BUTTON_MASKS.HOME) !== 0;
+        if (isHome && !wasHomePressed) {
+          wasHomePressed = true;
+          shell?.togglePauseOverlay();
+        } else if (!isHome) {
+          wasHomePressed = false;
+        }
+        return;
+      }
+
+      // Handle Verbose Frame
       if (message.type === 'INPUT_FRAME') {
         const frame = message as MotionInputFrame;
-        // If controller pressed Home button, toggle Pause HUD
-        if (frame.buttons.home) {
+        debugOverlay?.ingestPacket(frame);
+
+        if (frame.buttons.home && !wasHomePressed) {
+          wasHomePressed = true;
           shell?.togglePauseOverlay();
+        } else if (!frame.buttons.home) {
+          wasHomePressed = false;
         }
+        return;
       }
 
       appendLog(JSON.stringify(message));
@@ -180,6 +210,7 @@ function bindModalButtons(): void {
 // Bootstrap Console
 async function boot(): Promise<void> {
   shell = new ConsoleShell(stageEl, handPointerEl);
+  debugOverlay = new DebugOverlay();
   bindModalButtons();
   await fetchLanInfo();
   initNetwork();

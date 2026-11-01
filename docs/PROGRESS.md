@@ -12,8 +12,8 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase 1** | Tooling, Workspace Setup & HTTPS Proxy | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 2** | Node Relay & WebSocket Protocol | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 3** | Console Shell UI & Authentic Channel Matrix | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
-| **Phase 4** | Mobile Web Controller & Sensor Ingestion | Not Started | — | — | — |
-| **Phase 5** | Console Shell UI & Channel Matrix | Not Started | — | — | — |
+| **Phase 4** | Mobile Web Controller & Sensor Ingestion | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
+| **Phase 5** | Sensor Pipeline & On-Screen Pointer Engine | Not Started | — | — | — |
 | **Phase 6** | Web Audio Sound Synthesis Engine | Not Started | — | — | — |
 | **Phase 7** | Game 1: Slice Party (Fruit Slicing) | Not Started | — | — | — |
 | **Phase 8** | Game 2: Star Defender (Aim-and-Shoot) | Not Started | — | — | — |
@@ -90,23 +90,36 @@ This log tracks implementation progress, milestones, verification notes, and blo
 
 ---
 
-### Phase 4: Sensor Pipeline & On-Screen Pointer Engine
+### Phase 4: Mobile Web Controller & Sensor Ingestion
+- **Status**: Complete
+- **Key Deliverables**:
+  - `controller/index.html`: Pixel-accurate implementation of Stitch `design/virtual_remote.html` with Tailwind CSS, Nunito Sans, Material Symbols, P1 connection badge, RTT latency readout, battery percentage, "Activate Motion Sensors" action banner, tactile A button, recessed D-pad cross, Minus, Home (cloud), Plus, Recenter button, vertical 1 & 2 buttons with speaker hole array, and bottom full-width B Trigger button.
+  - `src/controller/sensors.ts`: `SensorManager` reading `devicemotion` rotation rates ($\alpha, \beta, \gamma$ in deg/s) and acceleration ($x, y, z$ in $\text{m/s}^2$), iOS permission checking (`DeviceMotionEvent.requestPermission`), Generic Sensor API fallback (`Gyroscope`, `Accelerometer`), and hardware watchdog detecting "no sensor data".
+  - `src/controller/touch.ts`: `TouchInputManager` providing multi-touch safe button tracking with pointer ID maps, bitmask calculation using `BUTTON_MASKS`, independent touch release, and haptic feedback.
+  - `src/controller/device.ts`: `DeviceImmersion` managing Screen Wake Lock with auto-reacquisition on visibility change, portrait orientation lock, and HTML5 Fullscreen request.
+  - `src/controller/main.ts`: 60Hz loop sending compact JSON packets (`CompactMotionPacket`), console command listener handling `COMMAND_HAPTIC` rumble.
+  - `src/console/core/debug-overlay.ts`: Console live telemetry debug HUD toggled with **`D`** key, displaying live Hz rate, sequence count, RTT latency, $\alpha, \beta, \gamma$ gyro bars, $x, y, z$ accel bars, and 12-button live state matrix.
+  - `server/relay.ts`: Fast-path forwarding for compact 60Hz packets.
+- **Verification Criteria**:
+  - [x] Full mobile touch UI matching console remote ergonomics with safe-area insets.
+  - [x] "Enable motion" button activates sensors, requests wake lock, portrait orientation lock, and fullscreen.
+  - [x] Multi-touch safe button pad with pointer events tracks simultaneous presses (e.g. B trigger + A button + D-pad) and releases correctly.
+  - [x] High-frequency 60Hz stream transmits compact ~80 byte packets (`{ t: 'F', s, ts, b, r, a }`).
+  - [x] Haptic feedback triggered on button press and when receiving `COMMAND_HAPTIC` from console.
+  - [x] Clear status indicators on controller: connecting, connected, disconnected, 60Hz gyro active, no sensor data.
+  - [x] Console debug overlay toggles with 'D' key, showing live telemetry meters and active button highlights.
+  - [x] Strict TypeScript check (`npx tsc --noEmit`) and Vite production build (`npm run build`) pass cleanly with 0 errors.
+- **Log Notes**:
+  - Maintained zero `any` types throughout. Single HTTPS origin proxying `/ws` preserves mobile sensor permissions in Android Chrome.
+
+---
+
+### Phase 5: Sensor Pipeline & On-Screen Pointer Engine
 - **Status**: Not Started
 - **Key Deliverables**: `src/console/pointer/` module, dead zone calculation, One Euro filter, sensitivity scaling, recentering.
 - **Verification Criteria**:
   - Smooth pointer movement on desktop screen mimicking infrared remote pointing.
   - Zero visible resting jitter; immediate response during rapid swings.
-- **Log Notes**:
-  - *No entries yet.*
-
----
-
-### Phase 5: Console Shell UI & Channel Matrix
-- **Status**: Not Started
-- **Key Deliverables**: 4×3 interactive channel grid, animated pagination wings, channel launch dialog modal, home overlay HUD, analog/digital clock.
-- **Verification Criteria**:
-  - Pointer hovers highlight channels with audio feedback and smooth scale transition.
-  - A-button clicks open channel launch dialog modal.
 - **Log Notes**:
   - *No entries yet.*
 

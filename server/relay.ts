@@ -1,12 +1,13 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { SessionManager } from './session.js';
 import { RELAY_INTERNAL_PORT, WS_PATH } from '../src/shared/constants.js';
-import type { 
-  NimbusNetworkMessage, 
-  JoinRoomRequest, 
-  JoinRoomAck, 
-  PeerStatusUpdate, 
-  PongMessage 
+import { 
+  isCompactPacket,
+  type NimbusNetworkMessage, 
+  type JoinRoomRequest, 
+  type JoinRoomAck, 
+  type PeerStatusUpdate, 
+  type PongMessage 
 } from '../src/shared/protocol.js';
 
 const port = Number(process.env.RELAY_PORT) || RELAY_INTERNAL_PORT;
@@ -21,7 +22,18 @@ wss.on('connection', (ws: WebSocket) => {
 
   ws.on('message', (data: Buffer | string) => {
     try {
-      const message = JSON.parse(data.toString()) as NimbusNetworkMessage;
+      const rawStr = data.toString();
+      const message = JSON.parse(rawStr) as NimbusNetworkMessage;
+
+      // Fast path for compact 60Hz motion packet: { t: 'F', s, ts, b, r, a }
+      if (isCompactPacket(message)) {
+        if (!boundRoomId) return;
+        const session = sessions.getRoom(boundRoomId);
+        if (session?.consoleSocket && session.consoleSocket.readyState === WebSocket.OPEN) {
+          session.consoleSocket.send(rawStr);
+        }
+        return;
+      }
 
       switch (message.type) {
         case 'JOIN_ROOM': {

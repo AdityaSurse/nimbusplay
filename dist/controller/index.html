@@ -1,213 +1,290 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Nimbus Wand — Controller (Phase 2)</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>Nimbus Wand — Virtual Remote</title>
+
+  <!-- Self-hosted & Google Web Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+  <!-- Tailwind CSS & Design Token Config from Stitch Design -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "secondary-container": "#5fbffe",
+            "on-primary": "#ffffff",
+            "surface-container-low": "#edf4ff",
+            "tertiary-fixed": "#d5e5f1",
+            "primary-fixed": "#c2e8ff",
+            "secondary-fixed": "#c9e6ff",
+            "inverse-surface": "#26313e",
+            "on-background": "#111d28",
+            "on-secondary-fixed": "#001e2f",
+            "on-primary-container": "#00435a",
+            "surface-bright": "#f7f9ff",
+            "primary-container": "#3cb4e7",
+            "inverse-on-surface": "#e8f2ff",
+            "primary": "#006688",
+            "error-container": "#ffdad6",
+            "surface-container-high": "#dde9f9",
+            "tertiary": "#51606a",
+            "outline": "#6e7980",
+            "surface": "#f7f9ff",
+            "secondary": "#006492",
+            "on-secondary-container": "#004c70",
+            "inverse-primary": "#76d1ff",
+            "surface-variant": "#d7e4f4",
+            "surface-container-highest": "#d7e4f4",
+            "surface-container": "#e3efff",
+            "background": "#f7f9ff",
+            "surface-container-lowest": "#ffffff",
+            "surface-dim": "#cfdbeb",
+            "outline-variant": "#bdc8d0",
+            "tertiary-container": "#9babb6"
+          },
+          fontFamily: {
+            sans: ["Nunito Sans", "-apple-system", "BlinkMacSystemFont", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+
   <style>
-    :root {
-      --bg: #0b1329;
-      --card: #16203d;
-      --border: #28375f;
-      --text: #f8fafc;
-      --text-muted: #8fa0c7;
-      --accent: #38bdf8;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --error: #ef4444;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; touch-action: manipulation; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: 16px;
-      gap: 16px;
+    * {
+      box-sizing: border-box;
       user-select: none;
       -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
     }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+    html, body {
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      overscroll-behavior: none;
+      background: #f7f9ff;
+      color: #111d28;
+      font-family: 'Nunito Sans', sans-serif;
+      overflow-x: hidden;
     }
-    h1 { font-size: 20px; font-weight: 700; color: var(--accent); }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 600;
-      background: var(--border);
-    }
-    .badge.connected { background: rgba(34, 197, 94, 0.2); color: var(--success); }
-    .badge.disconnected { background: rgba(239, 68, 68, 0.2); color: var(--error); }
-    .badge.reconnecting { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px); }
+    .pt-safe { padding-top: max(env(safe-area-inset-top, 0px), 8px); }
+    ::-webkit-scrollbar { display: none; }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .room-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .input-code {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #090e1e;
-      color: #38bdf8;
-      font-size: 20px;
-      font-weight: bold;
-      text-align: center;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-    .btn {
-      padding: 12px 18px;
-      background: var(--accent);
-      color: #0b1329;
-      border: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: opacity 0.15s;
-    }
-    .btn:active { opacity: 0.8; transform: scale(0.98); }
-    .btn-secondary {
-      background: var(--border);
-      color: var(--text);
-    }
-
-    .status-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      font-size: 13px;
-    }
-    .status-item {
-      background: rgba(0,0,0,0.25);
-      padding: 8px;
-      border-radius: 6px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .status-item span:first-child { color: var(--text-muted); font-size: 11px; }
-    .status-item span:last-child { font-weight: bold; }
-
-    .test-zone {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: auto;
-    }
-    .button-pad {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .pad-btn {
-      height: 70px;
-      font-size: 22px;
-      font-weight: 900;
-      border-radius: 12px;
-      background: #253358;
-      color: white;
-      border: 2px solid #3b4d7c;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .pad-btn:active {
-      background: #38bdf8;
-      color: #0b1329;
-    }
-
-    .log-box {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 11px;
-      color: #94a3b8;
-      background: #090e1e;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px;
-      height: 90px;
-      overflow-y: auto;
+    /* Tactile active button feedback */
+    .active-pressed {
+      transform: scale(0.92) !important;
+      filter: brightness(0.95);
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.28) !important;
     }
   </style>
-  <script type="module" crossorigin src="/assets/controller-CKrGsl2P.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/constants-h_hzzWQa.js">
+  <script type="module" crossorigin src="/assets/controller-DhfU-yKq.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/protocol-DruKBLqt.js">
 </head>
-<body>
-  <header>
-    <h1>Nimbus Wand</h1>
-    <div style="display: flex; gap: 6px;">
-      <span id="ctrl-relay-status" class="badge connecting">Connecting...</span>
-      <span id="ctrl-console-status" class="badge disconnected">Console: Offline</span>
+<body class="bg-surface text-on-surface flex flex-col min-h-screen">
+
+  <!-- Fixed Top Header Navigation Bar -->
+  <header class="fixed top-0 inset-x-0 z-50 bg-surface-container-lowest/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe">
+    <div class="h-12 px-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div id="status-relay-orb" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]"></div>
+        <span id="status-relay-text" class="text-[11px] font-bold tracking-wider uppercase text-on-surface">CONNECTED</span>
+        <span class="text-[11px] font-bold text-tertiary">| ROOM: <span id="label-room-code" class="text-primary font-black">----</span></span>
+      </div>
+      <div class="flex items-center gap-2.5">
+        <div class="flex items-center text-primary" title="Battery & Link State">
+          <span class="material-symbols-outlined text-[18px]">battery_5_bar</span>
+        </div>
+        <span id="status-console-pill" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-500">
+          TV: Waiting
+        </span>
+      </div>
     </div>
   </header>
 
-  <div class="card">
-    <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Active Room Session</div>
-    <div class="room-row">
-      <input type="text" id="input-room" class="input-code" maxlength="4" placeholder="CODE" />
-      <button id="btn-join" class="btn btn-secondary">Join</button>
+  <!-- Main Controller Viewport -->
+  <main class="flex flex-col relative w-full pt-14 pb-safe bg-surface flex-1">
+    
+    <!-- Quick Status & Sensor Info Card -->
+    <div class="px-4 py-2.5 flex items-center justify-between bg-surface-container-lowest/90 backdrop-blur-md rounded-2xl mx-4 mb-2.5 shadow-[0_4px_16px_rgba(120,140,160,0.12)]">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center shadow-[0_2px_8px_rgba(60,180,231,0.45)]">
+          <span class="text-xs font-black text-on-primary">P1</span>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse shadow-[0_0_6px_#3cb4e7]"></span>
+            <span class="text-xs font-bold text-on-surface">Nimbus Wand</span>
+          </div>
+          <span id="label-sensor-status" class="text-[10px] text-tertiary font-semibold">Sensors Standby</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 px-2.5 py-1 bg-surface-container-high rounded-full">
+          <span class="material-symbols-outlined text-[13px] text-primary">speed</span>
+          <span id="label-rtt" class="text-[11px] font-bold text-on-surface tracking-normal">--ms</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-high rounded-full">
+          <div class="w-4 h-2 bg-surface-container rounded-sm p-0.5 flex items-center">
+            <div class="h-full w-[95%] bg-primary-container rounded-[1px]"></div>
+          </div>
+          <span class="text-[11px] font-bold text-on-surface">95%</span>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div class="card">
-    <div class="status-grid">
-      <div class="status-item">
-        <span>RTT Latency</span>
-        <span id="ctrl-rtt">-- ms</span>
+    <!-- Enable Motion & Fullscreen Banner (High visibility action for mobile users) -->
+    <div id="banner-enable-motion" class="mx-4 mb-3 p-3.5 bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl shadow-[0_6px_20px_rgba(0,102,136,0.28)] flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="material-symbols-outlined text-[24px]">screen_rotation</span>
+        <div>
+          <div class="text-xs font-black tracking-wide uppercase">Activate Motion Sensors</div>
+          <div class="text-[10px] text-white/80 font-medium">Enables 60Hz gyro, portrait lock & wake lock</div>
+        </div>
       </div>
-      <div class="status-item">
-        <span>Frames Sent</span>
-        <span id="ctrl-sent">0</span>
-      </div>
-      <div class="status-item">
-        <span>Motion Sensor</span>
-        <span id="sensor-state">Standby</span>
-      </div>
-      <div class="status-item">
-        <span>Haptic Support</span>
-        <span id="haptic-state">Checking...</span>
-      </div>
+      <button id="btn-enable-motion" class="px-3.5 py-1.5 bg-white text-primary text-xs font-black rounded-xl shadow-md active:scale-95 transition-transform">
+        START
+      </button>
     </div>
-  </div>
 
-  <div class="test-zone">
-    <div class="button-pad">
-      <button id="btn-pad-a" class="pad-btn">A</button>
-      <button id="btn-pad-b" class="pad-btn">B (Trigger)</button>
+    <!-- Wand Remote Molded Chassis -->
+    <div class="mx-4 bg-gradient-to-b from-surface-container-lowest via-surface-container-low to-surface-variant rounded-[32px] p-5 shadow-[0_8px_24px_rgba(120,140,160,0.22)] flex flex-col items-center">
+      
+      <!-- Primary Action: Big Circular A Button -->
+      <div class="w-full flex justify-center py-2">
+        <button id="btn-a" class="w-24 h-24 rounded-full bg-gradient-to-b from-secondary-container via-primary-container to-secondary flex flex-col items-center justify-center relative shadow-[0_8px_20px_rgba(60,180,231,0.45),inset_0_2px_4px_rgba(255,255,255,0.85)] active:scale-95 transition-all duration-100 ease-out cursor-pointer" aria-label="A Button">
+          <div class="absolute top-1.5 inset-x-4 h-7 rounded-full bg-gradient-to-b from-white/70 to-transparent pointer-events-none"></div>
+          <span class="text-3xl text-on-primary font-black drop-shadow-sm tracking-wide">A</span>
+        </button>
+      </div>
+
+      <!-- Directional D-Pad Cross Inset -->
+      <div class="my-4 relative flex items-center justify-center">
+        <div class="w-[154px] h-[154px] relative bg-surface-container-low rounded-[28px] p-1.5 shadow-[inset_0_2px_6px_rgba(100,125,150,0.25),0_6px_14px_rgba(120,140,160,0.25)] flex items-center justify-center">
+          
+          <button id="dpad-up" class="absolute top-1.5 left-[52px] w-[50px] h-[48px] bg-gradient-to-b from-surface-container-lowest to-surface-container-high rounded-t-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Up">
+            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_up</span>
+          </button>
+          
+          <button id="dpad-down" class="absolute bottom-1.5 left-[52px] w-[50px] h-[48px] bg-gradient-to-t from-surface-container-lowest to-surface-container-high rounded-b-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Down">
+            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_down</span>
+          </button>
+          
+          <button id="dpad-left" class="absolute left-1.5 top-[52px] w-[48px] h-[50px] bg-gradient-to-r from-surface-container-lowest to-surface-container-high rounded-l-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Left">
+            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_left</span>
+          </button>
+          
+          <button id="dpad-right" class="absolute right-1.5 top-[52px] w-[48px] h-[50px] bg-gradient-to-l from-surface-container-lowest to-surface-container-high rounded-r-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Right">
+            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_right</span>
+          </button>
+
+          <!-- Center Pivot Hub -->
+          <div class="w-10 h-10 rounded-full bg-surface-container-high shadow-[inset_0_1.5px_4px_rgba(100,125,150,0.3)] flex items-center justify-center pointer-events-none">
+            <div class="w-3.5 h-3.5 rounded-full bg-surface-variant/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Utility Row: Minus, Home Cloud Orb, Plus -->
+      <div class="w-full flex items-center justify-around px-2 my-2">
+        <div class="flex flex-col items-center gap-1">
+          <button id="btn-minus" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_10px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Minus Button">
+            <span class="material-symbols-outlined text-[20px] text-tertiary font-bold">remove</span>
+          </button>
+          <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Minus</span>
+        </div>
+
+        <div class="flex flex-col items-center gap-1">
+          <button id="btn-home" class="w-14 h-14 rounded-full bg-surface-container-lowest shadow-[0_6px_16px_rgba(60,180,231,0.35),inset_0_2px_0_rgba(255,255,255,1)] p-1 flex items-center justify-center active:scale-90 transition-transform" aria-label="Home Menu">
+            <div class="w-full h-full rounded-full bg-gradient-to-b from-secondary-container to-primary flex items-center justify-center shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.6)]">
+              <span class="material-symbols-outlined text-[22px] text-on-primary">cloud</span>
+            </div>
+          </button>
+          <span class="text-[10px] font-bold text-primary uppercase tracking-wider">Home</span>
+        </div>
+
+        <div class="flex flex-col items-center gap-1">
+          <button id="btn-plus" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_10px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Plus Button">
+            <span class="material-symbols-outlined text-[20px] text-tertiary font-bold">add</span>
+          </button>
+          <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Plus</span>
+        </div>
+      </div>
+
+      <!-- Recenter Pointer Anchor Button -->
+      <div class="w-full my-3 flex justify-center">
+        <button id="btn-recenter" class="px-5 py-2.5 rounded-full bg-surface-container-high/80 backdrop-blur shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_2px_6px_rgba(120,140,160,0.15)] flex items-center gap-2 active:bg-primary-fixed transition-colors" aria-label="Recenter Pointer">
+          <span class="material-symbols-outlined text-[16px] text-primary">my_location</span>
+          <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">Recenter Pointer</span>
+        </button>
+      </div>
+
+      <!-- Vertical Button Pair: 1 and 2 with Speaker Holes -->
+      <div class="flex flex-col items-center gap-2.5 my-1">
+        <button id="btn-1" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_12px_rgba(120,140,160,0.22),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Button 1">
+          <span class="text-xl text-tertiary font-black">1</span>
+        </button>
+
+        <!-- Molded Acoustic Speaker Grille Emulation -->
+        <div class="flex flex-col items-center gap-1 py-1 px-4 opacity-70">
+          <div class="flex gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+          </div>
+          <div class="flex gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+          </div>
+        </div>
+
+        <button id="btn-2" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_12px_rgba(120,140,160,0.22),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Button 2">
+          <span class="text-xl text-tertiary font-black">2</span>
+        </button>
+      </div>
+
     </div>
-    <button id="btn-toggle-motion" class="btn">Start Continuous Motion Stream</button>
-    <button id="btn-send-test" class="btn btn-secondary">Send Single Test Packet</button>
-  </div>
 
-  <div id="ctrl-log" class="log-box">Initialized controller. Waiting for connection...</div>
+    <!-- Wide Underside B Trigger Bar -->
+    <div class="mx-4 mt-3">
+      <button id="btn-trigger" class="w-full py-4 bg-gradient-to-b from-surface-container-lowest via-surface-container-high to-surface-variant rounded-2xl shadow-[0_6px_18px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-between px-6 active:scale-[0.98] transition-all" aria-label="B Trigger">
+        <div class="flex items-center gap-1.5 opacity-60">
+          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+          <span class="w-1 h-4 rounded-full bg-tertiary-container"></span>
+          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+        </div>
+        <div class="flex items-center gap-2 text-on-surface">
+          <span class="material-symbols-outlined text-[20px] text-primary">vibration</span>
+          <span class="text-sm font-black tracking-widest uppercase">B Trigger</span>
+        </div>
+        <div class="flex items-center gap-1.5 opacity-60">
+          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+          <span class="w-1 h-4 rounded-full bg-tertiary-container"></span>
+          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Tactile Haptic Toast Popup -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-inverse-surface/90 text-inverse-on-surface rounded-full shadow-lg opacity-0 transition-opacity duration-200 pointer-events-none flex items-center gap-2 z-50">
+      <span class="material-symbols-outlined text-[16px] text-primary-container">check_circle</span>
+      <span id="toast-text" class="text-xs font-bold">Pointer Recenter Sent</span>
+    </div>
+
+  </main>
 
 </body>
 </html>
-

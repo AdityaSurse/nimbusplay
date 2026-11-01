@@ -509,19 +509,23 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
   - [x] Implement `server/relay.ts` room manager and WebSocket router.
   - [x] Implement `src/shared/protocol.ts` TypeScript schemas.
   - [x] Verify local Wi-Fi pairing and ping-pong round-trip latency.
-- [ ] **Phase 3: Mobile Controller Client**
-  - [ ] Build mobile touch UI matching console remote ergonomics.
-  - [ ] Ingest `DeviceMotionEvent` with axis remapping and orientation lock.
-  - [ ] Implement Screen Wake Lock and haptic vibration feedback.
-- [ ] **Phase 4: Sensor-to-Pointer Pipeline**
-  - [ ] Implement One Euro filter and deadzone mathematics.
-  - [x] Render custom SVG cursor with hardware-accelerated transforms.
-  - [ ] Add Recenter command handling.
-- [x] **Phase 5: Console Shell UI & Channel Matrix**
-  - [x] Build 4×3 Channel Grid matching Stitch design tokens.
+- [x] **Phase 3: Console Shell UI & Authentic Channel Matrix**
+  - [x] Build 4×3 Channel Grid matching Stitch design tokens and 1.04 focus scale.
   - [x] Implement Channel Launch modal dialog.
   - [x] Implement Home Overlay pause menu.
   - [x] Implement Controller Connection Setup & Pointer Calibration screens.
+  - [x] Render custom SVG cursor with hardware-accelerated transforms.
+- [x] **Phase 4: Mobile Web Controller & Sensor Ingestion**
+  - [x] Build mobile touch UI matching Stitch `design/virtual_remote.html` ergonomics.
+  - [x] Ingest `DeviceMotionEvent` (gyro rotation rate and accel with gravity) with Generic Sensor API fallback.
+  - [x] Multi-touch safe button pad with active pointer tracking and integer bitmask.
+  - [x] High-frequency 60Hz compact JSON packet streaming (`{ t: 'F', s, ts, b, r, a }`).
+  - [x] Implement Screen Wake Lock, portrait lock, fullscreen, and haptic feedback (`navigator.vibrate`).
+  - [x] Live sensor telemetry debug HUD on console toggled via **`D`** key.
+- [ ] **Phase 5: Sensor-to-Pointer Pipeline**
+  - [ ] Implement One Euro ($1€$) filter and deadzone mathematics.
+  - [ ] Convert gyro angular velocity ($\omega_\alpha, \omega_\beta$) into screen-space pointer velocity.
+  - [ ] Add Recenter command handling.
 - [ ] **Phase 6: Web Audio Procedural Synthesizer**
   - [ ] Synthesize UI chirps, clicks, and launch chimes.
   - [ ] Synthesize game sound effects (sword slash, laser blaster, bowling pin strike).
