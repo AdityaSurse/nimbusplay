@@ -116,6 +116,9 @@
       </div>
     </footer>
 
+    <!-- Game Canvas Viewport Layer -->
+    <div id="game-container" style="position: absolute; inset: 0; z-index: 25; display: none;"></div>
+
     <!-- ==================== MODALS & SCREEN OVERLAYS ==================== -->
 
     <!-- 1. Channel Launch Dialog Modal -->
@@ -406,6 +409,20 @@
               <span>0.6 deg/s (Standard)</span>
               <span>1.5 deg/s (Wide)</span>
             </div>
+          </div>
+
+          <!-- Lead-the-Target Aim Assist Toggle -->
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f9; padding: 12px 16px; border-radius: 12px; border: 1px solid #d8e2ea;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #111d28;">Lead-the-Target Aim Assist</div>
+              <div style="font-size: 11px; color: #6b7785; font-weight: 600; margin-top: 2px;">Predictive reticle intercept in Star Defender</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+              <input type="checkbox" id="setting-aim-assist" checked style="opacity: 0; width: 0; height: 0;">
+              <span id="slider-aim-assist" style="position: absolute; inset: 0; background-color: #006688; border-radius: 24px; transition: 0.2s;">
+                <span id="knob-aim-assist" style="position: absolute; content: ''; height: 18px; width: 18px; left: 22px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>
+              </span>
+            </label>
           </div>
         </div>
 

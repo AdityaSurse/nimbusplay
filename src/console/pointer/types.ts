@@ -10,6 +10,7 @@ export interface PointerSettings {
   dCutoff: number;            // One Euro derivative cutoff in Hz (default: 1.0)
   deadZone: number;           // Angular deadzone threshold in deg/s (default: 0.6)
   edgeSoftMargin: number;     // Soft stop margin in pixels (default: 24)
+  aimAssist: boolean;         // Lead-the-target predictive aim assist (default: true)
 }
 
 export interface GyroBiasCalibration {

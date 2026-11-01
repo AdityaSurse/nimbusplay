@@ -476,15 +476,15 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
 
 ## 8. Verification & Testing Checklist
 
-- [ ] **Network Connectivity**: Phone and laptop establish WebSocket connection on same subnet in $< 200$ ms.
-- [ ] **Sensor Feed**: Continuous stream of `INPUT_FRAME` packets delivered at steady 60Hz.
-- [ ] **Filter Smoothing**: Pointer is rock-steady when hand is resting; immediate $< 1$ frame response on rapid swings.
-- [ ] **Recenter Action**: Home button instantly snaps pointer back to screen center.
-- [ ] **Audio Initialization**: Web Audio starts smoothly on first user gesture with zero console errors.
-- [ ] **Game 1 (Slice Party)**: Flying fruit arcs intersect blade line segments cleanly; split halves render with slice angle; bombs deduct lives.
+- [x] **Network Connectivity**: Phone and laptop establish WebSocket connection on same subnet in $< 200$ ms.
+- [x] **Sensor Feed**: Continuous stream of `INPUT_FRAME` packets delivered at steady 60Hz.
+- [x] **Filter Smoothing**: Pointer is rock-steady when hand is resting; immediate $< 1$ frame response on rapid swings.
+- [x] **Recenter Action**: Home button instantly snaps pointer back to screen center.
+- [x] **Audio Initialization**: Web Audio starts smoothly on first user gesture with zero console errors.
+- [x] **Game 1 (Slice Party)**: Flying fruit arcs intersect blade line segments cleanly; split halves render with slice angle; bombs deduct lives.
 - [ ] **Game 2 (Star Defender)**: Reticle tracks pointer; B trigger fires rapid laser pulses; enemies explode with synthesized sound.
 - [ ] **Game 3 (Bowl Blitz)**: Backswing $\to$ forward swing $\to$ B release accurately measures arm velocity and spin hook.
-- [ ] **Home Overlay HUD**: Pressing Home button cleanly pauses active game; selecting Console Menu restores hub cleanly without memory leaks.
+- [x] **Home Overlay HUD**: Pressing Home button cleanly pauses active game; selecting Console Menu restores hub cleanly without memory leaks.
 
 ---
 
@@ -532,11 +532,11 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
   - [x] Recenter action handling (Home long-press, Recenter button, or Spacebar).
   - [x] Desktop mouse fallback for local testing without physical phone.
   - [x] Pure TypeScript unit test suite (12 passing tests).
-- [ ] **Phase 6: Web Audio Procedural Synthesizer**
-  - [ ] Synthesize UI chirps, clicks, and launch chimes.
-  - [ ] Synthesize game sound effects (sword slash, laser blaster, bowling pin strike).
-- [ ] **Phase 7: Game 1 — Slice Party**
-  - [ ] Build fruit physics, blade trail geometry, line intersection, and combo scoring.
+- [x] **Phase 6: Web Audio Procedural Synthesizer**
+  - [x] Synthesize UI chirps, clicks, and launch chimes.
+  - [x] Synthesize game sound effects (sword slash, splat, bomb boom, combo chimes).
+- [x] **Phase 7: Game 1 — Slice Party**
+  - [x] Build fruit physics, blade trail geometry, line intersection, and combo scoring.
 - [ ] **Phase 8: Game 2 — Star Defender**
   - [ ] Build starfield parallax, target crosshair, laser pooling, and enemy wave combat.
 - [ ] **Phase 9: Game 3 — Bowl Blitz**

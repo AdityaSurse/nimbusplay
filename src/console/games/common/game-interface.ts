@@ -1,0 +1,33 @@
+/**
+ * NimbusPlay — Standard Game Interface & Contracts
+ * Every game module (Slice Party, Star Defender, Bowl Blitz) implements IGame.
+ * Strictly typed with zero `any`.
+ */
+
+export interface GameInputState {
+  pointerX: number;       // Stage coordinate: 0 to width
+  pointerY: number;       // Stage coordinate: 0 to height
+  isSliceHeld: boolean;    // B button held (or left click held)
+  isTriggerPressed: boolean; // Button pressed this frame
+  rawBitmask: number;     // Active 12-bit button bitmask
+}
+
+export interface GameOptions {
+  width: number;
+  height: number;
+  sendHaptic: (pattern: number[]) => void;
+  onExitToMenu: () => void;
+  onScoreUpdate?: (score: number) => void;
+}
+
+export interface IGame {
+  readonly id: string;
+  readonly title: string;
+  init(container: HTMLElement, options: GameOptions): Promise<void>;
+  update(input: GameInputState, dt: number): void;
+  render(): void;
+  pause(): void;
+  resume(): void;
+  destroy(): void;
+}
+

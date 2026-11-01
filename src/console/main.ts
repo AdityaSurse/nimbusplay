@@ -2,9 +2,11 @@ import { ConsoleShell } from './ui/shell.js';
 import { ConsoleNetworkClient, type NetworkStatus } from './core/network.js';
 import { DebugOverlay } from './core/debug-overlay.js';
 import { InteractionManager } from './pointer/interaction-manager.js';
+import { GameManager } from './games/game-manager.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
 import { 
   isCompactPacket,
+  BUTTON_MASKS,
   type NimbusNetworkMessage, 
   type HapticFeedbackCommand, 
   type MotionInputFrame
@@ -23,6 +25,7 @@ let networkClient: ConsoleNetworkClient | null = null;
 let shell: ConsoleShell | null = null;
 let debugOverlay: DebugOverlay | null = null;
 let interaction: InteractionManager | null = null;
+let gameManager: GameManager | null = null;
 
 // DOM Elements
 const stageEl = document.getElementById('stage') as HTMLElement;
@@ -146,9 +149,23 @@ function initNetwork(): void {
 
 function bindModalButtons(): void {
   btnDialogBack?.addEventListener('click', () => shell?.closeLaunchDialog());
-  btnDialogStart?.addEventListener('click', () => {
-    alert('Game Launch animation triggered! Game runtime loads in Phase 7.');
-    shell?.closeLaunchDialog();
+  btnDialogStart?.addEventListener('click', async () => {
+    const game = shell?.getActiveDialogGame();
+    if (game) {
+      shell?.closeLaunchDialog();
+      await gameManager?.launchGame(game.id, {
+        sendHaptic: (pattern) => {
+          if (networkClient) {
+            networkClient.send({
+              type: 'COMMAND_HAPTIC',
+              seq: Date.now(),
+              timestamp: Date.now(),
+              pattern
+            });
+          }
+        }
+      });
+    }
   });
 
   btnPairingClose?.addEventListener('click', () => shell?.closePairingScreen());
@@ -164,7 +181,10 @@ function bindModalButtons(): void {
 
   headerBatteryPill?.addEventListener('click', () => shell?.openPairingScreen());
 
-  btnPauseResume?.addEventListener('click', () => shell?.closePauseOverlay());
+  btnPauseResume?.addEventListener('click', () => {
+    shell?.closePauseOverlay();
+    gameManager?.resume();
+  });
   btnPauseCalibrate?.addEventListener('click', () => {
     shell?.closePauseOverlay();
     shell?.openCalibrationScreen();
@@ -176,8 +196,12 @@ function bindModalButtons(): void {
   });
   btnPauseMenu?.addEventListener('click', () => {
     shell?.closePauseOverlay();
+    gameManager?.teardown();
   });
-  btnPauseClose?.addEventListener('click', () => shell?.closePauseOverlay());
+  btnPauseClose?.addEventListener('click', () => {
+    shell?.closePauseOverlay();
+    gameManager?.resume();
+  });
 
   btnCalibBack?.addEventListener('click', () => {
     interaction?.stopCalibrationRoutine();
@@ -207,6 +231,14 @@ async function boot(): Promise<void> {
   shell = new ConsoleShell(stageEl, handPointerEl);
   debugOverlay = new DebugOverlay();
 
+  const gameContainer = document.getElementById('game-container') as HTMLElement;
+  gameManager = new GameManager(gameContainer, (isRunning) => {
+    interaction?.setGameActive(isRunning);
+    if (gameContainer) {
+      gameContainer.style.display = isRunning ? 'block' : 'none';
+    }
+  });
+
   interaction = new InteractionManager(stageEl, handPointerEl, {
     openLaunchDialog: (id) => shell?.openLaunchDialog(id),
     closeLaunchDialog: () => shell?.closeLaunchDialog(),
@@ -222,14 +254,41 @@ async function boot(): Promise<void> {
       interaction?.stopCalibrationRoutine();
       shell?.closeCalibrationScreen();
     },
-    togglePause: () => shell?.togglePauseOverlay(),
-    closePause: () => shell?.closePauseOverlay(),
+    togglePause: () => {
+      shell?.togglePauseOverlay();
+      if (gameManager?.isGameRunning()) {
+        gameManager.pause();
+      }
+    },
+    closePause: () => {
+      shell?.closePauseOverlay();
+      gameManager?.resume();
+    },
     changePage: (delta) => shell?.changePage(delta)
   });
 
   bindModalButtons();
   await fetchLanInfo();
   initNetwork();
+
+  // 60 FPS Game Loop
+  const tickGame = () => {
+    if (gameManager?.isGameRunning()) {
+      const pos = interaction?.getPipeline().getPosition();
+      const bitmask = interaction?.getBitmask() ?? 0;
+      const isMouseDown = interaction?.getIsMouseDown() ?? false;
+
+      gameManager.update({
+        pointerX: pos?.x ?? 960,
+        pointerY: pos?.y ?? 540,
+        isSliceHeld: (bitmask & BUTTON_MASKS.B) !== 0 || isMouseDown,
+        isTriggerPressed: (bitmask & BUTTON_MASKS.A) !== 0,
+        rawBitmask: bitmask
+      });
+    }
+    requestAnimationFrame(tickGame);
+  };
+  requestAnimationFrame(tickGame);
 }
 
 boot();

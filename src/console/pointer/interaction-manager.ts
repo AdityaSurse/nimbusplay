@@ -35,6 +35,9 @@ export class InteractionManager {
   // Active interaction state
   private hoveredElement: HTMLElement | null = null;
   private prevBitmask = 0;
+  private currentBitmask = 0;
+  private isMouseDown = false;
+  private isGameActive = false;
   private homePressStart = 0;
   private activeChannelIndex = 0;
   private isCalibrating = false;
@@ -70,6 +73,22 @@ export class InteractionManager {
     this.bindSettingsUI();
     this.bindCalibrationUI();
     this.bindMouseFallback();
+  }
+
+  public setGameActive(active: boolean): void {
+    this.isGameActive = active;
+    if (active && this.hoveredElement) {
+      this.hoveredElement.classList.remove('is-hovered');
+      this.hoveredElement = null;
+    }
+  }
+
+  public getBitmask(): number {
+    return this.currentBitmask;
+  }
+
+  public getIsMouseDown(): boolean {
+    return this.isMouseDown;
   }
 
   public updateViewport(width: number, height: number): void {
@@ -129,6 +148,17 @@ export class InteractionManager {
     this.pointerEl.style.setProperty('--ptr-y', `${stageY}px`);
 
     // Element hit testing
+    if (this.isGameActive) {
+      const openModal = document.querySelector('.modal-overlay.open');
+      if (!openModal) {
+        if (this.hoveredElement) {
+          this.hoveredElement.classList.remove('is-hovered');
+          this.hoveredElement = null;
+        }
+        return;
+      }
+    }
+
     const stageRect = this.stageEl.getBoundingClientRect();
     const screenX = stageRect.left + (stageX / (this.stageEl.clientWidth || 1920)) * stageRect.width;
     const screenY = stageRect.top + (stageY / (this.stageEl.clientHeight || 1080)) * stageRect.height;
@@ -148,6 +178,7 @@ export class InteractionManager {
   }
 
   private handleButtons(bitmask: number): void {
+    this.currentBitmask = bitmask;
     const pressedNow = bitmask & ~this.prevBitmask;
     const releasedNow = ~bitmask & this.prevBitmask;
 
@@ -238,6 +269,9 @@ export class InteractionManager {
     const sliderSens = document.getElementById('setting-sensitivity') as HTMLInputElement;
     const sliderSmooth = document.getElementById('setting-smoothing') as HTMLInputElement;
     const sliderDead = document.getElementById('setting-deadzone') as HTMLInputElement;
+    const toggleAimAssist = document.getElementById('setting-aim-assist') as HTMLInputElement | null;
+    const knobAimAssist = document.getElementById('knob-aim-assist');
+    const sliderAimAssist = document.getElementById('slider-aim-assist');
     const labelSens = document.getElementById('label-val-sensitivity');
     const labelSmooth = document.getElementById('label-val-smoothing');
     const labelDead = document.getElementById('label-val-deadzone');
@@ -250,6 +284,13 @@ export class InteractionManager {
     if (sliderSens) sliderSens.value = cur.sensitivity.toString();
     if (sliderSmooth) sliderSmooth.value = cur.minCutoff.toString();
     if (sliderDead) sliderDead.value = cur.deadZone.toString();
+
+    const updateAimAssistVisual = (enabled: boolean) => {
+      if (toggleAimAssist) toggleAimAssist.checked = enabled;
+      if (sliderAimAssist) sliderAimAssist.style.backgroundColor = enabled ? '#006688' : '#bdc8d0';
+      if (knobAimAssist) knobAimAssist.style.left = enabled ? '22px' : '3px';
+    };
+    updateAimAssistVisual(cur.aimAssist ?? true);
 
     sliderSens?.addEventListener('input', () => {
       const val = parseFloat(sliderSens.value);
@@ -272,6 +313,13 @@ export class InteractionManager {
       this.pipeline.updateSettings({ deadZone: val });
     });
 
+    toggleAimAssist?.addEventListener('change', () => {
+      const enabled = toggleAimAssist.checked;
+      updateAimAssistVisual(enabled);
+      this.settingsManager.update({ aimAssist: enabled });
+      this.pipeline.updateSettings({ aimAssist: enabled });
+    });
+
     btnReset?.addEventListener('click', () => {
       const def = this.settingsManager.resetToDefaults();
       if (sliderSens) sliderSens.value = def.sensitivity.toString();
@@ -280,6 +328,7 @@ export class InteractionManager {
       if (labelSens) labelSens.textContent = `${def.sensitivity.toFixed(1)}x`;
       if (labelSmooth) labelSmooth.textContent = `${def.minCutoff.toFixed(1)} Hz`;
       if (labelDead) labelDead.textContent = `${def.deadZone.toFixed(1)} deg/s`;
+      updateAimAssistVisual(def.aimAssist ?? true);
       this.pipeline.updateSettings(def);
     });
 
@@ -363,12 +412,14 @@ export class InteractionManager {
 
     window.addEventListener('mousedown', (e: MouseEvent) => {
       if (e.button === 0) {
+        this.isMouseDown = true;
         this.pointerEl.classList.add('active-click');
       }
     });
 
     window.addEventListener('mouseup', (e: MouseEvent) => {
       if (e.button === 0) {
+        this.isMouseDown = false;
         this.pointerEl.classList.remove('active-click');
       }
     });
