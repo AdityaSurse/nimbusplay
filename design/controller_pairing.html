@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,300;0,500;0,600;0,700;0,800;1,400&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-container": "#5fbffe", "on-primary": "#ffffff", "surface-container-low": "#edf4ff", "tertiary-fixed": "#d5e5f1", "primary-fixed": "#c2e8ff", "secondary-fixed": "#c9e6ff", "inverse-surface": "#26313e", "on-background": "#111d28", "on-secondary-fixed": "#001e2f", "on-primary-container": "#00435a", "surface-bright": "#f7f9ff", "primary-container": "#3cb4e7", "inverse-on-surface": "#e8f2ff", "primary": "#006688", "error-container": "#ffdad6", "surface-container-high": "#dde9f9", "tertiary": "#51606a", "on-primary-fixed-variant": "#004d67", "on-tertiary": "#ffffff", "outline": "#6e7980", "on-tertiary-fixed": "#0e1d26", "surface": "#f7f9ff", "secondary": "#006492", "on-tertiary-container": "#314049", "on-tertiary-fixed-variant": "#3a4952", "on-secondary-container": "#004c70", "inverse-primary": "#76d1ff", "surface-variant": "#d7e4f4", "on-primary-fixed": "#001e2b", "surface-container-highest": "#d7e4f4", "on-error-container": "#93000a", "on-secondary": "#ffffff", "on-error": "#ffffff", "surface-container": "#e3efff", "background": "#f7f9ff", "surface-container-lowest": "#ffffff", "surface-dim": "#cfdbeb", "secondary-fixed-dim": "#8bceff", "outline-variant": "#bdc8d0", "tertiary-container": "#9babb6", "surface-tint": "#006688", "on-surface-variant": "#3e484f", "primary-fixed-dim": "#76d1ff", "on-secondary-fixed-variant": "#004b6f", "error": "#ba1a1a", "on-surface": "#111d28", "tertiary-fixed-dim": "#b9c9d4" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-2xl": "3.5rem", "margin-tv": "3.5rem", "space-sm": "0.5rem", "gutter": "1.25rem", "space-xs": "0.25rem", "gutter-tv": "1.75rem", "space-md": "1rem", "margin": "2rem", "space-lg": "1.5rem", "space-xl": "2.25rem" }, "fontFamily": { "headline-md": [ "Nunito Sans" ], "display-clock": [ "Nunito Sans" ], "label-md": [ "Nunito Sans" ], "label-lg": [ "Nunito Sans" ], "body-md": [ "Nunito Sans" ], "headline-xl": [ "Nunito Sans" ], "headline-lg": [ "Nunito Sans" ], "body-lg": [ "Nunito Sans" ], "label-sm": [ "Nunito Sans" ], "display-clock-mobile": [ "Nunito Sans" ], "headline-xl-mobile": [ "Nunito Sans" ], "headline-lg-mobile": [ "Nunito Sans" ] }, "fontSize": { "headline-md": [ "24px", { "lineHeight": "32px", "letterSpacing": "0.01em", "fontWeight": "700" } ], "display-clock": [ "56px", { "lineHeight": "60px", "letterSpacing": "0.02em", "fontWeight": "300" } ], "label-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" } ], "label-lg": [ "14px", { "lineHeight": "18px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "body-md": [ "15px", { "lineHeight": "22px", "letterSpacing": "0.01em", "fontWeight": "500" } ], "headline-xl": [ "44px", { "lineHeight": "52px", "letterSpacing": "-0.01em", "fontWeight": "800" } ], "headline-lg": [ "32px", { "lineHeight": "40px", "letterSpacing": "0em", "fontWeight": "700" } ], "body-lg": [ "18px", { "lineHeight": "26px", "letterSpacing": "0.01em", "fontWeight": "600" } ], "label-sm": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.12em", "fontWeight": "600" } ], "display-clock-mobile": [ "36px", { "lineHeight": "40px", "letterSpacing": "0.02em", "fontWeight": "300" } ], "headline-xl-mobile": [ "30px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "800" } ], "headline-lg-mobile": [ "24px", { "lineHeight": "32px", "letterSpacing": "0em", "fontWeight": "700" } ] } } } };</script></head><body class="bg-surface font-body-md text-on-surface relative min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed"><div class="fixed inset-0 pointer-events-none z-0 bg-gradient-to-b from-surface to-surface-container-high/60"><div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.8)_0%,transparent_65%)]"></div><svg class="absolute bottom-0 left-0 w-full h-[358px] opacity-20 text-secondary-fixed" fill="none" preserveaspectratio="none" viewbox="0 0 1440 280" xmlns="http://www.w3.org/2000/svg"><path d="M0 40C320 85 460 10 720 35C980 60 1140 10 1440 30V280H0V40Z" fill="currentColor"></path><path d="M0 80C340 120 520 50 780 75C1040 100 1200 45 1440 70V280H0V80Z" fill="currentColor" opacity="0.6"></path><path d="M0 130C300 160 500 110 820 125C1140 140 1260 95 1440 115V280H0V130Z" fill="currentColor" opacity="0.4"></path></svg></div><header class="fixed top-0 left-0 right-0 h-20 z-40 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="w-full px-space-2xl h-20 flex items-center justify-between"><div class="flex items-center gap-space-md"><div class="w-10 h-10 rounded-full bg-surface-container-lowest shadow-[0_4px_10px_rgba(120,140,160,0.2)] flex items-center justify-center"><div class="w-7 h-7 rounded-full bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">play_shapes</span></div></div><div class="flex flex-col"><span class="font-headline-md text-headline-md tracking-tight text-on-surface leading-none">NimbusPlay</span><span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Domestic Hub OS</span></div></div><nav class="flex items-center gap-space-sm bg-surface-container-lowest/80 p-1.5 rounded-full shadow-[0_2px_8px_rgba(120,140,160,0.15)]" data-active-classes="bg-primary-container text-on-primary font-bold shadow-[0_4px_12px_rgba(60,180,231,0.35)]"><a class="font-label-lg text-label-lg px-space-lg py-2 rounded-full text-on-surface-variant hover:text-on-surface transition-colors" data-path="channel-grid" href="#">Channels</a><a class="font-label-lg text-label-lg px-space-lg py-2 rounded-full text-on-surface-variant hover:text-on-surface transition-colors" data-path="play-library" href="#">Library</a><a class="font-label-lg text-label-lg px-space-lg py-2 rounded-full text-on-surface-variant hover:text-on-surface transition-colors" data-path="community-plaza" href="#">Plaza</a><a class="font-label-lg text-label-lg px-space-lg py-2 rounded-full text-on-surface-variant hover:text-on-surface transition-colors" data-path="sd-card-vault" href="#">SD Vault</a></nav><div class="flex items-center gap-space-lg"><div class="flex items-center gap-1.5 px-space-md py-1.5 rounded-full bg-surface-container-lowest shadow-[0_2px_6px_rgba(120,140,160,0.15)]"><div class="w-2 h-3.5 rounded-sm bg-primary-container"></div><div class="w-2 h-3.5 rounded-sm bg-primary-container"></div><div class="w-2 h-3.5 rounded-sm bg-primary-container"></div><div class="w-2 h-3.5 rounded-sm bg-surface-container-highest"></div><span class="material-symbols-outlined text-outline text-[16px] ml-1">cast</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><button aria-label="Previous Channel Page" class="fixed left-6 top-1/2 -translate-y-1/2 z-30 w-14 h-14 rounded-xl bg-surface-container-lowest shadow-[0_6px_14px_rgba(120,140,160,0.25)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-primary-container"><span class="material-symbols-outlined text-[32px]">chevron_left</span></button><button aria-label="Next Channel Page" class="fixed right-6 top-1/2 -translate-y-1/2 z-30 w-14 h-14 rounded-xl bg-surface-container-lowest shadow-[0_6px_14px_rgba(120,140,160,0.25)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-primary-container"><span class="material-symbols-outlined text-[32px]">chevron_right</span></button><main class="relative z-10 w-full pt-20 pb-44 px-space-2xl min-h-[calc(100vh-160px)] flex flex-col items-center justify-center"><div class="flex flex-col w-full max-w-[1560px] mx-auto py-4">
+<!-- Breadcrumb and Mode Sub-header -->
+<div class="w-full flex items-center justify-between mb-6 px-4">
+<div class="flex items-center gap-space-lg">
+<button class="group flex items-center gap-space-sm px-space-lg py-2.5 rounded-full bg-surface-container-lowest text-tertiary shadow-[0_4px_12px_rgba(120,140,160,0.2)] hover:scale-105 active:scale-95 transition-all" onclick="window.history.back()">
+<span class="material-symbols-outlined text-[20px] text-primary group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+<span class="font-label-lg text-label-lg tracking-wider uppercase font-bold text-on-surface-variant">System Settings</span>
+</button>
+<div class="flex items-center gap-3">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container shadow-[0_0_8px_#3CB4E7]"></div>
+<h2 class="font-headline-lg text-headline-lg text-tertiary tracking-tight font-extrabold">Controller Connection Setup</h2>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-lowest shadow-[0_2px_8px_rgba(120,140,160,0.12)]">
+<span class="material-symbols-outlined text-[20px] text-primary">sensors</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-outline">Nimbus Sync Protocol 2.4</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface-container-lowest shadow-[0_2px_8px_rgba(120,140,160,0.12)]">
+<span class="font-label-sm text-label-sm uppercase font-bold text-primary">2.4 GHz</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-label-sm text-label-sm text-tertiary">Ch 06</span>
+</div>
+</div>
+</div>
+<!-- Main Console Chassis Surface -->
+<div class="relative w-full rounded-[36px] bg-surface-container-lowest shadow-[0_20px_48px_rgba(100,125,150,0.22)] p-space-2xl overflow-hidden">
+<!-- Molded Top Rim Gloss & Ambient Glow Accents -->
+<div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-white to-transparent opacity-90 pointer-events-none"></div>
+<div class="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-secondary-fixed/40 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-primary-fixed/30 blur-3xl pointer-events-none"></div>
+<!-- Interior Content Columns -->
+<div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-space-2xl items-stretch">
+<!-- LEFT COLUMN: Mobile Pairing Instructions & QR Tile (7 cols) -->
+<section class="lg:col-span-7 flex flex-col justify-between space-y-8">
+<div>
+<div class="flex items-center gap-2.5 mb-2">
+<span class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm uppercase tracking-wider font-extrabold">Instant Pairing</span>
+<span class="text-tertiary font-label-sm text-label-sm uppercase tracking-widest font-semibold">Step 1 of 2</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-on-surface font-extrabold tracking-tight">Connect your phone</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-2 max-w-xl">
+            Scan the QR code or visit <span class="text-primary font-bold">nimbus.play</span> on any mobile browser. No app store installation required.
+          </p>
+<!-- Step Progression Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md mt-6">
+<div class="flex items-start gap-3 p-4 rounded-2xl bg-surface-container-low shadow-[0_2px_8px_rgba(120,140,160,0.08)]">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center font-bold text-label-lg shadow-sm shrink-0">1</div>
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface font-bold">Open Camera</h4>
+<p class="font-body-md text-body-md text-tertiary text-xs mt-0.5 leading-snug">Point your device camera at the code or visit the web address.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-4 rounded-2xl bg-surface-container-low shadow-[0_2px_8px_rgba(120,140,160,0.08)]">
+<div class="w-8 h-8 rounded-full bg-surface-container-lowest text-primary flex items-center justify-center font-bold text-label-lg shadow-sm shrink-0">2</div>
+<div>
+<h4 class="font-label-lg text-label-lg text-on-surface font-bold">Authorize Sensor</h4>
+<p class="font-body-md text-body-md text-tertiary text-xs mt-0.5 leading-snug">Allow motion and gyroscope inputs to begin controlling.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Pairing Interface Display (QR + Big Code Badge) -->
+<div class="flex flex-col sm:flex-row items-center gap-space-xl p-space-lg rounded-[28px] bg-surface-bright shadow-[inset_0_2px_6px_rgba(190,205,220,0.35),0_6px_20px_rgba(120,140,160,0.1)]">
+<!-- Stylized Glossy QR Code Card -->
+<div class="relative group p-4 rounded-3xl bg-surface-container-lowest shadow-[0_10px_24px_rgba(60,180,231,0.22),0_2px_6px_rgba(120,140,160,0.15)] shrink-0 transition-transform hover:scale-[1.02]">
+<!-- Inner Cyan Glow Accent -->
+<div class="absolute inset-2 rounded-2xl bg-primary-container/10 pointer-events-none"></div>
+<div class="relative w-[240px] h-[240px] p-2 bg-surface-container-lowest rounded-2xl flex flex-col items-center justify-center">
+<!-- High Fidelity Procedural QR Code Vector -->
+<svg class="w-full h-full text-on-background" fill="none" viewbox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<!-- Outer Corner Position Markers -->
+<!-- Top-Left -->
+<rect fill="#111D28" height="28" rx="6" width="28" x="6" y="6"></rect>
+<rect fill="#FFFFFF" height="18" rx="3" width="18" x="11" y="11"></rect>
+<rect fill="#006688" height="10" rx="2" width="10" x="15" y="15"></rect>
+<!-- Top-Right -->
+<rect fill="#111D28" height="28" rx="6" width="28" x="66" y="6"></rect>
+<rect fill="#FFFFFF" height="18" rx="3" width="18" x="71" y="11"></rect>
+<rect fill="#006688" height="10" rx="2" width="10" x="75" y="15"></rect>
+<!-- Bottom-Left -->
+<rect fill="#111D28" height="28" rx="6" width="28" x="6" y="66"></rect>
+<rect fill="#FFFFFF" height="18" rx="3" width="18" x="11" y="71"></rect>
+<rect fill="#006688" height="10" rx="2" width="10" x="15" y="75"></rect>
+<!-- Data Matrix Glyphs -->
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="38" y="8"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="48" y="8"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="56" y="14"></rect>
+<rect fill="#3CB4E7" height="6" rx="1.5" width="6" x="38" y="20"></rect>
+<rect fill="#111D28" height="8" rx="2" width="8" x="46" y="24"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="8" y="38"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="18" y="44"></rect>
+<rect fill="#3CB4E7" height="6" rx="1.5" width="6" x="28" y="38"></rect>
+<rect fill="#3CB4E7" fill-opacity="0.2" height="20" rx="4" width="20" x="40" y="40"></rect>
+<circle cx="50" cy="50" fill="#006688" r="6"></circle>
+<path d="M48 46L55 50L48 54V46Z" fill="#FFFFFF"></path>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="68" y="38"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="78" y="44"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="86" y="38"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="38" y="68"></rect>
+<rect fill="#3CB4E7" height="6" rx="1.5" width="6" x="46" y="74"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="56" y="68"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="38" y="82"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="48" y="86"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="68" y="68"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="76" y="76"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="6" x="86" y="68"></rect>
+<rect fill="#3CB4E7" height="6" rx="1.5" width="6" x="68" y="84"></rect>
+<rect fill="#111D28" height="6" rx="1.5" width="12" x="80" y="84"></rect>
+</svg>
+<!-- Subtle Corner Alignment Markers -->
+<div class="absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 border-primary-container"></div>
+<div class="absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 border-primary-container"></div>
+<div class="absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 border-primary-container"></div>
+<div class="absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 border-primary-container"></div>
+</div>
+<div class="mt-2 text-center">
+<span class="font-label-sm text-label-sm font-bold text-tertiary tracking-widest uppercase">Direct Mobile Link</span>
+</div>
+</div>
+<!-- Room Code & Manual Direct Input -->
+<div class="flex-1 flex flex-col justify-center space-y-4 w-full">
+<div>
+<span class="font-label-md text-label-md uppercase font-extrabold tracking-widest text-outline">Or Enter Room Code</span>
+<p class="font-body-md text-body-md text-tertiary text-sm mt-0.5">Type this 4-character token on nimbus.play</p>
+</div>
+<!-- Giant Spaced Room Code Badge -->
+<div class="flex items-center gap-2.5 sm:gap-3">
+<div class="flex-1 flex items-center justify-center h-20 rounded-2xl bg-surface-container-lowest shadow-[inset_0_2px_4px_rgba(120,140,160,0.15),0_4px_10px_rgba(120,140,160,0.1)]">
+<span class="font-headline-xl text-headline-xl text-primary font-black tracking-widest">K</span>
+</div>
+<div class="flex-1 flex items-center justify-center h-20 rounded-2xl bg-surface-container-lowest shadow-[inset_0_2px_4px_rgba(120,140,160,0.15),0_4px_10px_rgba(120,140,160,0.1)]">
+<span class="font-headline-xl text-headline-xl text-primary font-black tracking-widest">7</span>
+</div>
+<div class="flex-1 flex items-center justify-center h-20 rounded-2xl bg-surface-container-lowest shadow-[inset_0_2px_4px_rgba(120,140,160,0.15),0_4px_10px_rgba(120,140,160,0.1)]">
+<span class="font-headline-xl text-headline-xl text-primary font-black tracking-widest">Q</span>
+</div>
+<div class="flex-1 flex items-center justify-center h-20 rounded-2xl bg-surface-container-lowest shadow-[inset_0_2px_4px_rgba(120,140,160,0.15),0_4px_10px_rgba(120,140,160,0.1)]">
+<span class="font-headline-xl text-headline-xl text-primary font-black tracking-widest">X</span>
+</div>
+</div>
+<!-- Copy/Helper Info -->
+<div class="flex items-center justify-between pt-1">
+<div class="flex items-center gap-2 text-tertiary">
+<span class="material-symbols-outlined text-[18px] text-primary">wifi_protected_setup</span>
+<span class="font-label-md text-label-md font-semibold">Auto-refreshes in 04:48</span>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-lowest text-primary hover:bg-primary-fixed transition-colors shadow-sm font-label-md text-label-md font-bold">
+<span class="material-symbols-outlined text-[16px]">refresh</span>
+<span>New Code</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Controller Slot Indicators P1-P4 -->
+<div class="pt-2">
+<div class="flex items-center justify-between mb-3">
+<span class="font-label-md text-label-md uppercase tracking-wider font-extrabold text-outline">Console Player Slots</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">1 of 4 Connected</span>
+</div>
+<div class="grid grid-cols-4 gap-space-md">
+<!-- P1 Active -->
+<div class="flex flex-col items-center p-3 rounded-2xl bg-surface-container-lowest shadow-[0_4px_14px_rgba(60,180,231,0.25)] transition-all">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold shadow-[0_0_12px_#3CB4E7]">
+<span class="font-label-lg text-label-lg">P1</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase font-bold text-primary mt-2">Active</span>
+<div class="flex items-center gap-1 mt-1">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-label-sm text-[10px] text-tertiary">Phone</span>
+</div>
+</div>
+<!-- P2 Waiting (Dotted Outline) -->
+<div class="flex flex-col items-center p-3 rounded-2xl bg-surface-container-low/70 shadow-sm opacity-90">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest/60 flex items-center justify-center text-tertiary font-bold">
+<span class="font-label-lg text-label-lg">P2</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase font-bold text-outline mt-2">Ready</span>
+<span class="font-label-sm text-[10px] text-outline-variant mt-1">Slot Open</span>
+</div>
+<!-- P3 Empty -->
+<div class="flex flex-col items-center p-3 rounded-2xl bg-surface-container-low/40 opacity-60">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest/40 flex items-center justify-center text-outline font-bold">
+<span class="font-label-lg text-label-lg">P3</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase font-bold text-outline-variant mt-2">Empty</span>
+<span class="font-label-sm text-[10px] text-outline-variant mt-1">Slot Open</span>
+</div>
+<!-- P4 Empty -->
+<div class="flex flex-col items-center p-3 rounded-2xl bg-surface-container-low/40 opacity-60">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest/40 flex items-center justify-center text-outline font-bold">
+<span class="font-label-lg text-label-lg">P4</span>
+</div>
+<span class="font-label-sm text-label-sm uppercase font-bold text-outline-variant mt-2">Empty</span>
+<span class="font-label-sm text-[10px] text-outline-variant mt-1">Slot Open</span>
+</div>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN: Hardware Motion Remote Graphic & Live Telemetry (5 cols) -->
+<section class="lg:col-span-5 flex flex-col justify-between space-y-6 lg:pl-4">
+<!-- Physical Remote Interaction Illustration Box -->
+<div class="relative w-full rounded-[28px] bg-gradient-to-b from-surface-bright to-surface-container p-6 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_10px_24px_rgba(120,140,160,0.15)] flex flex-col items-center justify-center overflow-hidden min-h-[340px]">
+<!-- Background Motion Arc Lines -->
+<svg class="absolute inset-0 w-full h-full opacity-40 pointer-events-none" fill="none" viewbox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
+<circle cx="200" cy="170" r="140" stroke="#3CB4E7" stroke-dasharray="4 8" stroke-width="1.5"></circle>
+<circle cx="200" cy="170" r="110" stroke="#3CB4E7" stroke-dasharray="12 12" stroke-width="2"></circle>
+<path d="M70 170 C120 70 280 70 330 170" stroke="#3CB4E7" stroke-linecap="round" stroke-width="2"></path>
+<path d="M70 170 C120 270 280 270 330 170" opacity="0.6" stroke="#3CB4E7" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+<!-- Floating Motion Cue Badges -->
+<div class="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-primary text-[16px]">screen_rotation</span>
+<span class="font-label-sm text-label-sm font-bold text-tertiary">Motion Plus 6-Axis</span>
+</div>
+<!-- Stylized Phone as Gamepad Vector Illustration -->
+<div class="relative z-10 flex items-center justify-center -rotate-6 transition-transform hover:rotate-0 duration-300">
+<!-- Simulated Hand Silhouette Aura -->
+<div class="absolute -inset-6 bg-secondary-fixed/50 rounded-[44px] blur-xl"></div>
+<!-- Smartphone Shell in Wii/Nimbus Aesthetic -->
+<div class="relative w-64 h-36 rounded-[28px] bg-surface-container-lowest p-2 shadow-[0_16px_36px_rgba(0,100,146,0.22),inset_0_2px_4px_#FFFFFF] flex flex-col justify-between">
+<!-- Screen Display Interior -->
+<div class="w-full h-full rounded-[22px] bg-inverse-surface p-3 flex flex-col justify-between relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-tr from-primary-container/20 to-transparent"></div>
+<!-- Phone Top Screen Bar -->
+<div class="flex items-center justify-between relative z-10">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>
+<span class="font-label-sm text-[10px] text-on-primary font-bold tracking-wider">NIMBUS CONTROLLER</span>
+</div>
+<span class="font-label-sm text-[10px] text-secondary-fixed">92% ⚡</span>
+</div>
+<!-- Gamepad Face Buttons -->
+<div class="flex items-center justify-between px-2 relative z-10">
+<!-- D-Pad -->
+<div class="relative w-12 h-12 flex items-center justify-center">
+<div class="absolute w-12 h-4 bg-tertiary rounded-md"></div>
+<div class="absolute w-4 h-12 bg-tertiary rounded-md"></div>
+<div class="relative w-3 h-3 rounded-full bg-surface-container-lowest"></div>
+</div>
+<!-- Center Pointer Sensor Visual -->
+<div class="flex flex-col items-center">
+<div class="w-8 h-8 rounded-full bg-primary-container/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed text-[20px]">gamepad</span>
+</div>
+</div>
+<!-- Action Buttons (A & B) -->
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs shadow-[0_0_8px_#3CB4E7]">A</div>
+<div class="w-7 h-7 rounded-full bg-surface-container-lowest/80 text-on-surface flex items-center justify-center font-bold text-xs">B</div>
+</div>
+</div>
+<!-- Lower Status Bar -->
+<div class="flex items-center justify-between text-[9px] text-tertiary-fixed relative z-10">
+<span>GYRO: CALIBRATED</span>
+<span class="text-primary-fixed font-bold">READY</span>
+</div>
+</div>
+<!-- Phone Camera / Speaker notch accent -->
+<div class="absolute top-1/2 left-1.5 -translate-y-1/2 w-1 h-3 rounded-full bg-outline-variant"></div>
+</div>
+<!-- Directional Dynamic Motion Arrows -->
+<div class="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center text-primary animate-bounce">
+<span class="material-symbols-outlined text-[20px]">north_east</span>
+</div>
+</div>
+<div class="mt-4 text-center z-10">
+<span class="font-label-md text-label-md uppercase font-bold text-tertiary tracking-wider">Natural Pointer &amp; Tilt Gestures Active</span>
+</div>
+</div>
+<!-- Telemetry & Pairing Status Cards -->
+<div class="space-y-space-md">
+<!-- Card 1: Player 1 Live Connected -->
+<div class="p-4 rounded-2xl bg-surface-container-lowest shadow-[0_6px_16px_rgba(120,140,160,0.18)] flex items-center justify-between transition-all">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-2xl bg-primary-container/20 flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[28px] text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h4 class="font-headline-md text-body-lg text-on-surface font-extrabold leading-none">Player 1 Connected</h4>
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-[10px] uppercase font-bold">Primary</span>
+</div>
+<div class="flex items-center gap-3 mt-1.5 text-tertiary text-xs">
+<span class="flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[14px] text-primary">battery_5_bar</span> 92%
+                  </span>
+<span>•</span>
+<span class="text-primary font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> 14ms - Excellent
+                  </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="w-9 h-9 rounded-full bg-surface-container-low text-tertiary hover:text-error hover:bg-error-container/30 transition-colors flex items-center justify-center" title="Disconnect P1">
+<span class="material-symbols-outlined text-[18px]">power_settings_new</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Waiting for Next Controller -->
+<div class="p-4 rounded-2xl bg-surface-bright shadow-[inset_0_1px_3px_rgba(200,215,230,0.3)] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="relative w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[24px] animate-spin">sync</span>
+<span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-primary-container animate-ping"></span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-md text-tertiary font-bold leading-tight">Waiting for controller 2...</h4>
+<p class="font-label-sm text-label-sm text-outline mt-0.5">Scan existing QR with another smartphone</p>
+</div>
+</div>
+<span class="font-label-md text-label-md uppercase tracking-wider text-primary font-bold">Pairing...</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Bottom Action Ribbon inside Chassis -->
+<div class="relative z-10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+<!-- Left Utility Pills -->
+<div class="flex items-center gap-space-md w-full sm:w-auto">
+<button class="flex-1 sm:flex-initial px-6 py-3 rounded-full bg-surface-container-lowest text-tertiary font-label-lg text-label-lg font-bold shadow-[0_4px_12px_rgba(120,140,160,0.18)] hover:text-error hover:bg-error-container/20 active:scale-95 transition-all">
+          Disconnect All
+        </button>
+<button class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-surface-container-lowest text-on-surface font-label-lg text-label-lg font-bold shadow-[0_4px_12px_rgba(120,140,160,0.18)] hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-primary text-[20px]">vibration</span>
+<span>Test Motion Sensors</span>
+</button>
+</div>
+<!-- Right Affirmation Pill (Primary Glossy Cyan) -->
+<div class="flex items-center gap-space-md w-full sm:w-auto justify-end">
+<a class="flex-1 sm:flex-initial text-center px-10 py-3.5 rounded-full bg-gradient-to-b from-primary-container to-secondary text-on-primary font-label-lg text-body-lg font-extrabold shadow-[0_8px_24px_rgba(60,180,231,0.45),inset_0_2px_0_rgba(255,255,255,0.7)] hover:scale-105 active:scale-95 transition-all" data-path="channel-grid" href="#">
+          Done
+        </a>
+</div>
+</div>
+</div>
+<!-- Interactive Floating Hand Cursor (Custom Positioned for UI Immersion) -->
+<div class="hidden lg:flex fixed top-[68%] left-[78%] z-50 pointer-events-none drop-shadow-[0_12px_20px_rgba(38,49,62,0.35)] -rotate-12 transition-transform duration-100 ease-out" id="interactive-cursor">
+<div class="relative flex items-center justify-center">
+<!-- Cursor White Outer Stroke -->
+<span class="material-symbols-outlined text-surface-container-lowest text-[56px] select-none stroke-current" style="font-variation-settings: 'FILL' 1;">pan_tool</span>
+<!-- Cursor Dark Core -->
+<span class="material-symbols-outlined absolute text-on-surface text-[50px] select-none" style="font-variation-settings: 'FILL' 1;">pan_tool</span>
+<!-- Player 1 Cyan Pill Pip -->
+<div class="absolute top-3.5 left-4.5 w-4 h-4 rounded-full bg-primary-container shadow-[0_0_8px_#3CB4E7,0_0_0_2px_#FFFFFF] flex items-center justify-center">
+<span class="font-label-sm text-[9px] text-on-primary font-black leading-none">1</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-side Interactive Script for Cursor Glide & Code Pulse -->
+<script>
+  (function() {
+    const cursor = document.getElementById('interactive-cursor');
+    if (!cursor) return;
+
+    // Smooth hover simulation matching Wii pointer inertia
+    document.addEventListener('mousemove', (e) => {
+      window.requestAnimationFrame(() => {
+        cursor.style.transform = `translate(${e.clientX - (window.innerWidth * 0.78)}px, ${e.clientY - (window.innerHeight * 0.68)}px) rotate(-12deg)`;
+      });
+    });
+  })();
+</script></main><footer class="fixed bottom-0 left-0 right-0 h-40 z-40 pointer-events-none"><div class="relative w-full h-full pointer-events-auto"><svg class="absolute bottom-0 left-0 w-full h-40 drop-shadow-[0_-4px_16px_rgba(120,140,160,0.18)]" fill="none" preserveaspectratio="none" viewbox="0 0 1920 160" xmlns="http://www.w3.org/2000/svg"><path d="M0 45 C480 45 760 0 960 0 C1160 0 1440 45 1920 45 V160 H0 V45 Z" fill="#F7F9FF"></path><path d="M0 48 C480 48 760 3 960 3 C1160 3 1440 48 1920 48 V160 H0 V48 Z" fill="url(#footer-light-grad)"></path><defs><lineargradient gradientunits="userSpaceOnUse" id="footer-light-grad" x1="960" x2="960" y1="0" y2="160"><stop stop-color="#FFFFFF"></stop><stop offset="1" stop-color="#DDE9F9"></stop></lineargradient></defs></svg><div class="relative w-full h-full max-w-[1920px] mx-auto px-space-2xl flex items-center justify-between"><div class="flex items-center"><a aria-label="NimbusPlay System Settings" class="group relative w-[110px] h-[110px] rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgba(120,140,160,0.3)] flex items-center justify-center p-1.5 transition-transform hover:scale-105 active:scale-95" data-path="system-settings" href="#"><div class="w-full h-full rounded-full bg-surface-bright flex items-center justify-center shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_0_0_3px_#3CB4E7]"><span class="material-symbols-outlined text-primary text-[42px] group-hover:rotate-45 transition-transform">settings</span></div></a></div><div class="flex flex-col items-center justify-center text-center -translate-y-2"><span class="font-label-md text-label-md tracking-widest uppercase text-tertiary font-bold mb-0.5">SUN 11/19</span><span class="font-display-clock text-display-clock text-tertiary tracking-tight leading-none drop-shadow-sm">14:28</span></div><div class="flex items-center"><a aria-label="Message Board" class="group relative w-[110px] h-[110px] rounded-full bg-surface-container-lowest shadow-[0_8px_20px_rgba(120,140,160,0.3)] flex items-center justify-center p-1.5 transition-transform hover:scale-105 active:scale-95" data-path="message-board" href="#"><div class="w-full h-full rounded-full bg-surface-bright flex items-center justify-center shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),0_0_0_3px_#3CB4E7]"><span class="material-symbols-outlined text-primary text-[42px] group-hover:-translate-y-1 transition-transform">mail</span></div></a></div></div></div></footer><div class="fixed bottom-24 right-1/4 z-50 pointer-events-none drop-shadow-[0_10px_16px_rgba(38,49,62,0.35)] -rotate-12"><div class="relative flex items-center justify-center"><span class="material-symbols-outlined text-surface-container-lowest text-[52px] select-none stroke-current">pan_tool</span><span class="material-symbols-outlined absolute text-on-surface text-[46px] select-none">pan_tool</span><div class="absolute top-3 left-4 w-3.5 h-3.5 rounded-full bg-primary-container shadow-[0_0_6px_#3CB4E7,0_0_0_1.5px_#FFFFFF]"><span class="absolute inset-0 flex items-center justify-center font-label-sm text-[8px] text-on-primary font-bold leading-none">1</span></div></div></div></body></html>
