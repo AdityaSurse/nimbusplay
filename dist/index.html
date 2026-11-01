@@ -1,219 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NimbusPlay — Console (Phase 2 Relay)</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --error: #ef4444;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border);
-    }
-    h1 { font-size: 24px; font-weight: 700; color: var(--accent); }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 9999px;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--border);
-    }
-    .badge.connected { background: rgba(34, 197, 94, 0.15); color: var(--success); }
-    .badge.disconnected { background: rgba(239, 68, 68, 0.15); color: var(--error); }
-    .badge.reconnecting { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 360px 1fr;
-      gap: 20px;
-      flex: 1;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .qr-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 16px;
-      background: #ffffff;
-      border-radius: 8px;
-    }
-    #qrcode-canvas {
-      width: 200px !important;
-      height: 200px !important;
-    }
-    .room-display {
-      text-align: center;
-      color: #0f172a;
-    }
-    .room-code {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 4px;
-      color: #0284c7;
-    }
-    .room-url {
-      font-size: 11px;
-      color: #64748b;
-      word-break: break-all;
-    }
-
-    .status-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      font-size: 14px;
-    }
-    .status-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 6px;
-    }
-    .status-label { color: var(--text-muted); }
-    .status-val { font-weight: 600; }
-
-    .btn {
-      padding: 8px 16px;
-      background: var(--accent);
-      color: #0f172a;
-      border: none;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .btn:hover { opacity: 0.9; }
-
-    .debug-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex: 1;
-      min-height: 400px;
-    }
-    .debug-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .log-container {
-      flex: 1;
-      background: #090d16;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
-      color: #38bdf8;
-      overflow-y: auto;
-      max-height: 520px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .log-line {
-      line-height: 1.4;
-      word-break: break-all;
-    }
-    .log-time { color: var(--text-muted); margin-right: 8px; }
-  </style>
-  <script type="module" crossorigin src="/assets/main-BlRhkuAZ.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NimbusPlay — Domestic Console Hub</title>
+  <script type="module" crossorigin src="/assets/main-83IWFlT_.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/constants-h_hzzWQa.js">
+  <link rel="stylesheet" crossorigin href="/assets/main-VLh1j9nW.css">
 </head>
 <body>
-  <header>
-    <div>
-      <h1>NimbusPlay Console</h1>
-      <span style="font-size: 13px; color: var(--text-muted);">Phase 2: WebSocket Relay & Single-Origin Pairing</span>
-    </div>
-    <div style="display: flex; gap: 10px;">
-      <span id="relay-status" class="badge connecting">Relay: Connecting...</span>
-      <span id="peer-status" class="badge disconnected">Controller: Waiting</span>
-    </div>
-  </header>
 
-  <div class="grid">
-    <div class="card">
-      <div class="card-title">Controller Pairing</div>
-      <div class="qr-container">
-        <canvas id="qrcode-canvas"></canvas>
-        <div class="room-display">
-          <div style="font-size: 11px; text-transform: uppercase; font-weight: bold; color: #475569;">Room Code</div>
-          <div id="room-code-text" class="room-code">----</div>
-          <div id="room-url-text" class="room-url">Fetching LAN IP...</div>
+  <!-- 16:9 Letterboxed Master Console Stage -->
+  <main id="stage">
+    
+    <!-- Ambient Specular Glass Sheen -->
+    <div class="stage-ambient-sheen"></div>
+
+    <!-- Sinusoidal Background Wave Vectors -->
+    <svg class="stage-waves" fill="none" preserveAspectRatio="none" viewBox="0 0 1440 280">
+      <path d="M0 40C320 85 460 10 720 35C980 60 1140 10 1440 30V280H0V40Z" fill="currentColor"></path>
+      <path d="M0 80C340 120 520 50 780 75C1040 100 1200 45 1440 70V280H0V80Z" fill="currentColor" opacity="0.6"></path>
+      <path d="M0 130C300 160 500 110 820 125C1140 140 1260 95 1440 115V280H0V130Z" fill="currentColor" opacity="0.4"></path>
+    </svg>
+
+    <!-- Top Status Chrome Bar -->
+    <header class="console-header">
+      <div class="brand-badge">
+        <div class="brand-icon-orb">
+          <div class="brand-icon-inner">
+            <span class="material-symbols-outlined" style="font-size: 18px;">play_shapes</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+          <span class="brand-title">NimbusPlay</span>
+          <span class="brand-subtitle">Domestic Hub OS</span>
         </div>
       </div>
 
-      <div class="status-list">
-        <div class="status-row">
-          <span class="status-label">Local Host IP</span>
-          <span id="lan-ip-val" class="status-val">...</span>
+      <nav class="nav-pills">
+        <a class="nav-pill active" href="#">Channels</a>
+        <a class="nav-pill" href="#">Library</a>
+        <a class="nav-pill" href="#">Plaza</a>
+        <a class="nav-pill" href="#">SD Vault</a>
+      </nav>
+
+      <div class="top-status-group">
+        <div class="battery-pill" id="header-battery-pill" title="P1 Wand Battery & Wireless">
+          <span style="font-size: 11px; font-weight: 800; color: var(--color-outline); margin-right: 2px;">P1</span>
+          <div class="battery-bar" id="bat-1"></div>
+          <div class="battery-bar" id="bat-2"></div>
+          <div class="battery-bar" id="bat-3"></div>
+          <div class="battery-bar" id="bat-4"></div>
+          <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-primary); margin-left: 4px;">wifi</span>
         </div>
-        <div class="status-row">
-          <span class="status-label">Relay RTT Latency</span>
-          <span id="rtt-val" class="status-val">-- ms</span>
-        </div>
-        <div class="status-row">
-          <span class="status-label">Frames Received</span>
-          <span id="frames-count" class="status-val">0</span>
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--color-primary); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.18);">
+          <span class="material-symbols-outlined" style="font-size: 20px;">person</span>
         </div>
       </div>
+    </header>
 
-      <button id="btn-vibrate" class="btn" style="margin-top: auto;">Send Haptic Ping to Controller</button>
+    <!-- Lateral Pagination Bumper Chevrons -->
+    <button id="btn-page-prev" class="bumper-btn bumper-left" aria-label="Previous Page">
+      <span class="material-symbols-outlined" style="font-size: 34px;">chevron_left</span>
+    </button>
+    <button id="btn-page-next" class="bumper-btn bumper-right" aria-label="Next Page">
+      <span class="material-symbols-outlined" style="font-size: 34px;">chevron_right</span>
+    </button>
+
+    <!-- Central 4x3 Channel Matrix Viewport -->
+    <section class="channel-viewport">
+      <div class="channel-grid" id="channels-grid">
+        <!-- Rendered dynamically by ConsoleShell -->
+      </div>
+      <div class="pagination-pips">
+        <div class="pip active"></div>
+        <div class="pip"></div>
+        <div class="pip"></div>
+        <div class="pip"></div>
+      </div>
+    </section>
+
+    <!-- Bottom Sculpted Console Tray -->
+    <footer class="console-bottom-tray">
+      <div class="bottom-tray-surface">
+        <svg style="position: absolute; bottom: 0; left: 0; width: 100%; height: 145px; filter: drop-shadow(0 -4px 16px rgba(120,140,160,0.18));" fill="none" preserveAspectRatio="none" viewBox="0 0 1920 160">
+          <path d="M0 45 C480 45 760 0 960 0 C1160 0 1440 45 1920 45 V160 H0 V45 Z" fill="#F7F9FF"></path>
+          <path d="M0 48 C480 48 760 3 960 3 C1160 3 1440 48 1920 48 V160 H0 V48 Z" fill="url(#footer-tray-grad)"></path>
+          <defs>
+            <linearGradient id="footer-tray-grad" x1="960" y1="0" x2="960" y2="160" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FFFFFF"></stop>
+              <stop offset="1" stop-color="#DDE9F9"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div class="tray-content-row">
+          <!-- Left Disk: System Settings & Pairing -->
+          <a href="#" id="disk-settings" class="system-disk-btn" aria-label="System Settings & Controller Pairing">
+            <div class="system-disk-inner">
+              <span class="material-symbols-outlined" style="font-size: 42px;">settings</span>
+            </div>
+          </a>
+
+          <!-- Center Live Real-Time Clock HUD -->
+          <div class="center-clock-hud">
+            <span class="clock-date">SUN 11/19</span>
+            <span class="clock-time">14:28</span>
+          </div>
+
+          <!-- Right Disk: Message Board / Pause HUD -->
+          <a href="#" id="disk-messages" class="system-disk-btn" aria-label="Pause Menu / Quick Overlay">
+            <div class="system-disk-inner">
+              <span class="material-symbols-outlined" style="font-size: 42px;">mail</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ==================== MODALS & SCREEN OVERLAYS ==================== -->
+
+    <!-- 1. Channel Launch Dialog Modal -->
+    <div id="launch-dialog-overlay" class="modal-overlay">
+      <div class="modal-dialog-pod" style="max-width: 820px;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, white, transparent); opacity: 0.9;"></div>
+        
+        <!-- 16:9 Banner Preview Container -->
+        <div style="position: relative; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-tile); overflow: hidden; background: #cfdbeb; box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);">
+          <div id="dialog-banner-inner" style="width: 100%; height: 100%;"></div>
+          <!-- Top Left Disc Pip -->
+          <div style="position: absolute; top: 14px; left: 16px; display: flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 9999px; background: rgba(255,255,255,0.94); box-shadow: 0 2px 8px rgba(0,0,0,0.12); z-index: 10;">
+            <span style="width: 9px; height: 9px; border-radius: 50%; background: #3cb4e7; animation: pulse 1.5s infinite;"></span>
+            <span style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #111d28; letter-spacing: 0.08em;">Disc Channel</span>
+          </div>
+          <!-- Bottom Right Stereo Badge -->
+          <div style="position: absolute; bottom: 12px; right: 16px; display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; background: rgba(0,0,0,0.45); color: white; font-size: 11px; font-weight: bold; letter-spacing: 0.1em; z-index: 10;">
+            <span class="material-symbols-outlined" style="font-size: 14px; color: #76d1ff;">volume_up</span>
+            <span>PCM STEREO</span>
+          </div>
+        </div>
+
+        <!-- Channel Metadata Strip -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: #edf4ff; border-radius: 16px; border: 1px solid rgba(207,216,224,0.5);">
+          <div>
+            <div id="dialog-game-title" style="font-size: 24px; font-weight: 800; color: var(--color-on-surface); line-height: 1.2;">Game Title</div>
+            <div id="dialog-game-category" style="font-size: 14px; color: var(--color-outline); margin-top: 3px; font-weight: 600;">Category • Rev 1.00</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="padding: 6px 12px; border-radius: 8px; background: white; font-size: 12px; font-weight: 800; color: #006688; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+              INTERNAL MEMORY
+            </div>
+            <div style="width: 32px; height: 38px; border-radius: 6px; background: white; font-size: 18px; font-weight: 900; color: #111d28; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;">
+              <span>E</span>
+              <span style="font-size: 7px; font-weight: 800; text-transform: uppercase; color: #64748b;">ALL</span>
+            </div>
+          </div>
+        </div>
+
+        <p id="dialog-game-desc" style="font-size: 15px; line-height: 1.6; color: #51606a;">
+          Game description details...
+        </p>
+
+        <!-- Action Pill Buttons Row (Centered Logos & Adjusted Text) -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; padding-top: 10px;">
+          <button id="btn-dialog-back" class="pill-btn pill-btn-secondary" style="flex: 1; height: 60px;">
+            <span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+            <span>Back</span>
+          </button>
+          <button id="btn-dialog-start" class="pill-btn pill-btn-primary" style="flex: 1; height: 60px;">
+            <span class="material-symbols-outlined" style="font-size: 26px;">play_arrow</span>
+            <span>Start</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="card debug-panel">
-      <div class="debug-header">
-        <div class="card-title">Live Inbound Message Stream</div>
-        <button id="btn-clear-logs" class="btn" style="padding: 4px 10px; font-size: 12px; background: var(--border); color: var(--text);">Clear</button>
-      </div>
-      <div id="log-container" class="log-container">
-        <div class="log-line" style="color: var(--text-muted);">Waiting for messages from relay or controller...</div>
+    <!-- 2. Controller Connection Setup Screen -->
+    <div id="pairing-overlay" class="modal-overlay">
+      <div class="modal-dialog-pod" style="max-width: 980px; max-height: 86vh; overflow-y: auto;">
+        
+        <!-- Header Strip -->
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border-seam); padding-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <button id="btn-pairing-close" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 18px; font-size: 14px;">
+              <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+              <span>Back</span>
+            </button>
+            <h2 style="font-size: 24px; font-weight: 800; color: var(--color-on-surface); line-height: 1;">Controller Connection Setup</h2>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--color-primary); background: #e3efff; padding: 6px 14px; border-radius: 9999px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">sensors</span>
+            <span>Nimbus Sync 2.4</span>
+          </div>
+        </div>
+
+        <!-- 2-Column Pairing Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding-top: 12px;">
+          
+          <!-- Left: Mobile Onboarding & Real QR Code -->
+          <div style="display: flex; flex-direction: column; gap: 18px;">
+            <div>
+              <span style="display: inline-block; padding: 3px 12px; border-radius: 9999px; background: #c2e8ff; color: #004d67; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;">Instant Pairing</span>
+              <h3 style="font-size: 26px; font-weight: 800; color: #111d28; margin-top: 6px; line-height: 1.2;">Connect your phone</h3>
+              <p style="font-size: 14px; color: #51606a; margin-top: 4px; line-height: 1.5;">
+                Scan with any mobile camera or navigate directly to the link in Chrome. Zero downloads required.
+              </p>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 20px; border-radius: 24px; background: #f7f9ff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); border: 1px solid #cfd8e0;">
+              <canvas id="pairing-qr-canvas" style="width: 210px; height: 210px; background: white; border-radius: 12px; padding: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.1);"></canvas>
+              <div style="text-align: center;">
+                <div style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #6b7785; letter-spacing: 0.1em;">Room Code</div>
+                <div id="pairing-room-code" style="font-size: 34px; font-weight: 900; letter-spacing: 5px; color: #006688; line-height: 1.1; margin: 2px 0;">----</div>
+                <div id="pairing-room-url" style="font-size: 11px; color: #6b7785; word-break: break-all; font-weight: 600;">Loading...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Controller Bay, Live Telemetry & Log Drawer -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <h4 style="font-size: 18px; font-weight: 800; color: #111d28;">Controller Bay (Player 1)</h4>
+            
+            <div style="padding: 18px; border-radius: 16px; background: #f7f9ff; border: 1px solid #cfd8e0; display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; color: #51606a; font-weight: 600;">Controller Status</span>
+                <span id="pairing-peer-badge" class="badge" style="padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 800; background: #e2e8f0; color: #475569;">Waiting</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; color: #51606a; font-weight: 600;">Relay Latency (RTT)</span>
+                <span id="pairing-rtt-val" style="font-size: 14px; font-weight: 800; color: #006688;">-- ms</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; color: #51606a; font-weight: 600;">Motion Packet Stream</span>
+                <span id="pairing-frames-val" style="font-size: 14px; font-weight: 800; color: #006688;">0 frames</span>
+              </div>
+            </div>
+
+            <div style="font-size: 12px; font-weight: 800; color: #6b7785; text-transform: uppercase; letter-spacing: 0.08em;">Live Inbound Packet Log</div>
+            <div id="pairing-log-box" style="flex: 1; min-height: 120px; max-height: 140px; overflow-y: auto; background: #090e1a; border-radius: 10px; padding: 10px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #38bdf8; border: 1px solid #1e293b;">
+              Waiting for incoming packets...
+            </div>
+
+            <button id="btn-pairing-test-vibrate" class="pill-btn pill-btn-primary" style="height: 48px; font-size: 15px;">
+              <span class="material-symbols-outlined" style="font-size: 20px;">vibration</span>
+              <span>Send Haptic Ping</span>
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- 3. Pause Overlay (Home Menu Overlay HUD) -->
+    <div id="pause-overlay" class="modal-overlay">
+      <div style="position: absolute; inset: 0; background: rgba(247, 249, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);"></div>
+      <!-- Scanline Simulation -->
+      <div style="position: absolute; inset: 0; opacity: 0.035; background: repeating-linear-gradient(0deg, #111d28, #111d28 2px, transparent 2px, transparent 4px); pointer-events: none;"></div>
+
+      <div class="modal-dialog-pod" style="max-width: 680px; z-index: 10; padding: 36px 40px;">
+        <div style="text-align: center; margin-bottom: 6px;">
+          <h2 style="font-size: 30px; font-weight: 800; color: #111d28; line-height: 1.1;">NimbusPlay Menu</h2>
+          <span style="font-size: 12px; text-transform: uppercase; color: #6b7785; letter-spacing: 0.12em; font-weight: 800;">Quick Access Overlay</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; margin: 16px 0;">
+          <button id="btn-pause-resume" class="pill-btn pill-btn-primary" style="justify-content: space-between; padding: 0 28px; height: 60px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span class="material-symbols-outlined" style="font-size: 26px;">play_arrow</span>
+              <span style="font-size: 18px; font-weight: 800;">Resume Game</span>
+            </div>
+            <span class="material-symbols-outlined" style="font-size: 24px;">chevron_right</span>
+          </button>
+
+          <button id="btn-pause-calibrate" class="pill-btn pill-btn-secondary" style="justify-content: space-between; padding: 0 28px; height: 60px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span class="material-symbols-outlined" style="font-size: 24px; color: #006688;">tune</span>
+              <span style="font-size: 18px; font-weight: 800;">Calibrate Pointer</span>
+            </div>
+            <span class="material-symbols-outlined" style="font-size: 24px;">chevron_right</span>
+          </button>
+
+          <button id="btn-pause-pairing" class="pill-btn pill-btn-secondary" style="justify-content: space-between; padding: 0 28px; height: 60px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span class="material-symbols-outlined" style="font-size: 24px; color: #006688;">sensors</span>
+              <span style="font-size: 18px; font-weight: 800;">Controller Pairing</span>
+            </div>
+            <span class="material-symbols-outlined" style="font-size: 24px;">chevron_right</span>
+          </button>
+
+          <button id="btn-pause-menu" class="pill-btn pill-btn-secondary" style="justify-content: space-between; padding: 0 28px; height: 60px; color: #ba1a1a;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span class="material-symbols-outlined" style="font-size: 24px;">home</span>
+              <span style="font-size: 18px; font-weight: 800;">Console Menu</span>
+            </div>
+            <span class="material-symbols-outlined" style="font-size: 24px;">chevron_right</span>
+          </button>
+        </div>
+
+        <button id="btn-pause-close" class="pill-btn pill-btn-secondary" style="height: 46px; font-size: 15px; margin-top: 4px;">
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. Pointer Calibration Screen -->
+    <div id="calibration-overlay" class="modal-overlay">
+      <div class="modal-dialog-pod" style="max-width: 860px; padding: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border-seam); padding-bottom: 14px;">
+          <div>
+            <h2 style="font-size: 24px; font-weight: 800; color: #111d28; line-height: 1.2;">Pointer Calibration & Tuning</h2>
+            <p style="font-size: 14px; color: #51606a; margin-top: 2px;">
+              Point the cursor directly at the center bullseye and press the <strong style="color: #006688;">A</strong> button.
+            </p>
+          </div>
+          <button id="btn-calib-back" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 20px; font-size: 14px;">
+            Back
+          </button>
+        </div>
+
+        <!-- Master Staging Canvas with Radar Grid -->
+        <div style="position: relative; width: 100%; aspect-ratio: 16/9; border-radius: var(--radius-tile); background: #f7f9ff; overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.06); border: 1px solid #cfd8e0; margin: 10px 0;">
+          <svg style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5;" viewBox="0 0 800 450">
+            <circle cx="400" cy="225" r="180" stroke="#bdc8d0" stroke-dasharray="4 6" stroke-width="1" fill="none"></circle>
+            <circle cx="400" cy="225" r="120" stroke="#76d1ff" stroke-width="1.2" fill="none"></circle>
+            <circle cx="400" cy="225" r="60" stroke="#3cb4e7" stroke-dasharray="2 4" stroke-width="1.5" fill="none"></circle>
+            <line x1="400" y1="20" x2="400" y2="430" stroke="#bdc8d0" stroke-width="1"></line>
+            <line x1="40" y1="225" x2="760" y2="225" stroke="#bdc8d0" stroke-width="1"></line>
+          </svg>
+
+          <!-- Reticle Bullseye Target (Centered Circle with Pulsing Dot) -->
+          <div style="position: relative; width: 190px; height: 190px; border-radius: 50%; background: white; box-shadow: 0 8px 24px rgba(60,180,231,0.25); display: flex; align-items: center; justify-content: center;">
+            <svg style="position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg);" viewBox="0 0 190 190">
+              <circle cx="95" cy="95" r="84" stroke="#d7e4f4" stroke-width="7" fill="none"></circle>
+              <circle cx="95" cy="95" r="84" stroke="#3cb4e7" stroke-width="7" fill="none" stroke-dasharray="527" stroke-dashoffset="130" stroke-linecap="round"></circle>
+            </svg>
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: #3cb4e7; box-shadow: 0 0 14px #3cb4e7, 0 0 0 3px white;"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #51606a; font-weight: 600; padding: 4px 4px 0;">
+          <span>Sensor Bar Position: <strong style="color: #111d28;">Above TV</strong></span>
+          <span>Resting Gyro Drift: <strong style="color: #22c55e;">0.02 deg/s (Calibrated)</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom P1 Hand Glove Cursor (Follows Mouse with Sub-pixel Precision) -->
+    <div id="hand-pointer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="54" height="54" fill="none">
+        <filter id="hand-shadow" x="-30%" y="-20%" width="160%" height="160%">
+          <feDropShadow dx="1" dy="3" stdDeviation="3" flood-color="#4A5663" flood-opacity="0.35"/>
+        </filter>
+        <!-- Player 1 cyan indicator ring -->
+        <circle cx="24" cy="40" r="6" fill="#3CB4E7" stroke="#FFFFFF" stroke-width="1.5"/>
+        <text x="24" y="43" text-anchor="middle" font-family="'Nunito', sans-serif" font-weight="900" font-size="7" fill="#FFFFFF">1</text>
+        <!-- Open glove pointer hand -->
+        <path d="M 19 14 C 19 11.5 20.5 10 22 10 C 23.5 10 25 11.5 25 14 L 25 21 C 25 21 26 19 28 19 C 29.5 19 30.5 20.2 30.5 22 C 30.5 22 31.5 20.5 33 20.5 C 34.5 20.5 35.5 21.8 35.5 23.5 L 35.5 26 C 35.5 24.8 36.8 24 38 24 C 39.5 24 40.5 25.2 40.5 27 C 40.5 32 37 36 33 38 C 29 40 21 40 17 35 C 13.5 30.5 13 25 14 22 C 14.5 20.5 16 20.5 17 22 L 19 24.5 Z" fill="#FFFFFF" stroke="#8A96A3" stroke-width="1.8" stroke-linejoin="round" filter="url(#hand-shadow)"/>
+        <path d="M 22 17 L 22 25 M 27.5 22 L 27.5 26 M 33 23 L 33 27" stroke="#CFD8E0" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+  </main>
 
 </body>
 </html>

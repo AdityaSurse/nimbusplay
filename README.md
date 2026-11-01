@@ -504,7 +504,7 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
 - [x] **Phase 1: Tooling & Workspace Setup**
   - [x] Initialize `package.json` with TypeScript, Vite, `@vitejs/plugin-basic-ssl`, `pixi.js`, `ws`, `qrcode`.
   - [x] Configure `vite.config.ts` with SSL certificates and `/ws` reverse proxy.
-  - [ ] Configure `tailwind.config.js` with NimbusPlay design tokens.
+  - [x] Configure design tokens in `src/styles/tokens.css` with NimbusPlay specifications.
 - [x] **Phase 2: Local Relay & Protocol Layer**
   - [x] Implement `server/relay.ts` room manager and WebSocket router.
   - [x] Implement `src/shared/protocol.ts` TypeScript schemas.
@@ -515,12 +515,13 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
   - [ ] Implement Screen Wake Lock and haptic vibration feedback.
 - [ ] **Phase 4: Sensor-to-Pointer Pipeline**
   - [ ] Implement One Euro filter and deadzone mathematics.
-  - [ ] Render custom SVG cursor with hardware-accelerated transforms.
+  - [x] Render custom SVG cursor with hardware-accelerated transforms.
   - [ ] Add Recenter command handling.
-- [ ] **Phase 5: Console Shell UI & Channel Matrix**
-  - [ ] Build 4×3 Channel Grid matching Stitch design tokens.
-  - [ ] Implement Channel Launch modal dialog.
-  - [ ] Implement Home Overlay pause menu.
+- [x] **Phase 5: Console Shell UI & Channel Matrix**
+  - [x] Build 4×3 Channel Grid matching Stitch design tokens.
+  - [x] Implement Channel Launch modal dialog.
+  - [x] Implement Home Overlay pause menu.
+  - [x] Implement Controller Connection Setup & Pointer Calibration screens.
 - [ ] **Phase 6: Web Audio Procedural Synthesizer**
   - [ ] Synthesize UI chirps, clicks, and launch chimes.
   - [ ] Synthesize game sound effects (sword slash, laser blaster, bowling pin strike).

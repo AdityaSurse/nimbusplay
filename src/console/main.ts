@@ -1,7 +1,7 @@
-import QRCode from 'qrcode';
+import { ConsoleShell } from './ui/shell.js';
 import { ConsoleNetworkClient, type NetworkStatus } from './core/network.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
-import type { NimbusNetworkMessage, HapticFeedbackCommand } from '../shared/protocol.js';
+import type { NimbusNetworkMessage, HapticFeedbackCommand, MotionInputFrame } from '../shared/protocol.js';
 
 interface LanInfo {
   lanIp: string;
@@ -13,36 +13,43 @@ let lanIp = window.location.hostname;
 let lanPort = window.location.port ? Number(window.location.port) : 5173;
 let frameCounter = 0;
 let networkClient: ConsoleNetworkClient | null = null;
+let shell: ConsoleShell | null = null;
 
 // DOM Elements
-const relayStatusEl = document.getElementById('relay-status') as HTMLSpanElement;
-const peerStatusEl = document.getElementById('peer-status') as HTMLSpanElement;
-const roomCodeText = document.getElementById('room-code-text') as HTMLDivElement;
-const roomUrlText = document.getElementById('room-url-text') as HTMLDivElement;
-const lanIpVal = document.getElementById('lan-ip-val') as HTMLSpanElement;
-const rttVal = document.getElementById('rtt-val') as HTMLSpanElement;
-const framesCount = document.getElementById('frames-count') as HTMLSpanElement;
-const logContainer = document.getElementById('log-container') as HTMLDivElement;
-const qrcodeCanvas = document.getElementById('qrcode-canvas') as HTMLCanvasElement;
-const btnVibrate = document.getElementById('btn-vibrate') as HTMLButtonElement;
-const btnClearLogs = document.getElementById('btn-clear-logs') as HTMLButtonElement;
+const stageEl = document.getElementById('stage') as HTMLElement;
+const handPointerEl = document.getElementById('hand-pointer') as HTMLElement;
+const pairingPeerBadge = document.getElementById('pairing-peer-badge') as HTMLSpanElement;
+const pairingRttVal = document.getElementById('pairing-rtt-val') as HTMLSpanElement;
+const pairingFramesVal = document.getElementById('pairing-frames-val') as HTMLSpanElement;
+const pairingLogBox = document.getElementById('pairing-log-box') as HTMLDivElement;
+const btnPairingTestVibrate = document.getElementById('btn-pairing-test-vibrate') as HTMLButtonElement;
+const headerBatteryPill = document.getElementById('header-battery-pill') as HTMLDivElement;
 
-function appendLog(text: string, isImportant = false): void {
+// Modal Action Buttons
+const btnDialogBack = document.getElementById('btn-dialog-back');
+const btnDialogStart = document.getElementById('btn-dialog-start');
+const btnPairingClose = document.getElementById('btn-pairing-close');
+const diskSettings = document.getElementById('disk-settings');
+const diskMessages = document.getElementById('disk-messages');
+const btnPauseResume = document.getElementById('btn-pause-resume');
+const btnPauseCalibrate = document.getElementById('btn-pause-calibrate');
+const btnPausePairing = document.getElementById('btn-pause-pairing');
+const btnPauseMenu = document.getElementById('btn-pause-menu');
+const btnPauseClose = document.getElementById('btn-pause-close');
+const btnCalibBack = document.getElementById('btn-calib-back');
+
+function appendLog(text: string): void {
+  if (!pairingLogBox) return;
   const line = document.createElement('div');
-  line.className = 'log-line';
-  if (isImportant) {
-    line.style.color = '#38bdf8';
-    line.style.fontWeight = 'bold';
-  }
+  line.style.lineHeight = '1.4';
   const time = new Date().toLocaleTimeString();
-  line.innerHTML = `<span class="log-time">[${time}]</span> ${escapeHtml(text)}`;
-  logContainer.appendChild(line);
+  line.innerHTML = `<span style="color: #64748b;">[${time}]</span> ${escapeHtml(text)}`;
+  pairingLogBox.appendChild(line);
 
-  // Keep at most 200 lines
-  while (logContainer.children.length > 200) {
-    logContainer.removeChild(logContainer.children[0]);
+  while (pairingLogBox.children.length > 50) {
+    pairingLogBox.removeChild(pairingLogBox.children[0]);
   }
-  logContainer.scrollTop = logContainer.scrollHeight;
+  pairingLogBox.scrollTop = pairingLogBox.scrollHeight;
 }
 
 function escapeHtml(str: string): string {
@@ -56,33 +63,17 @@ async function fetchLanInfo(): Promise<void> {
       const data = (await res.json()) as LanInfo;
       lanIp = data.lanIp;
       lanPort = data.port;
-      lanIpVal.textContent = `${lanIp}:${lanPort}`;
     }
   } catch (err) {
-    console.warn('[Console] Could not fetch LAN info, using fallback hostname:', err);
-    lanIpVal.textContent = `${lanIp}:${lanPort}`;
+    console.warn('[Console] Using fallback hostname for LAN IP:', err);
   }
 }
 
-function updateQrCode(roomId: string): void {
+function getControllerUrl(roomId: string): string {
   const isHttps = window.location.protocol === 'https:';
   const protocol = isHttps ? 'https' : 'http';
   const host = lanIp === 'localhost' || lanIp === '127.0.0.1' ? window.location.hostname : lanIp;
-  const controllerUrl = `${protocol}://${host}:${lanPort}/controller?room=${roomId}`;
-
-  roomCodeText.textContent = roomId;
-  roomUrlText.textContent = controllerUrl;
-
-  QRCode.toCanvas(qrcodeCanvas, controllerUrl, {
-    width: 200,
-    margin: 1,
-    color: {
-      dark: '#0284c7',
-      light: '#ffffff'
-    }
-  }, (err) => {
-    if (err) console.error('[Console] QR generation failed:', err);
-  });
+  return `${protocol}://${host}:${lanPort}/controller?room=${roomId}`;
 }
 
 function initNetwork(): void {
@@ -92,26 +83,43 @@ function initNetwork(): void {
 
   networkClient = new ConsoleNetworkClient(wsUrl, activeRoomId, {
     onStatusChange: (status: NetworkStatus, details?: string) => {
-      relayStatusEl.className = `badge ${status}`;
-      relayStatusEl.textContent = `Relay: ${status.toUpperCase()}${details ? ` (${details})` : ''}`;
-      appendLog(`[Relay Status] ${status} ${details || ''}`, true);
+      appendLog(`[Relay] ${status.toUpperCase()} ${details || ''}`);
     },
     onPeerStatus: (connected: boolean) => {
-      peerStatusEl.className = `badge ${connected ? 'connected' : 'disconnected'}`;
-      peerStatusEl.textContent = connected ? 'Controller: Connected' : 'Controller: Waiting';
-      appendLog(`[Peer Status] Controller is ${connected ? 'CONNECTED' : 'DISCONNECTED'}`, true);
+      if (pairingPeerBadge) {
+        pairingPeerBadge.textContent = connected ? 'Connected' : 'Waiting';
+        pairingPeerBadge.style.background = connected ? 'rgba(34, 197, 94, 0.2)' : '#e2e8f0';
+        pairingPeerBadge.style.color = connected ? '#22c55e' : '#475569';
+      }
+      appendLog(`[Controller] Peer ${connected ? 'CONNECTED' : 'DISCONNECTED'}`);
     },
     onRoomJoined: (roomId: string) => {
       activeRoomId = roomId;
-      updateQrCode(roomId);
-      appendLog(`[Room] Joined room ${roomId}`, true);
+      const url = getControllerUrl(roomId);
+      if (shell) {
+        shell.updatePairingInfo(roomId, url);
+      }
+      appendLog(`[Room] Assigned code: ${roomId}`);
     },
     onLatencyUpdate: (rttMs: number) => {
-      rttVal.textContent = `${rttMs} ms`;
+      if (pairingRttVal) {
+        pairingRttVal.textContent = `${rttMs} ms`;
+      }
     },
     onMessage: (message: NimbusNetworkMessage) => {
       frameCounter++;
-      framesCount.textContent = frameCounter.toString();
+      if (pairingFramesVal) {
+        pairingFramesVal.textContent = `${frameCounter} frames`;
+      }
+
+      if (message.type === 'INPUT_FRAME') {
+        const frame = message as MotionInputFrame;
+        // If controller pressed Home button, toggle Pause HUD
+        if (frame.buttons.home) {
+          shell?.togglePauseOverlay();
+        }
+      }
+
       appendLog(JSON.stringify(message));
     }
   });
@@ -119,28 +127,62 @@ function initNetwork(): void {
   networkClient.connect();
 }
 
-btnVibrate.addEventListener('click', () => {
-  if (networkClient) {
-    const cmd: HapticFeedbackCommand = {
-      type: 'COMMAND_HAPTIC',
-      seq: Date.now(),
-      timestamp: Date.now(),
-      pattern: [50, 30, 50]
-    };
-    networkClient.send(cmd);
-    appendLog('[Action] Sent COMMAND_HAPTIC to controller', true);
-  }
-});
+function bindModalButtons(): void {
+  btnDialogBack?.addEventListener('click', () => shell?.closeLaunchDialog());
+  btnDialogStart?.addEventListener('click', () => {
+    alert('Game Launch animation triggered! Game runtime loads in Phase 7.');
+    shell?.closeLaunchDialog();
+  });
 
-btnClearLogs.addEventListener('click', () => {
-  logContainer.innerHTML = '';
-});
+  btnPairingClose?.addEventListener('click', () => shell?.closePairingScreen());
+  diskSettings?.addEventListener('click', (e) => {
+    e.preventDefault();
+    shell?.openPairingScreen();
+  });
 
-// Boot sequence
+  diskMessages?.addEventListener('click', (e) => {
+    e.preventDefault();
+    shell?.togglePauseOverlay();
+  });
+
+  headerBatteryPill?.addEventListener('click', () => shell?.openPairingScreen());
+
+  btnPauseResume?.addEventListener('click', () => shell?.closePauseOverlay());
+  btnPauseCalibrate?.addEventListener('click', () => {
+    shell?.closePauseOverlay();
+    shell?.openCalibrationScreen();
+  });
+  btnPausePairing?.addEventListener('click', () => {
+    shell?.closePauseOverlay();
+    shell?.openPairingScreen();
+  });
+  btnPauseMenu?.addEventListener('click', () => {
+    shell?.closePauseOverlay();
+  });
+  btnPauseClose?.addEventListener('click', () => shell?.closePauseOverlay());
+
+  btnCalibBack?.addEventListener('click', () => shell?.closeCalibrationScreen());
+
+  btnPairingTestVibrate?.addEventListener('click', () => {
+    if (networkClient) {
+      const cmd: HapticFeedbackCommand = {
+        type: 'COMMAND_HAPTIC',
+        seq: Date.now(),
+        timestamp: Date.now(),
+        pattern: [60, 40, 60]
+      };
+      networkClient.send(cmd);
+      appendLog('[Action] Sent COMMAND_HAPTIC to controller');
+    }
+  });
+}
+
+// Bootstrap Console
 async function boot(): Promise<void> {
+  shell = new ConsoleShell(stageEl, handPointerEl);
+  bindModalButtons();
   await fetchLanInfo();
   initNetwork();
 }
 
 boot();
-
