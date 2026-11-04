@@ -29,6 +29,20 @@ export class SettingsManager {
     return true;
   }
 
+  public static isBowlingPowerMeterEnabled(): boolean {
+    if (typeof localStorage === 'undefined') return false;
+    try {
+      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<PointerSettings>;
+        return parsed.bowlingPowerMeter === true;
+      }
+    } catch {
+      // Fallback
+    }
+    return false;
+  }
+
   public getSettings(): PointerSettings {
     return { ...this.currentSettings };
   }

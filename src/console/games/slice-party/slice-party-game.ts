@@ -5,13 +5,14 @@
  * Strictly typed with zero `any`.
  */
 
-import { Application, Container, Graphics } from 'pixi.js';
+import { Application, Container } from 'pixi.js';
 import type { IGame, GameInputState, GameOptions } from '../common/game-interface.js';
 import { SliceCollision } from './collision.js';
 import { EntityManager, FruitEntity } from './fruit-entity.js';
 import { BladeTrail } from './blade-trail.js';
 import { ParticleSystem } from './particle-system.js';
 import { SlicePartyHUD } from './hud.js';
+import { DojoBackdrop } from './dojo-backdrop.js';
 import { FRUIT_DEFS, type FruitType } from './fruit-graphics.js';
 import { audioManager } from '../../audio/audio-manager.js';
 
@@ -24,6 +25,7 @@ export class SlicePartyGame implements IGame {
   private options: GameOptions | null = null;
 
   // Subsystems
+  private backdrop!: DojoBackdrop;
   private entityManager = new EntityManager();
   private bladeTrail = new BladeTrail();
   private particles = new ParticleSystem();
@@ -72,7 +74,8 @@ export class SlicePartyGame implements IGame {
 
     // Build layered display hierarchy
     this.app.stage.addChild(this.gameStage);
-    this.renderBackdrop();
+    this.backdrop = new DojoBackdrop(options.width, options.height);
+    this.gameStage.addChild(this.backdrop.container);
 
     this.gameStage.addChild(this.entityManager.container);
     this.gameStage.addChild(this.particles.getDisplayObject());
@@ -262,15 +265,6 @@ export class SlicePartyGame implements IGame {
 
       this.entityManager.spawnFruit(type, x, y, vx, vy, vRot);
     }
-  }
-
-  private renderBackdrop(): void {
-    const bg = new Graphics();
-    // Soft vignette ambient background
-    bg.rect(0, 0, 1920, 1080).fill({ color: 0x07111e, alpha: 0.88 });
-    // Decorative traditional wood grain strips
-    bg.rect(0, 1080 - 60, 1920, 60).fill({ color: 0x111d28, alpha: 0.95 });
-    this.gameStage.addChild(bg);
   }
 
   private restartGame(): void {

@@ -384,6 +384,31 @@ export class AudioManager {
   }
 
   /**
+   * Bowling Pin Collision: Multi-tone resonant pulse with fast decay
+   */
+  public playBowlingPinHit(): void {
+    if (this.isMuted || !this.ensureContext()) return;
+    const ctx = this.ctx!;
+    const now = ctx.currentTime;
+
+    [480, 720, 1140, 1420].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.75, now + 0.18);
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.28 / (idx + 1), now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain!);
+      osc.start(now);
+      osc.stop(now + 0.24);
+    });
+  }
+
+  /**
    * Channel / Button Click: sine envelope pulse
    */
   public playClick(): void {

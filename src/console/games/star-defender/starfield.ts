@@ -85,12 +85,17 @@ export class Starfield {
   public render(): void {
     this.g.clear();
 
-    // Deep space backdrop fill
-    this.g.rect(0, 0, this.width, this.height).fill(0x060913);
+    // Deep space backdrop fill (100% opaque, covers entire canvas)
+    this.g.rect(0, 0, this.width, this.height).fill(0x040711);
 
-    // Subtle galactic nebula gradients
-    this.g.circle(400, 300, 320).fill({ color: 0x1e1b4b, alpha: 0.25 });
-    this.g.circle(1500, 750, 420).fill({ color: 0x082f49, alpha: 0.25 });
+    // Deep cosmic nebulae clusters
+    this.g.circle(380, 260, 360).fill({ color: 0x2e1065, alpha: 0.22 });
+    this.g.circle(1520, 680, 440).fill({ color: 0x083344, alpha: 0.24 });
+    this.g.circle(960, 480, 320).fill({ color: 0x1e1b4b, alpha: 0.18 });
+
+    // Subtle edge space vignette
+    this.g.rect(0, 0, this.width, 60).fill({ color: 0x010308, alpha: 0.4 });
+    this.g.rect(0, this.height - 60, this.width, 60).fill({ color: 0x010308, alpha: 0.4 });
 
     // Draw all stars
     for (let i = 0; i < this.stars.length; i++) {

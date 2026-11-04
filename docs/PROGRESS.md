@@ -17,7 +17,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase 6** | Web Audio Sound Synthesis Engine | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 7** | Game 1: Slice Party (Fruit Slicing) | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
 | **Phase 8** | Game 2: Star Defender (Aim-and-Shoot) | **Complete** | 2026-11-01 | 2026-11-01 | Verified |
-| **Phase 9** | Game 3: Bowl Blitz (Throw Motion Bowling) | Not Started | — | — | — |
+| **Phase 9** | Game 3: Bowl Blitz (Throw Motion Bowling) | **Complete** | 2026-11-04 | 2026-11-04 | Verified |
 | **Phase 10**| System Integration, Polish & Performance Tuning | Not Started | — | — | — |
 
 ---
@@ -214,16 +214,37 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] 22/22 unit tests passing; strict `tsc --noEmit` and Vite production build pass with 0 errors.
 - **Log Notes**:
   - Fully decoupled architecture using small modular files (< 250 lines / < 350 lines). Pure unit test suite for lead prediction math and object pool guarantees robust runtime stability. Single HTTPS origin and relay protocol preserved.
+  - Resolved game isolation bug: `#game-container` elevated to `z-index: 45` with `#stage.in-game` hiding all Wii console chrome (top header, bottom tray, clock, channel matrix, and background waves). Each game now launches in its own dedicated, 100% opaque thematic window: Slice Party features an authentic Fruit-Ninja-style procedural wooden dojo table/wall (`dojo-backdrop.ts`), Star Defender features a deep space cosmic nebula arena (`starfield.ts`), and Bowl Blitz features a hardwood perspective bowling lane (`bowling-backdrop.ts`).
 
 ---
 
 ### Phase 9: Game 3 — Bowl Blitz
-- **Status**: Not Started
-- **Key Deliverables**: Pseudo-3D bowling alley in PixiJS, swing-and-release throw gesture detection, pin physics collision, 10-frame scorecard.
+- **Status**: Complete
+- **Key Deliverables**:
+  - `src/console/games/bowl-blitz/types.ts`: Type definitions for `PinState`, `ThrowParameters`, `FrameScore`, `ReplayFrame`, and `ThrowStage`.
+  - `src/console/games/bowl-blitz/bowling-scorecard.ts`: Official 10-frame bowling scorecard engine tracking strikes (`X`), spares (`/`), open frames, 10th-frame 3-roll bonus rules, and cumulative running scores.
+  - `src/console/games/bowl-blitz/throw-detector.ts`: Forward swing accelerometer peak detection ($a_{\text{fwd}} \ge 5.5\,\text{m/s}^2$), backswing bonus, wrist roll rate ($\gamma$) hook spin derivation, yaw ($\alpha$) direction mapping, and oscillating power-meter fallback mode.
+  - `src/console/games/bowl-blitz/bowling-physics.ts`: Pseudo-3D perspective lane projection ($y: 980 \to 260$, lane width $960 \to 360$), dynamic ball scaling, late-hook curve ($y < 680$), gutter channels, ball-pin collisions, and pin-to-pin chain reaction domino physics.
+  - `src/console/games/bowl-blitz/replay-system.ts`: Circular keyframe snapshot recorder (40 fps) and 0.6x slow-motion playback system.
+  - `src/console/games/bowl-blitz/bowling-backdrop.ts`: 100% opaque perspective maple hardwood lane, foul line, side gutters, targeting arrows, and pin deck.
+  - `src/console/games/bowl-blitz/bowling-hud.ts`: 10-frame overhead TV monitor scoreboard, strike/spare/gutter celebratory banners, vertical power-meter bar, slow-mo replay badge, and Game Over card.
+  - `src/console/games/bowl-blitz/bowl-blitz-game.ts`: Master `IGame` loop orchestrating all bowling subsystems, pin rack re-racking, audio, and controller haptic rumble.
+  - `src/console/audio/audio-manager.ts`: Procedural `playBowlingPinHit()` synthesizing multi-tone resonant pulse ($480, 720, 1140, 1420\,\text{Hz}$) with rapid exponential decay.
+  - `src/console/pointer/settings-manager.ts` & `index.html`: "Bowl Blitz: Power Meter Mode" toggle persisted in `localStorage` for pointer-aim & power meter fallback.
 - **Verification Criteria**:
-  - Holding B, swinging phone forward, and releasing B throws ball down lane with realistic speed and spin hook.
+  - [x] Continuous 60 fps rendering on PixiJS v8 canvas.
+  - [x] Holding B arms the swing; swinging phone forward and releasing B launches the ball with forward speed and hook spin.
+  - [x] Wrist roll ($\gamma$) authentically introduces late curve into the 1-3 pocket.
+  - [x] Balls straying beyond lane bounds drop into gutters and roll into the pit without hitting pins.
+  - [x] Multi-pin collisions produce authentic pin-to-pin chain reactions and domino falls.
+  - [x] Complete 10-frame scoring rules: strikes, spares, open frames, and 10th-frame 3-roll condition verified across edge cases (including perfect 300 game and all-spares 150 game).
+  - [x] Instant slow-motion replay (0.6x) recorded during rolls and playable via the "REPLAY (B)" button on deck.
+  - [x] Power Meter Mode fallback toggle in Settings enables desktop mouse / button testing with oscillating power gauge and pointer drift hook spin.
+  - [x] Synthesized pin clatter sound effect and haptic rumble on pin hits and strikes.
+  - [x] 35/35 automated unit tests pass (13 new bowling tests covering scoring, throw detection, and physics); `tsc --noEmit` and Vite production build pass with 0 errors.
 - **Log Notes**:
-  - *No entries yet.*
+  - Strictly adheres to the modularity constraints: `bowl-blitz-game.ts` is 325 lines (under 350 max limit), and all supporting modules are $< 250$ lines.
+  - Single HTTPS origin and WebSocket relay protocol fully maintained. No external assets or Nintendo IP used.
 
 ---
 

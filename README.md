@@ -540,7 +540,12 @@ The visual presentation adheres to the specifications in [`design/DESIGN.md`](fi
 - [x] **Phase 8: Game 2 — Star Defender**
   - [x] Build starfield parallax, target crosshair, laser pooling, and enemy wave combat.
   - [x] Build mothership boss every 5 waves, power-ups, lead aim assist toggle, and haptic rumble.
-- [ ] **Phase 9: Game 3 — Bowl Blitz**
-  - [ ] Build perspective lane, swing/release gesture detector, and pin cluster physics.
+- [x] **Phase 9: Game 3 — Bowl Blitz**
+  - [x] Build perspective lane, swing/release gesture detector, and pin cluster physics.
+  - [x] Official 10-frame bowling scorecard engine (strikes, spares, 10th-frame 3-roll bonus rules).
+  - [x] Accelerometer peak forward swing detection & wrist roll rate hook curve ($y < 680$).
+  - [x] 0.6x slow-motion instant replay recorder and playback system.
+  - [x] Settings fallback: Pointer-aim + power-meter throw mode for mouse or motion calibration.
+  - [x] Synthesized pin collision sound and haptic vibration feedback.
 - [ ] **Phase 10: Performance Tuning & Final Polish**
   - [ ] Measure end-to-end latency, audit 60 fps rendering, and verify error recoveries.

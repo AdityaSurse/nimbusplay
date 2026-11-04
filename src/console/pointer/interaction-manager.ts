@@ -8,6 +8,7 @@
 import { PointerPipeline } from './pipeline.js';
 import { CalibrationManager } from './calibration.js';
 import { SettingsManager } from './settings-manager.js';
+import type { MotionSample } from './types.js';
 import { BUTTON_MASKS, type CompactMotionPacket, type MotionInputFrame } from '../../shared/protocol.js';
 
 export interface ConsoleInteractionCallbacks {
@@ -41,6 +42,10 @@ export class InteractionManager {
   private homePressStart = 0;
   private activeChannelIndex = 0;
   private isCalibrating = false;
+  private latestMotion: MotionSample = {
+    rotationRate: { alpha: 0, beta: 0, gamma: 0 },
+    acceleration: { x: 0, y: 0, z: 9.8 }
+  };
 
   constructor(
     stageEl: HTMLElement,
@@ -91,6 +96,10 @@ export class InteractionManager {
     return this.isMouseDown;
   }
 
+  public getLatestMotion(): MotionSample {
+    return this.latestMotion;
+  }
+
   public updateViewport(width: number, height: number): void {
     this.pipeline.setViewport({ width, height });
   }
@@ -128,6 +137,8 @@ export class InteractionManager {
       if (f.buttons.home) bitmask |= BUTTON_MASKS.HOME;
       if (f.buttons.recenter) bitmask |= BUTTON_MASKS.RECENTER;
     }
+
+    this.latestMotion = sample;
 
     // 1. If currently on Calibration screen, pass sample to calibrator
     if (this.isCalibrating) {
@@ -272,6 +283,9 @@ export class InteractionManager {
     const toggleAimAssist = document.getElementById('setting-aim-assist') as HTMLInputElement | null;
     const knobAimAssist = document.getElementById('knob-aim-assist');
     const sliderAimAssist = document.getElementById('slider-aim-assist');
+    const toggleBowlingMeter = document.getElementById('setting-bowling-meter') as HTMLInputElement | null;
+    const knobBowlingMeter = document.getElementById('knob-bowling-meter');
+    const sliderBowlingMeter = document.getElementById('slider-bowling-meter');
     const labelSens = document.getElementById('label-val-sensitivity');
     const labelSmooth = document.getElementById('label-val-smoothing');
     const labelDead = document.getElementById('label-val-deadzone');
@@ -291,6 +305,13 @@ export class InteractionManager {
       if (knobAimAssist) knobAimAssist.style.left = enabled ? '22px' : '3px';
     };
     updateAimAssistVisual(cur.aimAssist ?? true);
+
+    const updateBowlingMeterVisual = (enabled: boolean) => {
+      if (toggleBowlingMeter) toggleBowlingMeter.checked = enabled;
+      if (sliderBowlingMeter) sliderBowlingMeter.style.backgroundColor = enabled ? '#006688' : '#bdc8d0';
+      if (knobBowlingMeter) knobBowlingMeter.style.left = enabled ? '22px' : '3px';
+    };
+    updateBowlingMeterVisual(cur.bowlingPowerMeter ?? false);
 
     sliderSens?.addEventListener('input', () => {
       const val = parseFloat(sliderSens.value);
@@ -320,6 +341,13 @@ export class InteractionManager {
       this.pipeline.updateSettings({ aimAssist: enabled });
     });
 
+    toggleBowlingMeter?.addEventListener('change', () => {
+      const enabled = toggleBowlingMeter.checked;
+      updateBowlingMeterVisual(enabled);
+      this.settingsManager.update({ bowlingPowerMeter: enabled });
+      this.pipeline.updateSettings({ bowlingPowerMeter: enabled });
+    });
+
     btnReset?.addEventListener('click', () => {
       const def = this.settingsManager.resetToDefaults();
       if (sliderSens) sliderSens.value = def.sensitivity.toString();
@@ -329,6 +357,7 @@ export class InteractionManager {
       if (labelSmooth) labelSmooth.textContent = `${def.minCutoff.toFixed(1)} Hz`;
       if (labelDead) labelDead.textContent = `${def.deadZone.toFixed(1)} deg/s`;
       updateAimAssistVisual(def.aimAssist ?? true);
+      updateBowlingMeterVisual(def.bowlingPowerMeter ?? false);
       this.pipeline.updateSettings(def);
     });
 

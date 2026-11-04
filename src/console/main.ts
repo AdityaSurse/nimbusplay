@@ -3,6 +3,7 @@ import { ConsoleNetworkClient, type NetworkStatus } from './core/network.js';
 import { DebugOverlay } from './core/debug-overlay.js';
 import { InteractionManager } from './pointer/interaction-manager.js';
 import { GameManager } from './games/game-manager.js';
+import { audioManager } from './audio/audio-manager.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
 import { 
   isCompactPacket,
@@ -153,6 +154,7 @@ function bindModalButtons(): void {
     const game = shell?.getActiveDialogGame();
     if (game) {
       shell?.closeLaunchDialog();
+      audioManager.playLaunchChime();
       await gameManager?.launchGame(game.id, {
         sendHaptic: (pattern) => {
           if (networkClient) {
@@ -234,6 +236,7 @@ async function boot(): Promise<void> {
   const gameContainer = document.getElementById('game-container') as HTMLElement;
   gameManager = new GameManager(gameContainer, (isRunning) => {
     interaction?.setGameActive(isRunning);
+    stageEl.classList.toggle('in-game', isRunning);
     if (gameContainer) {
       gameContainer.style.display = isRunning ? 'block' : 'none';
     }
@@ -278,12 +281,16 @@ async function boot(): Promise<void> {
       const bitmask = interaction?.getBitmask() ?? 0;
       const isMouseDown = interaction?.getIsMouseDown() ?? false;
 
+      const motion = interaction?.getLatestMotion();
+
       gameManager.update({
         pointerX: pos?.x ?? 960,
         pointerY: pos?.y ?? 540,
         isSliceHeld: (bitmask & BUTTON_MASKS.B) !== 0 || isMouseDown,
         isTriggerPressed: (bitmask & BUTTON_MASKS.A) !== 0,
-        rawBitmask: bitmask
+        rawBitmask: bitmask,
+        accel: motion ? { ...motion.acceleration } : undefined,
+        gyro: motion ? { ...motion.rotationRate } : undefined
       });
     }
     requestAnimationFrame(tickGame);

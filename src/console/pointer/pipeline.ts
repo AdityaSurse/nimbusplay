@@ -22,7 +22,8 @@ export const DEFAULT_POINTER_SETTINGS: PointerSettings = {
   dCutoff: 1.0,
   deadZone: 0.6,
   edgeSoftMargin: 24,
-  aimAssist: true
+  aimAssist: true,
+  bowlingPowerMeter: false
 };
 
 export class PointerPipeline {

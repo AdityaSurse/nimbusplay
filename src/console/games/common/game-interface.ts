@@ -10,6 +10,8 @@ export interface GameInputState {
   isSliceHeld: boolean;    // B button held (or left click held)
   isTriggerPressed: boolean; // Button pressed this frame
   rawBitmask: number;     // Active 12-bit button bitmask
+  accel?: { x: number; y: number; z: number };             // Device linear + gravity acceleration (m/s^2)
+  gyro?: { alpha: number; beta: number; gamma: number };    // Rotation rates (deg/s): yaw, pitch, roll
 }
 
 export interface GameOptions {

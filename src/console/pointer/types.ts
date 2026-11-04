@@ -11,6 +11,7 @@ export interface PointerSettings {
   deadZone: number;           // Angular deadzone threshold in deg/s (default: 0.6)
   edgeSoftMargin: number;     // Soft stop margin in pixels (default: 24)
   aimAssist: boolean;         // Lead-the-target predictive aim assist (default: true)
+  bowlingPowerMeter: boolean; // Bowl Blitz fallback mode: pointer-aim + power meter (default: false)
 }
 
 export interface GyroBiasCalibration {
