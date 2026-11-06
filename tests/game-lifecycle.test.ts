@@ -28,18 +28,21 @@ describe('Game Remake Catalog & Channel Matrix Tests', () => {
     }
   });
 
-  it('should render 5 game tiles and 7 ghost tiles in the DOM HTML', () => {
-    const html = renderChannelsGridHtml();
+  it('should render 4 game tiles and 8 ghost tiles on main menu matching reference photo', () => {
+    const html = renderChannelsGridHtml(0);
     assert.ok(html.includes('data-game="fruitNinja"'));
     assert.ok(html.includes('data-game="alienAttack"'));
     assert.ok(html.includes('data-game="shootingRange"'));
     assert.ok(html.includes('data-game="sketch"'));
-    assert.ok(html.includes('data-game="turboCircuit"'));
 
-    // Count ghost tiles
+    // Count ghost tiles (exactly 8 on page 0)
     const ghostMatches = html.match(/empty-slot/g);
     assert.ok(ghostMatches !== null);
-    assert.equal(ghostMatches.length, 7);
+    assert.equal(ghostMatches.length, 8);
+
+    // Page 2 contains Turbo Circuit
+    const page1 = renderChannelsGridHtml(1);
+    assert.ok(page1.includes('data-game="turboCircuit"'));
   });
 
   it('should contain zero references to deprecated legacy games in catalog', () => {

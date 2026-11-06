@@ -81,43 +81,33 @@
     <!-- Bottom Sculpted Console Tray -->
     <footer class="console-bottom-tray">
       <div class="bottom-tray-surface">
-        <svg style="position: absolute; bottom: 0; left: 0; width: 100%; height: 145px; filter: drop-shadow(0 -4px 16px rgba(120,140,160,0.18));" fill="none" preserveAspectRatio="none" viewBox="0 0 1920 160">
-          <path d="M0 45 C480 45 760 0 960 0 C1160 0 1440 45 1920 45 V160 H0 V45 Z" fill="#F7F9FF"></path>
-          <path d="M0 48 C480 48 760 3 960 3 C1160 3 1440 48 1920 48 V160 H0 V48 Z" fill="url(#footer-tray-grad)"></path>
-          <defs>
-            <linearGradient id="footer-tray-grad" x1="960" y1="0" x2="960" y2="160" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#FFFFFF"></stop>
-              <stop offset="1" stop-color="#DDE9F9"></stop>
-            </linearGradient>
-          </defs>
+        <svg style="position: absolute; bottom: 0; left: 0; width: 100%; height: 125px; filter: drop-shadow(0 -4px 14px rgba(120,140,160,0.12));" fill="none" preserveAspectRatio="none" viewBox="0 0 1920 125">
+          <path d="M0 38 C480 38 760 0 960 0 C1160 0 1440 38 1920 38 V125 H0 V38 Z" fill="#FFFFFF"></path>
         </svg>
 
         <div class="tray-content-row">
-          <!-- Left Disk: System Settings & Options -->
-          <a href="#" id="disk-settings" class="system-disk-btn" aria-label="System Settings & Options">
-            <div class="system-disk-inner">
-              <span class="material-symbols-outlined" style="font-size: 38px;">settings</span>
-            </div>
-          </a>
+          <!-- Left Label: Channels (opens Settings) -->
+          <div class="tray-left-label" id="disk-settings" title="Channels">
+            <span>Channels</span>
+          </div>
 
-          <!-- Ambience Music Mute/Unmute Pill Button -->
-          <button id="btn-toggle-ambience" class="ambience-pill-btn" aria-label="Toggle Background Ambience">
+          <!-- Hidden Ambient audio toggle kept for DOM binding -->
+          <button id="btn-toggle-ambience" class="ambience-pill-btn" aria-label="Toggle Background Ambience" style="display: none;">
             <span id="ambience-icon" class="material-symbols-outlined" style="font-size: 18px; color: #006688;">music_note</span>
             <span id="ambience-label">Music: On</span>
           </button>
 
           <!-- Center Live Real-Time Clock HUD -->
           <div class="center-clock-hud">
-            <span class="clock-date">SUN 11/19</span>
-            <span class="clock-time">14:28</span>
+            <span class="clock-time">3:50</span>
           </div>
 
           <!-- Bottom-Right Live Pairing QR Dock Badge -->
           <div id="dock-qr-link" class="dock-qr-card" title="Scan with phone camera to connect Wand">
             <div class="dock-qr-canvas-wrap">
-              <canvas id="dock-qr-canvas" width="72" height="72"></canvas>
+              <canvas id="dock-qr-canvas" width="68" height="68"></canvas>
             </div>
-            <div class="dock-qr-meta">
+            <div class="dock-qr-meta" style="display: none;">
               <span class="dock-qr-title">PAIR PHONE</span>
               <span id="dock-qr-code" class="dock-qr-code">----</span>
             </div>

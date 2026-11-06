@@ -1,5 +1,6 @@
 /**
  * NimbusPlay — Games Catalog & Channel Grid View
+ * Matches reference monitor layout: 4 top-row game tiles + 8 faint ghost tiles.
  * Strictly typed with zero `any`. Target < 250 lines.
  */
 
@@ -69,9 +70,25 @@ export const GAMES_CATALOG: Record<string, GameMetadata> = {
   }
 };
 
-export function renderChannelsGridHtml(): string {
+export function renderChannelsGridHtml(page = 0): string {
+  if (page === 1) {
+    // Page 2: Turbo Circuit in slot 1 + 11 ghost tiles
+    return `
+      <div class="channel-tile game-tile group" data-action="launch" data-game="turboCircuit" data-slot="1">
+        ${CHANNEL_ART.turboCircuit}
+      </div>
+      ${Array.from({ length: 11 }).map((_, i) => `
+        <div class="channel-tile ghost-tile empty-slot group" data-slot="${i + 2}">
+          ${CHANNEL_ART.ghostTile}
+        </div>
+      `).join('')}
+    `;
+  }
+
+  // Page 0: Exactly matches reference photo
+  // Top Row: 4 colorful tiles (Fruit Ninja, Alien Attack, Shooting Range, Sketch)
+  // Rows 2 & 3: 8 faint empty ghost tiles
   return `
-    <!-- Top Row: 4 Colorful Glossy Game Tiles + Row 2 Start: Turbo Circuit -->
     <div class="channel-tile game-tile group" data-action="launch" data-game="fruitNinja" data-slot="1">
       ${CHANNEL_ART.fruitNinja}
     </div>
@@ -88,13 +105,8 @@ export function renderChannelsGridHtml(): string {
       ${CHANNEL_ART.sketch}
     </div>
 
-    <!-- Row 2: Tile 5 (Turbo Circuit) + 7 Faint Ghost Tiles -->
-    <div class="channel-tile game-tile group" data-action="launch" data-game="turboCircuit" data-slot="5">
-      ${CHANNEL_ART.turboCircuit}
-    </div>
-
-    ${Array.from({ length: 7 }).map((_, i) => `
-      <div class="channel-tile ghost-tile empty-slot group" data-slot="${i + 6}">
+    ${Array.from({ length: 8 }).map((_, i) => `
+      <div class="channel-tile ghost-tile empty-slot group" data-slot="${i + 5}">
         ${CHANNEL_ART.ghostTile}
       </div>
     `).join('')}

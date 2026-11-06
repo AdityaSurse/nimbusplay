@@ -149,21 +149,15 @@ export class ConsoleShell {
 
   public changePage(delta: number): void {
     this.currentPage = (this.currentPage + delta + this.maxPages) % this.maxPages;
-    const pips = document.querySelectorAll('.pagination-pips .pip');
-    pips.forEach((pip, idx) => {
-      pip.classList.toggle('active', idx === this.currentPage);
-    });
+    this.renderHomeMenu();
     audioManager.playPageTurn();
   }
 
   private initClock(): void {
     const updateTime = () => {
       const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-      const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-      const dateStr = `${days[now.getDay()]} ${now.getMonth() + 1}/${now.getDate()}`;
+      const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
       document.querySelectorAll('.clock-time').forEach((el) => { el.textContent = timeStr; });
-      document.querySelectorAll('.clock-date').forEach((el) => { el.textContent = dateStr; });
     };
     updateTime();
     setInterval(updateTime, 1000);
@@ -172,7 +166,7 @@ export class ConsoleShell {
   private renderHomeMenu(): void {
     const gridEl = document.getElementById('channels-grid');
     if (!gridEl) return;
-    gridEl.innerHTML = renderChannelsGridHtml();
+    gridEl.innerHTML = renderChannelsGridHtml(this.currentPage);
     this.bindGridEvents();
   }
 
