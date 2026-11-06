@@ -819,10 +819,13 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [x] Player starship with white fuselage, red delta wings, animated blue thruster exhaust dots, and banking roll tilt.
   - [x] Landscape phone tilt steering & dual firing buttons; descending asteroids, saucers, and alien in glowing ring bubble.
   - [x] Top-left score & BEST; top-right 3 green hearts for hull lives and shield active indicator; power-up capsules.
-- [ ] **Phase R5: Game 3 — Shooting Range (Carnival Target Pop)**
-  - [ ] Sunny daytime sky with drifting cartoon clouds and rolling green grass hill.
-  - [ ] Pop-up animated concentric ring bullseye targets (red, orange, black).
-  - [ ] Instantaneous hitscan trigger fire with floating score text (`+16`, `+20`).
+- [x] **Phase R5: Game 3 — Shooting Range (Carnival Target Pop)**
+  - [x] Bright blue cartoon sky with drifting fluffy cumulus clouds and warm sun glare.
+  - [x] Layered rolling green grass meadow with rounded cartoon trees on the left and right flanks.
+  - [x] Pop-up and floating concentric bullseye targets (red & white, gold-ringed, black-ringed).
+  - [x] Gyro pointer precision crosshair with animated recoil kick and hitscan line-of-sight testing.
+  - [x] Proximity scoring (+25 dead center bullseye, +15 inner, +10 outer) and floating "+N" popups.
+  - [x] 60-second round countdown timer with accuracy stats and Round Over modal.
 - [ ] **Phase R6: Game 4 — Sketch (Interactive Whiteboard Canvas)**
   - [ ] Clean digital whiteboard canvas (`#FFFFFF`).
   - [ ] Left vertical color palette swatches, brush size dots, eraser, and clear tools.

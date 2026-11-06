@@ -31,7 +31,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase R2** | Controller Dynamic Layout Mode (Landscape Flight Yoke) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R3** | Game 1: Fruit Ninja (Cedar Planks, `X X X` Strikes & Splatters) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R4** | Game 2: Alien Attack (3D Cosmic Rail Shooter & Dual Thumb) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
-| **Phase R5** | Game 3: Shooting Range (Carnival Sky, Grass & Bullseyes) | Not Started | — | — | — |
+| **Phase R5** | Game 3: Shooting Range (Carnival Sky, Grass & Bullseyes) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R6** | Game 4: Sketch (Interactive Whiteboard & Spline Ink) | Not Started | — | — | — |
 | **Phase R7** | Remake System Integration, Latency Profiling & QA | Not Started | — | — | — |
 
@@ -413,4 +413,29 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] 37/37 unit tests pass across 9 test suites in <100ms (`npm test`).
   - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors.
   - [x] All files strictly obey line count limits (<250 lines per module, <350 lines for game loop).
+
+---
+
+### Phase R5: Game 3 — Shooting Range Remake
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/console/games/shooting-range/range-backdrop.ts`: Bright cartoon sky blue gradient (`#38bdf8` to `#93c5fd`), warm sun glare, 5 fluffy drifting cumulus clouds with horizontal parallax, layered rolling green grass meadow (`#4ade80`, `#22c55e`), cute meadow flower dots, and rounded cartoon trees on the left and right flanks.
+  - `src/console/games/shooting-range/target-graphics.ts`: Concentric vector bullseye target renderer for Red, Gold, and Black variants, with wooden ground stakes, specular rim highlights, and splinter fragments.
+  - `src/console/games/shooting-range/crosshair.ts`: Precision aiming reticle tracking wand pointer coordinates, featuring precision outer circle, 4 tick marks, red center pip, and animated spring recoil kick on shot.
+  - `src/console/games/shooting-range/target-manager.ts`: Spawns pop-up targets behind grass hills and floating targets in the sky. Hitscan proximity detection calculates points: +25 for dead-center bullseye, +15 for inner ring, +10 for outer ring. Generates splinter destruction particles and manages target lifecycles.
+  - `src/console/games/shooting-range/range-hud.ts`: Frosted top-left score card with mini bullseye badge and high score tracking, top-right 60-second round countdown timer pill (urgency indicator under 10s) and accuracy stats (`ACC: 88%`), floating "+N" score popups, and Round Over dialog with Play Again and Menu pill buttons.
+  - `src/console/games/shooting-range/shooting-range-game.ts`: Master `IGame` loop ($< 250$ lines) wiring gyro pointer tracking, A-button and trigger hitscan shooting, recoil, Web Audio effects (`playBullseyeBell`, `playCarnivalPop`), haptic rumble on fire and bullseye hits, and clean teardown.
+  - `src/console/games/game-manager.ts`: Wired `shootingRange` channel tile launch.
+  - `tests/shooting-range.test.ts`: Added 7 unit tests verifying hitscan scoring mathematics (bullseye, inner, outer, miss), crosshair recoil and decay, and shot accuracy calculations.
+- **Verification Criteria**:
+  - [x] Bright blue sky with fluffy white clouds, green meadow, and cartoon trees matching `reel-games.png` (bottom-left).
+  - [x] Concentric bullseyes in red, gold, and black variants popping up in grass and floating across clouds.
+  - [x] Precision reticle following gyro pointer and mouse with recoil animation.
+  - [x] Shooting with A button, trigger, or mouse click triggers hitscan testing.
+  - [x] Floating "+N" score popups at hit position (+25 BULLSEYE!, +15, +10).
+  - [x] 60-second timed round system with Round Over statistics modal.
+  - [x] Hit and miss Web Audio sounds and phone haptic vibration feedback.
+  - [x] 44/44 unit tests pass across 12 test suites in <100ms (`npm test`).
+  - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors.
+  - [x] All modules adhere strictly to line count limits (<250 lines per module).
 

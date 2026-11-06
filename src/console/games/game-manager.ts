@@ -7,6 +7,7 @@
 import type { IGame, GameInputState, GameOptions } from './common/game-interface.js';
 import { SlicePartyGame } from './slice-party/slice-party-game.js';
 import { AlienAttackGame } from './alien-attack/alien-attack-game.js';
+import { ShootingRangeGame } from './shooting-range/shooting-range-game.js';
 
 export class GameManager {
   private activeGame: IGame | null = null;
@@ -38,6 +39,8 @@ export class GameManager {
       game = new SlicePartyGame();
     } else if (gameId === 'alienAttack') {
       game = new AlienAttackGame();
+    } else if (gameId === 'shootingRange') {
+      game = new ShootingRangeGame();
     }
 
     if (!game) {
