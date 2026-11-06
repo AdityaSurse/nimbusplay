@@ -1288,6 +1288,19 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [x] Full HUD overlay: gold italic position badge, digital speedometer, coin counter, lap counter, and minimap track outline.
   - [x] Dual-input support: phone landscape tilt steering + buttons, and desktop WASD/Arrow keyboard fallback.
   - [x] 100% test pass rate (70/70 tests) and 0-error strict TypeScript build.
+- [x] **Phase R10: Turbo Circuit Full Race Championship & AI Opponents**
+  - [x] 3-2-1-GO center countdown with audio bleeps and rocket start window.
+  - [x] 8 racers on staggered starting grid (player starts 8th at the back).
+  - [x] 7 AI opponents (Nova, Blaze, Pixel, Echo, Rex, Luna, Apex) with spline navigation, lane offsets, rubber-banding, and bumping.
+  - [x] Checkpoint lap system (3 laps) with `FINAL LAP!` alert.
+  - [x] Live position ranking dynamically calculated and animated on HUD.
+  - [x] 3-tier drift mini-turbo sparks (Blue, Orange, Purple) with boost on release.
+  - [x] Item boxes awarding original items: Turbo Boost, Rocket Orb, Oil Slick, and Shield.
+  - [x] Collectible coins increasing top speed; drop 3 coins on spin-out.
+  - [x] Glider ramp section with deployable delta wing and aerial flight physics.
+  - [x] HUD matching reference: gold italic position pop, coin/lap counters, minimap dots, and top-left item roulette.
+  - [x] "FINISH!" banner and Race Results screen with "Race Again" and "Back to Menu" buttons.
+  - [x] Web Audio synthesized engine, drift, boost, item, and finish sounds; controller vibration on boosts, bumps, and hits.
 
 ---
 

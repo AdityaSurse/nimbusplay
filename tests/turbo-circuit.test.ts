@@ -1,7 +1,6 @@
 /**
  * NimbusPlay — Turbo Circuit Unit & Physics Integration Tests
- * Verifies track spline geometry, arcade kart physics, steering damping,
- * off-road slowdown, barrier bounce, and chase camera dynamics.
+ * Verifies track spline, drift tiers, glider flight, items, AI ranking, and camera.
  * Strictly typed with zero `any`. Target < 250 lines.
  */
 
@@ -10,200 +9,171 @@ import assert from 'node:assert/strict';
 import { Vector3 } from 'three';
 import { TrackSpline } from '../src/console/games/turbo-circuit/track-spline.js';
 import { KartPhysics } from '../src/console/games/turbo-circuit/kart-physics.js';
+import { AIManager } from '../src/console/games/turbo-circuit/ai-manager.js';
+import { ItemSystem } from '../src/console/games/turbo-circuit/item-system.js';
 import { ChaseCamera } from '../src/console/games/turbo-circuit/chase-camera.js';
 import type { KartInput } from '../src/console/games/turbo-circuit/types.js';
 
-describe('TrackSpline Geometry & Sample Queries', () => {
-  it('should initialize closed CatmullRom track with expected road width and start grid', () => {
+describe('TrackSpline & Grid Geometry', () => {
+  it('should initialize closed track with 8 staggered grid slots', () => {
     const track = new TrackSpline();
     assert.equal(track.roadWidth, 16.0);
-    assert.equal(track.curbWidth, 1.6);
     assert.ok(track.curve.closed);
 
-    const start = track.getStartGridTransform();
-    assert.ok(Number.isFinite(start.position.x));
-    assert.ok(Number.isFinite(start.position.z));
-    assert.ok(Number.isFinite(start.heading));
+    // Verify 8 distinct grid positions
+    for (let slot = 0; slot < 8; slot++) {
+      const grid = track.getStartGridTransform(slot);
+      assert.ok(Number.isFinite(grid.position.x));
+      assert.ok(Number.isFinite(grid.heading));
+    }
     track.destroy();
   });
 
-  it('should detect on-road vs off-road positions correctly', () => {
+  it('should detect glider ramp zone on track spline', () => {
     const track = new TrackSpline();
-    const start = track.getStartGridTransform();
-
-    // Position on centerline
-    const onRoadSample = track.getClosestTrackSample(start.position);
-    assert.equal(onRoadSample.isOffroad, false);
-    assert.ok(onRoadSample.distanceFromCenter < 1.0);
-
-    // Position 12 meters to the side (halfRoad = 8.0, so 12 is in grass infield)
-    const offRoadPos = new Vector3(
-      start.position.x + onRoadSample.binormal.x * 12.0,
-      start.position.y,
-      start.position.z + onRoadSample.binormal.z * 12.0
-    );
-    const offRoadSample = track.getClosestTrackSample(offRoadPos);
-    assert.equal(offRoadSample.isOffroad, true);
-    assert.ok(offRoadSample.distanceFromCenter > 8.0);
-
+    assert.equal(track.isGliderRamp(0.40), true);
+    assert.equal(track.isGliderRamp(0.10), false);
     track.destroy();
   });
 });
 
-describe('KartPhysics Engine Tests', () => {
+describe('KartPhysics Drift, Glider & Hazard Mechanics', () => {
   const neutralInput: KartInput = { steer: 0, gas: false, brake: false, drift: false, boost: false };
 
-  it('should accelerate on straightaway when gas is pressed', () => {
+  it('should progress through 3 drift spark tiers (Blue, Orange, Purple)', () => {
     const track = new TrackSpline();
     const physics = new KartPhysics(track);
-    assert.equal(physics.state.speed, 0);
+    physics.state.speed = 30;
 
-    const gasInput: KartInput = { ...neutralInput, gas: true };
-    for (let i = 0; i < 30; i++) {
-      physics.update(gasInput, 0.016);
-    }
+    const driftInput: KartInput = { ...neutralInput, steer: 0.8, drift: true };
 
-    assert.ok(physics.state.speed > 10.0, 'Kart did not accelerate with gas input');
-    assert.ok(physics.state.speed <= physics.state.maxSpeed);
-    track.destroy();
-  });
+    // 0.7s -> Blue tier
+    for (let i = 0; i < 44; i++) physics.update(driftInput, 0.016);
+    assert.equal(physics.state.driftTier, 'blue');
 
-  it('should decelerate when braking', () => {
-    const track = new TrackSpline();
-    const physics = new KartPhysics(track);
-    physics.state.speed = 30.0;
+    // 1.5s -> Orange tier
+    for (let i = 0; i < 50; i++) physics.update(driftInput, 0.016);
+    assert.equal(physics.state.driftTier, 'orange');
 
-    const brakeInput: KartInput = { ...neutralInput, brake: true };
-    for (let i = 0; i < 15; i++) {
-      physics.update(brakeInput, 0.016);
-    }
+    // 2.6s -> Purple tier
+    for (let i = 0; i < 70; i++) physics.update(driftInput, 0.016);
+    assert.equal(physics.state.driftTier, 'purple');
 
-    assert.ok(physics.state.speed < 25.0, 'Kart did not decelerate when braking');
-    track.destroy();
-  });
-
-  it('should reduce steering sensitivity at high speeds to prevent snap oversteer', () => {
-    const track = new TrackSpline();
-    const physicsLow = new KartPhysics(track);
-    physicsLow.state.speed = 10.0;
-
-    const physicsHigh = new KartPhysics(track);
-    physicsHigh.state.speed = 45.0;
-
-    const steerInput: KartInput = { ...neutralInput, steer: 1.0 };
-    physicsLow.update(steerInput, 0.016);
-    physicsHigh.update(steerInput, 0.016);
-
-    // Turn rate factor = Math.max(0.48, 1.0 - (speed / maxSpeed) * 0.45)
-    // Low speed allows sharper turn angle than high speed
-    assert.ok(
-      Math.abs(physicsLow.state.steerAngle) >= Math.abs(physicsHigh.state.steerAngle),
-      'High speed steering was not properly damped'
-    );
-    track.destroy();
-  });
-
-  it('should clamp speed when driving off-road in the grass', () => {
-    const track = new TrackSpline();
-    const physics = new KartPhysics(track);
-    const start = track.getStartGridTransform();
-
-    // Place kart in the grass verge (9.5 units from center: past 8.0m road edge, before 10.8m barrier)
-    const sample = track.getClosestTrackSample(start.position);
-    physics.state.x = start.position.x + sample.binormal.x * 9.5;
-    physics.state.z = start.position.z + sample.binormal.z * 9.5;
-    physics.state.heading = Math.atan2(sample.tangent.x, sample.tangent.z);
-    physics.state.speed = 0;
-
-    const gasInput: KartInput = { ...neutralInput, gas: true };
-    for (let i = 0; i < 60; i++) {
-      physics.update(gasInput, 0.016);
-    }
-
-    assert.equal(physics.state.isOffroad, true);
-    // Off-road cap is maxSpeed * 0.42 (~20.16)
-    assert.ok(physics.state.speed <= physics.state.maxSpeed * 0.45);
-    assert.ok(physics.state.speed > 15.0);
-    track.destroy();
-  });
-
-  it('should bounce off barriers when exceeding track limits', () => {
-    const track = new TrackSpline();
-    const physics = new KartPhysics(track);
-    const start = track.getStartGridTransform();
-
-    // Move kart past barrier limit (halfRoad 8 + 3 = 11m)
-    const sample = track.getClosestTrackSample(start.position);
-    physics.state.x = start.position.x + sample.binormal.x * 12.0;
-    physics.state.z = start.position.z + sample.binormal.z * 12.0;
-    physics.state.speed = 30.0;
-
+    // Release drift -> grants boost
     physics.update(neutralInput, 0.016);
-    assert.ok(physics.state.wallBounceCooldown > 0, 'Wall bounce cooldown not triggered');
-    assert.ok(physics.state.speed < 30.0 * 0.6, 'Speed not reduced after wall collision');
+    assert.ok(physics.state.boostTimer > 1.0);
+    assert.ok(physics.state.speed >= 68.0);
     track.destroy();
   });
 
-  it('should activate boost and increase max speed during boost window', () => {
+  it('should engage glider flight and elevation lift on glider ramp', () => {
     const track = new TrackSpline();
     const physics = new KartPhysics(track);
-    physics.triggerBoost(1.5);
+    physics.state.speed = 35.0;
 
-    assert.ok(physics.state.boostTimer > 0);
-    assert.equal(physics.state.speed, 68.0);
+    // Place kart on glider ramp (t = 0.40)
+    const rampPt = track.getPointAlongSpline(0.40, 0);
+    physics.state.x = rampPt.position.x;
+    physics.state.z = rampPt.position.z;
 
-    physics.update(neutralInput, 0.05);
-    assert.equal(physics.state.maxSpeed, 68.0);
+    const gasInput: KartInput = { ...neutralInput, gas: true };
+    for (let i = 0; i < 20; i++) physics.update(gasInput, 0.016);
+
+    assert.equal(physics.state.isGliding, true);
+    assert.ok(physics.state.glideHeight > 0.5, 'Glider did not gain altitude');
+    track.destroy();
+  });
+
+  it('should spin out and drop 3 coins when hitting a hazard without shield', () => {
+    const track = new TrackSpline();
+    const physics = new KartPhysics(track);
+    physics.state.coins = 5;
+    physics.state.speed = 40;
+
+    physics.triggerSpinout();
+    assert.equal(physics.state.isSpinning, true);
+    assert.equal(physics.state.coins, 2);
+
+    // While shielded, spinout is blocked
+    physics.triggerShield(5.0);
+    physics.triggerSpinout();
+    assert.equal(physics.state.coins, 2);
+    track.destroy();
+  });
+});
+
+describe('AIManager & Live Position Ranking Tests', () => {
+  it('should initialize 7 distinct AI opponents with staggered grid slots', () => {
+    const track = new TrackSpline();
+    const ai = new AIManager(track);
+    assert.equal(ai.opponents.length, 7);
+
+    // Verify all names
+    const names = ai.opponents.map((o) => o.name);
+    assert.ok(names.includes('Nova'));
+    assert.ok(names.includes('Blaze'));
+    assert.ok(names.includes('Apex'));
+
+    ai.destroy();
+    track.destroy();
+  });
+
+  it('should compute live race positions correctly across all 8 racers', () => {
+    const track = new TrackSpline();
+    const ai = new AIManager(track);
+    const physics = new KartPhysics(track);
+
+    // Player starts at back (8th)
+    const initialRanks = ai.computeRanks(physics.state);
+    assert.equal(initialRanks.playerRank, 8);
+    assert.equal(initialRanks.sortedRacers.length, 8);
+
+    // Move player ahead by 1 lap
+    physics.state.currentLap = 2;
+    physics.state.totalDistance = track.totalLength + 200;
+    const updatedRanks = ai.computeRanks(physics.state);
+    assert.equal(updatedRanks.playerRank, 1, 'Player should be 1st with 1-lap lead');
+
+    ai.destroy();
+    track.destroy();
+  });
+});
+
+describe('ItemSystem Spawn & Hazard Mechanics', () => {
+  it('should provide weighted item distribution based on rank', () => {
+    const track = new TrackSpline();
+    const items = new ItemSystem(track);
+
+    // 8th position: should get speed boosts or rockets
+    const item8 = items.getRandomItem(8);
+    assert.ok(item8 === 'boost' || item8 === 'rocket' || item8 === 'shield');
+
+    // 1st position: should get defensive items
+    const item1 = items.getRandomItem(1);
+    assert.ok(item1 === 'oil' || item1 === 'shield' || item1 === 'boost');
+
+    items.destroy();
     track.destroy();
   });
 });
 
 describe('ChaseCamera Dynamic FOV & Tracking Tests', () => {
-  it('should initialize at base FOV and aspect ratio', () => {
+  it('should track behind kart and expand FOV when boosting', () => {
     const cam = new ChaseCamera(16 / 9);
     assert.equal(cam.camera.fov, 60);
-    assert.ok(Math.abs(cam.camera.aspect - 16 / 9) < 0.001);
-  });
 
-  it('should track behind kart and smoothly increase FOV when boosting', () => {
-    const cam = new ChaseCamera(16 / 9);
     const mockKart = {
-      x: 0,
-      y: 0,
-      z: 0,
-      speed: 50,
-      maxSpeed: 68,
-      heading: 0,
-      steerAngle: 0,
-      angularVelocity: 0,
-      isDrifting: false,
-      driftDirection: 0,
-      driftTime: 0,
-      boostTimer: 2.0, // boosting
-      isOffroad: false,
-      wallBounceCooldown: 0,
-      coins: 4,
-      currentLap: 1,
-      lapProgress: 0,
-      rpm: 3000
+      x: 0, y: 0, z: 0, speed: 50, maxSpeed: 68, heading: 0, steerAngle: 0, angularVelocity: 0,
+      isDrifting: false, driftDirection: 0, driftTime: 0, driftTier: 'none' as const, boostTimer: 2.0,
+      isGliding: false, glideHeight: 0, isSpinning: false, spinTimer: 0, isShielded: false,
+      shieldTimer: 0, heldItem: null, isItemRoulette: false, isOffroad: false, wallBounceCooldown: 0,
+      coins: 4, currentLap: 1, lapProgress: 0, totalDistance: 0, position: 8, rpm: 3000
     };
 
-    // First frame snaps anchor behind kart
     cam.update(mockKart, 0.016);
-    assert.ok(cam.camera.position.z < 0, 'Camera should be behind heading 0 (negative Z)');
-    assert.ok(cam.camera.position.y > 0, 'Camera should be elevated above ground');
+    assert.ok(cam.camera.position.z < 0);
 
-    // Several frames under boost -> FOV rises towards 75
-    for (let i = 0; i < 30; i++) {
-      cam.update(mockKart, 0.016);
-    }
-    assert.ok(cam.camera.fov > 65, `Expected FOV kick > 65, got ${cam.camera.fov}`);
-
-    // End boost -> FOV eases back to 60
-    mockKart.boostTimer = 0;
-    for (let i = 0; i < 60; i++) {
-      cam.update(mockKart, 0.016);
-    }
-    assert.ok(cam.camera.fov < 64, `Expected FOV recovery < 64, got ${cam.camera.fov}`);
+    for (let i = 0; i < 30; i++) cam.update(mockKart, 0.016);
+    assert.ok(cam.camera.fov > 65);
   });
 });

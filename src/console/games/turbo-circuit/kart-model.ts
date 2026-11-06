@@ -1,6 +1,6 @@
 /**
  * NimbusPlay — Turbo Circuit Procedural Low-Poly Kart & Driver Model
- * Original racer "Volt" with spinning wheels, steering animation, and body lean.
+ * Original racer "Volt" with spinning wheels, steering, driver lean, glider wing, and drift sparks.
  * Strictly typed with zero `any`. Target < 250 lines.
  */
 
@@ -10,8 +10,10 @@ import {
   CylinderGeometry,
   SphereGeometry,
   MeshStandardMaterial,
+  MeshBasicMaterial,
   Mesh
 } from 'three';
+import type { DriftTier } from './types.js';
 
 export class KartModel {
   public readonly group = new Group();
@@ -26,157 +28,95 @@ export class KartModel {
 
   private readonly driverTorso = new Group();
   private readonly boostFlames: Mesh[] = [];
+  private readonly gliderWing = new Group();
+  private readonly sparkMeshes: Mesh[] = [];
+  private sparkMaterial!: MeshBasicMaterial;
 
-  constructor() {
-    this.buildChassis();
+  constructor(primaryColor: number = 0xef4444, accentColor: number = 0x06b6d4) {
+    this.buildChassis(primaryColor, accentColor);
     this.buildWheels();
-    this.buildDriver();
+    this.buildDriver(accentColor);
     this.buildExhausts();
+    this.buildGliderWing();
+    this.buildDriftSparks();
   }
 
-  private buildChassis(): void {
-    // 1. Lower chassis frame
+  private buildChassis(primary: number, accent: number): void {
     const frameGeo = new BoxGeometry(2.0, 0.35, 3.8);
-    const frameMat = new MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
-    const frame = new Mesh(frameGeo, frameMat);
+    const frame = new Mesh(frameGeo, new MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 }));
     frame.position.y = 0.45;
     frame.castShadow = true;
     this.group.add(frame);
 
-    // 2. Aerodynamic wedge body (Crimson Red with Cyan Accent)
     const bodyGeo = new BoxGeometry(1.6, 0.45, 2.6);
-    const bodyMat = new MeshStandardMaterial({ color: 0xef4444, roughness: 0.3, metalness: 0.2 });
-    const body = new Mesh(bodyGeo, bodyMat);
+    const body = new Mesh(bodyGeo, new MeshStandardMaterial({ color: primary, roughness: 0.3, metalness: 0.2 }));
     body.position.set(0, 0.72, 0.1);
     body.castShadow = true;
     this.group.add(body);
 
-    // 3. Front Nose Splitter
     const noseGeo = new BoxGeometry(1.9, 0.18, 0.9);
-    const noseMat = new MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
-    const nose = new Mesh(noseGeo, noseMat);
+    const nose = new Mesh(noseGeo, new MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 }));
     nose.position.set(0, 0.38, 1.85);
     nose.castShadow = true;
     this.group.add(nose);
 
-    // 4. Side pods with cyan radiator vents
-    const podGeo = new BoxGeometry(0.35, 0.4, 1.8);
-    const podMat = new MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.4 });
-    const leftPod = new Mesh(podGeo, podMat);
-    leftPod.position.set(-0.95, 0.65, 0.0);
-    this.group.add(leftPod);
-
-    const rightPod = new Mesh(podGeo, podMat);
-    rightPod.position.set(0.95, 0.65, 0.0);
-    this.group.add(rightPod);
-
-    // 5. Rear spoiler wing mounted on dual struts
-    const strutGeo = new BoxGeometry(0.08, 0.7, 0.15);
-    const strutMat = new MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 });
-
-    const leftStrut = new Mesh(strutGeo, strutMat);
-    leftStrut.position.set(-0.65, 1.15, -1.6);
-    this.group.add(leftStrut);
-
-    const rightStrut = new Mesh(strutGeo, strutMat);
-    rightStrut.position.set(0.65, 1.15, -1.6);
-    this.group.add(rightStrut);
-
-    const wingGeo = new BoxGeometry(2.3, 0.12, 0.55);
-    const wingMat = new MeshStandardMaterial({ color: 0xef4444, roughness: 0.3 });
-    const wing = new Mesh(wingGeo, wingMat);
-    wing.position.set(0, 1.5, -1.6);
-    wing.castShadow = true;
-    this.group.add(wing);
+    const spoilerGeo = new BoxGeometry(2.1, 0.12, 0.55);
+    const spoiler = new Mesh(spoilerGeo, new MeshStandardMaterial({ color: accent, metalness: 0.4 }));
+    spoiler.position.set(0, 1.25, -1.6);
+    spoiler.castShadow = true;
+    this.group.add(spoiler);
   }
 
   private buildWheels(): void {
-    const tireGeo = new CylinderGeometry(0.48, 0.48, 0.42, 16);
-    tireGeo.rotateZ(Math.PI / 2);
-    const tireMat = new MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+    const wheelGeo = new CylinderGeometry(0.44, 0.44, 0.38, 14);
+    wheelGeo.rotateZ(Math.PI / 2);
+    const tireMat = new MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
+    const rimMat = new MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.1 });
 
-    const rimGeo = new CylinderGeometry(0.28, 0.28, 0.44, 8);
-    rimGeo.rotateZ(Math.PI / 2);
-    const rimMat = new MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
-
-    const createWheel = (group: Group) => {
-      const tire = new Mesh(tireGeo, tireMat);
+    const createWheel = (): Group => {
+      const g = new Group();
+      const tire = new Mesh(wheelGeo, tireMat);
       tire.castShadow = true;
-      group.add(tire);
-      const rim = new Mesh(rimGeo, rimMat);
-      group.add(rim);
+      const rim = new Mesh(new CylinderGeometry(0.25, 0.25, 0.4, 10), rimMat);
+      rim.rotateZ(Math.PI / 2);
+      g.add(tire, rim);
+      return g;
     };
 
-    // Front Wheels with steering pivots
-    createWheel(this.frontLeftWheel);
-    this.frontLeftWheel.position.set(-1.18, 0, 0);
-    this.frontLeftPivot.position.set(0, 0.48, 1.3);
-    this.frontLeftPivot.add(this.frontLeftWheel);
-    this.group.add(this.frontLeftPivot);
+    const fl = createWheel(); fl.position.set(-1.05, 0.44, 1.2); this.frontLeftPivot.add(fl); this.frontLeftWheel.add(fl);
+    const fr = createWheel(); fr.position.set(1.05, 0.44, 1.2); this.frontRightPivot.add(fr); this.frontRightWheel.add(fr);
+    const rl = createWheel(); rl.position.set(-1.08, 0.46, -1.2); this.rearLeftWheel.add(rl);
+    const rr = createWheel(); rr.position.set(1.08, 0.46, -1.2); this.rearRightWheel.add(rr);
 
-    createWheel(this.frontRightWheel);
-    this.frontRightWheel.position.set(1.18, 0, 0);
-    this.frontRightPivot.position.set(0, 0.48, 1.3);
-    this.frontRightPivot.add(this.frontRightWheel);
-    this.group.add(this.frontRightPivot);
-
-    // Rear Wheels
-    createWheel(this.rearLeftWheel);
-    this.rearLeftWheel.position.set(-1.22, 0.48, -1.25);
-    this.group.add(this.rearLeftWheel);
-
-    createWheel(this.rearRightWheel);
-    this.rearRightWheel.position.set(1.22, 0.48, -1.25);
-    this.group.add(this.rearRightWheel);
+    this.group.add(this.frontLeftPivot, this.frontRightPivot, this.rearLeftWheel, this.rearRightWheel);
   }
 
-  private buildDriver(): void {
-    // Low-poly human racer "Volt"
-    const suitMat = new MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 });
-    const torsoGeo = new BoxGeometry(0.75, 0.85, 0.5);
-    const torso = new Mesh(torsoGeo, suitMat);
-    torso.position.set(0, 1.15, 0.1);
-    torso.castShadow = true;
+  private buildDriver(helmetColor: number): void {
+    const seat = new Mesh(new BoxGeometry(0.9, 0.6, 0.8), new MeshStandardMaterial({ color: 0x09090b }));
+    seat.position.set(0, 0.75, -0.3);
+    this.group.add(seat);
+
+    const torso = new Mesh(new BoxGeometry(0.8, 0.75, 0.55), new MeshStandardMaterial({ color: 0x1e293b }));
+    torso.position.set(0, 1.15, -0.2);
     this.driverTorso.add(torso);
 
-    // Helmet
-    const helmetGeo = new SphereGeometry(0.38, 12, 10);
-    const helmetMat = new MeshStandardMaterial({ color: 0xef4444, roughness: 0.2, metalness: 0.3 });
-    const helmet = new Mesh(helmetGeo, helmetMat);
-    helmet.position.set(0, 1.8, 0.1);
-    helmet.castShadow = true;
+    const helmet = new Mesh(new SphereGeometry(0.38, 14, 12), new MeshStandardMaterial({ color: helmetColor, metalness: 0.5 }));
+    helmet.position.set(0, 1.72, -0.15);
     this.driverTorso.add(helmet);
 
-    // Visor
-    const visorGeo = new BoxGeometry(0.48, 0.18, 0.25);
-    const visorMat = new MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1 });
-    const visor = new Mesh(visorGeo, visorMat);
-    visor.position.set(0, 1.8, 0.36);
+    const visor = new Mesh(new BoxGeometry(0.48, 0.18, 0.32), new MeshStandardMaterial({ color: 0x0284c7, metalness: 0.9 }));
+    visor.position.set(0, 1.72, 0.12);
     this.driverTorso.add(visor);
-
-    // Steering wheel
-    const wheelGeo = new CylinderGeometry(0.24, 0.24, 0.06, 12);
-    wheelGeo.rotateX(Math.PI / 3);
-    const wheelMat = new MeshStandardMaterial({ color: 0x1e293b, metalness: 0.7 });
-    const steerWheel = new Mesh(wheelGeo, wheelMat);
-    steerWheel.position.set(0, 1.05, 0.65);
-    this.driverTorso.add(steerWheel);
-
     this.group.add(this.driverTorso);
   }
 
   private buildExhausts(): void {
-    const pipeGeo = new CylinderGeometry(0.12, 0.12, 0.5, 8);
+    const pipeGeo = new CylinderGeometry(0.12, 0.14, 0.55, 10);
     pipeGeo.rotateX(Math.PI / 2);
-    const pipeMat = new MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9 });
-
-    const flameGeo = new CylinderGeometry(0.01, 0.16, 0.65, 6);
+    const pipeMat = new MeshStandardMaterial({ color: 0x64748b, metalness: 0.9 });
+    const flameGeo = new CylinderGeometry(0.02, 0.22, 0.8, 8);
     flameGeo.rotateX(Math.PI / 2);
-    const flameMat = new MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x0ea5e9,
-      emissiveIntensity: 1.0
-    });
+    const flameMat = new MeshBasicMaterial({ color: 0x38bdf8 });
 
     for (const side of [-0.4, 0.4]) {
       const pipe = new Mesh(pipeGeo, pipeMat);
@@ -191,28 +131,61 @@ export class KartModel {
     }
   }
 
-  public updateAnimation(speed: number, steerInput: number, isBoosting: boolean, dt: number): void {
-    // 1. Wheel spin rate proportional to linear speed
+  private buildGliderWing(): void {
+    const wingGeo = new BoxGeometry(4.8, 0.08, 1.6);
+    const wingMat = new MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3, metalness: 0.4 });
+    const wing = new Mesh(wingGeo, wingMat);
+    wing.position.set(0, 2.2, -0.2);
+    this.gliderWing.add(wing);
+    this.gliderWing.visible = false;
+    this.group.add(this.gliderWing);
+  }
+
+  private buildDriftSparks(): void {
+    const sparkGeo = new SphereGeometry(0.16, 6, 6);
+    this.sparkMaterial = new MeshBasicMaterial({ color: 0x38bdf8 });
+    for (const side of [-1.15, 1.15]) {
+      const spark = new Mesh(sparkGeo, this.sparkMaterial);
+      spark.position.set(side, 0.3, -1.2);
+      spark.visible = false;
+      this.sparkMeshes.push(spark);
+      this.group.add(spark);
+    }
+  }
+
+  public updateAnimation(speed: number, steerInput: number, isBoosting: boolean, driftTier: DriftTier, isGliding: boolean, dt: number): void {
     const spinAngle = (speed / 0.48) * dt;
     this.frontLeftWheel.rotation.x += spinAngle;
     this.frontRightWheel.rotation.x += spinAngle;
     this.rearLeftWheel.rotation.x += spinAngle;
     this.rearRightWheel.rotation.x += spinAngle;
 
-    // 2. Front wheel steering pivot angle
     const targetPivot = -steerInput * 0.48;
     this.frontLeftPivot.rotation.y = targetPivot;
     this.frontRightPivot.rotation.y = targetPivot;
 
-    // 3. Driver lean into corner
     const targetLean = steerInput * 0.28;
     this.driverTorso.rotation.z += (targetLean - this.driverTorso.rotation.z) * Math.min(1.0, dt * 10);
 
-    // 4. Boost flames flicker
+    // Boost flames
     for (const flame of this.boostFlames) {
       flame.visible = isBoosting;
       if (isBoosting) {
         flame.scale.set(1 + Math.random() * 0.3, 1 + Math.random() * 0.3, 1 + Math.random() * 0.4);
+      }
+    }
+
+    // Glider wing deployment
+    this.gliderWing.visible = isGliding;
+
+    // Drift sparks
+    const hasSparks = driftTier !== 'none';
+    for (const spark of this.sparkMeshes) {
+      spark.visible = hasSparks;
+      if (hasSparks) {
+        const color = driftTier === 'purple' ? 0xc084fc : driftTier === 'orange' ? 0xfb923c : 0x38bdf8;
+        this.sparkMaterial.color.setHex(color);
+        spark.position.y = 0.25 + Math.random() * 0.2;
       }
     }
   }
@@ -221,13 +194,9 @@ export class KartModel {
     this.group.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
-        if (Array.isArray(obj.material)) {
-          obj.material.forEach((m) => m.dispose());
-        } else {
-          obj.material.dispose();
-        }
+        if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+        else obj.material.dispose();
       }
     });
   }
 }
-

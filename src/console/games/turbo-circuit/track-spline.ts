@@ -1,6 +1,6 @@
 /**
  * NimbusPlay — Turbo Circuit Procedural Track & Spline Generator
- * Builds a closed 3D CatmullRom road with blue/white curbs, lane markings, and grass infield.
+ * Builds a closed 3D CatmullRom road with curbs, grass, checkpoints, glider ramp, and grid.
  * Strictly typed with zero `any`. Target < 250 lines.
  */
 
@@ -12,7 +12,8 @@ import {
   Float32BufferAttribute,
   MeshStandardMaterial,
   Mesh,
-  PlaneGeometry
+  PlaneGeometry,
+  BoxGeometry
 } from 'three';
 import type { TrackSample } from './types.js';
 
@@ -21,6 +22,7 @@ export class TrackSpline {
   public readonly roadWidth = 16.0;
   public readonly curbWidth = 1.6;
   public readonly trackGroup = new Group();
+  public readonly totalLength: number;
 
   private readonly samplesCount = 200;
   private readonly cachedPoints: Vector3[] = [];
@@ -28,7 +30,6 @@ export class TrackSpline {
   private readonly cachedBinormals: Vector3[] = [];
 
   constructor() {
-    // 16 control points forming a closed dynamic stadium circuit
     const points: Vector3[] = [
       new Vector3(-50, 0, -80), // 0: Start / Finish line
       new Vector3(-50, 0, -20), // 1: Main straight
@@ -49,10 +50,12 @@ export class TrackSpline {
     ];
 
     this.curve = new CatmullRomCurve3(points, true, 'centripetal', 0.5);
+    this.totalLength = this.curve.getLength();
     this.precomputeSplineData();
     this.buildRoadMesh();
     this.buildCurbs();
     this.buildGrassInfield();
+    this.buildGliderRamp();
   }
 
   private precomputeSplineData(): void {
@@ -78,28 +81,18 @@ export class TrackSpline {
       const idx = i % this.samplesCount;
       const pt = this.cachedPoints[idx];
       const binormal = this.cachedBinormals[idx];
-
       const left = pt.clone().addScaledVector(binormal, -halfW);
       const right = pt.clone().addScaledVector(binormal, halfW);
 
-      positions.push(left.x, left.y + 0.05, left.z);
-      positions.push(right.x, right.y + 0.05, right.z);
-
-      // Dark asphalt tone
-      const isStripe = (i % 6) < 3;
-      const c = isStripe ? 0.20 : 0.16;
+      positions.push(left.x, left.y + 0.05, left.z, right.x, right.y + 0.05, right.z);
+      const c = (i % 6) < 3 ? 0.20 : 0.16;
       colors.push(c, c, c + 0.02, c, c, c + 0.02);
     }
 
     const indices: number[] = [];
     for (let i = 0; i < this.samplesCount; i++) {
       const i0 = i * 2;
-      const i1 = i0 + 1;
-      const i2 = i0 + 2;
-      const i3 = i0 + 3;
-
-      indices.push(i0, i1, i2);
-      indices.push(i1, i3, i2);
+      indices.push(i0, i0 + 1, i0 + 2, i0 + 1, i0 + 3, i0 + 2);
     }
 
     const geo = new BufferGeometry();
@@ -108,13 +101,7 @@ export class TrackSpline {
     geo.setIndex(indices);
     geo.computeVertexNormals();
 
-    const mat = new MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.85,
-      metalness: 0.05
-    });
-
-    const roadMesh = new Mesh(geo, mat);
+    const roadMesh = new Mesh(geo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }));
     roadMesh.receiveShadow = true;
     this.trackGroup.add(roadMesh);
   }
@@ -127,37 +114,27 @@ export class TrackSpline {
     for (let i = 0; i <= this.samplesCount; i++) {
       const idx = i % this.samplesCount;
       const pt = this.cachedPoints[idx];
-      const binormal = this.cachedBinormals[idx];
+      const bin = this.cachedBinormals[idx];
+      const lOut = pt.clone().addScaledVector(bin, -(halfW + this.curbWidth));
+      const lIn = pt.clone().addScaledVector(bin, -halfW);
+      const rIn = pt.clone().addScaledVector(bin, halfW);
+      const rOut = pt.clone().addScaledVector(bin, halfW + this.curbWidth);
 
-      // Outer and inner curb strips
-      const leftInner = pt.clone().addScaledVector(binormal, -halfW);
-      const leftOuter = pt.clone().addScaledVector(binormal, -(halfW + this.curbWidth));
-      const rightInner = pt.clone().addScaledVector(binormal, halfW);
-      const rightOuter = pt.clone().addScaledVector(binormal, halfW + this.curbWidth);
+      positions.push(lOut.x, lOut.y + 0.12, lOut.z, lIn.x, lIn.y + 0.06, lIn.z);
+      positions.push(rIn.x, rIn.y + 0.06, rIn.z, rOut.x, rOut.y + 0.12, rOut.z);
 
-      positions.push(leftOuter.x, leftOuter.y + 0.12, leftOuter.z);
-      positions.push(leftInner.x, leftInner.y + 0.06, leftInner.z);
-      positions.push(rightInner.x, rightInner.y + 0.06, rightInner.z);
-      positions.push(rightOuter.x, rightOuter.y + 0.12, rightOuter.z);
-
-      // Blue and White alternating curbs (4 segments blue, 4 segments white)
       const isBlue = Math.floor(i / 3) % 2 === 0;
       const r = isBlue ? 0.11 : 0.96;
       const g = isBlue ? 0.32 : 0.96;
       const b = isBlue ? 0.88 : 0.98;
-
       colors.push(r, g, b, r, g, b, r, g, b, r, g, b);
     }
 
     const indices: number[] = [];
     for (let i = 0; i < this.samplesCount; i++) {
       const b = i * 4;
-      // Left curb quad
-      indices.push(b, b + 1, b + 4);
-      indices.push(b + 1, b + 5, b + 4);
-      // Right curb quad
-      indices.push(b + 2, b + 3, b + 6);
-      indices.push(b + 3, b + 7, b + 6);
+      indices.push(b, b + 1, b + 4, b + 1, b + 5, b + 4);
+      indices.push(b + 2, b + 3, b + 6, b + 3, b + 7, b + 6);
     }
 
     const geo = new BufferGeometry();
@@ -166,8 +143,7 @@ export class TrackSpline {
     geo.setIndex(indices);
     geo.computeVertexNormals();
 
-    const mat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.6 });
-    const curbMesh = new Mesh(geo, mat);
+    const curbMesh = new Mesh(geo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.6 }));
     curbMesh.receiveShadow = true;
     this.trackGroup.add(curbMesh);
   }
@@ -175,15 +151,26 @@ export class TrackSpline {
   private buildGrassInfield(): void {
     const geo = new PlaneGeometry(450, 450, 16, 16);
     geo.rotateX(-Math.PI / 2);
-    const mat = new MeshStandardMaterial({
-      color: 0x22c55e,
-      roughness: 0.92,
-      metalness: 0.0
-    });
-    const grass = new Mesh(geo, mat);
+    const grass = new Mesh(geo, new MeshStandardMaterial({ color: 0x22c55e, roughness: 0.92 }));
     grass.position.y = -0.05;
     grass.receiveShadow = true;
     this.trackGroup.add(grass);
+  }
+
+  private buildGliderRamp(): void {
+    // Ramp located on back-straight approach (t approx 0.38)
+    const rampIdx = Math.floor(this.samplesCount * 0.38);
+    const pt = this.cachedPoints[rampIdx];
+    const tan = this.cachedTangents[rampIdx];
+    const angle = Math.atan2(tan.x, tan.z);
+
+    const rampGeo = new BoxGeometry(this.roadWidth * 0.8, 1.2, 5.0);
+    const rampMat = new MeshStandardMaterial({ color: 0x0284c7, metalness: 0.3, roughness: 0.4 });
+    const rampMesh = new Mesh(rampGeo, rampMat);
+    rampMesh.position.set(pt.x, pt.y + 0.6, pt.z);
+    rampMesh.rotation.y = angle;
+    rampMesh.rotation.x = -0.15; // incline
+    this.trackGroup.add(rampMesh);
   }
 
   public getClosestTrackSample(pos: Vector3): TrackSample {
@@ -216,28 +203,46 @@ export class TrackSpline {
     };
   }
 
-  public getStartGridTransform(): { position: Vector3; heading: number } {
-    // Start at point 0 on the main straight, facing forward along tangent
-    const p = this.cachedPoints[0];
-    const t = this.cachedTangents[0];
-    const heading = Math.atan2(t.x, t.z);
-    return {
-      position: new Vector3(p.x, p.y + 0.1, p.z),
-      heading
-    };
+  public isGliderRamp(t: number): boolean {
+    return t >= 0.37 && t <= 0.44;
+  }
+
+  public getStartGridTransform(slotIndex: number = 7): { position: Vector3; heading: number } {
+    // 8 staggered slots back from finish line (slot 0 = 1st pole, slot 7 = 8th player)
+    const stepBack = 0.007; // ~5.5m spacing along spline
+    const baseT = (1.0 - (slotIndex + 1) * stepBack) % 1.0;
+    const normT = baseT < 0 ? baseT + 1.0 : baseT;
+    const pt = this.curve.getPointAt(normT);
+    const tan = this.curve.getTangentAt(normT).normalize();
+    const up = new Vector3(0, 1, 0);
+    const bin = new Vector3().crossVectors(tan, up).normalize();
+
+    // Alternate left (-3.2m) and right (+3.2m) lanes
+    const lateral = slotIndex % 2 === 0 ? -3.2 : 3.2;
+    const pos = pt.clone().addScaledVector(bin, lateral);
+    pos.y += 0.1;
+
+    return { position: pos, heading: Math.atan2(tan.x, tan.z) };
+  }
+
+  public getPointAlongSpline(t: number, lateralOffset: number = 0): { position: Vector3; heading: number; tangent: Vector3 } {
+    const normT = ((t % 1.0) + 1.0) % 1.0;
+    const pt = this.curve.getPointAt(normT);
+    const tan = this.curve.getTangentAt(normT).normalize();
+    const up = new Vector3(0, 1, 0);
+    const bin = new Vector3().crossVectors(tan, up).normalize();
+    const pos = pt.clone().addScaledVector(bin, lateralOffset);
+    pos.y += 0.1;
+    return { position: pos, heading: Math.atan2(tan.x, tan.z), tangent: tan };
   }
 
   public destroy(): void {
     this.trackGroup.traverse((obj) => {
       if (obj instanceof Mesh) {
         obj.geometry.dispose();
-        if (Array.isArray(obj.material)) {
-          obj.material.forEach((m) => m.dispose());
-        } else {
-          obj.material.dispose();
-        }
+        if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+        else obj.material.dispose();
       }
     });
   }
 }
-
