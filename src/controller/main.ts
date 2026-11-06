@@ -13,7 +13,8 @@ import {
   isCompactPacket,
   type NimbusNetworkMessage, 
   type CompactMotionPacket, 
-  type HapticFeedbackCommand 
+  type HapticFeedbackCommand,
+  type LayoutModeCommand
 } from '../shared/protocol.js';
 
 let activeRoomId = 'AUTO';
@@ -54,34 +55,36 @@ function showToast(text: string, durationMs = 1200): void {
   }
 }
 
-function updateSensorUI(status: SensorStatus, detail?: string): void {
-  if (!labelSensorStatus) return;
+const SENSOR_UI_MAP: Record<SensorStatus, { text: string; cls: string }> = {
+  active: { text: '60Hz Gyro Active', cls: 'text-[11px] text-emerald-500 font-bold' },
+  'no-sensor-data': { text: 'No Sensor Data', cls: 'text-[11px] text-amber-500 font-bold' },
+  denied: { text: 'Motion Denied', cls: 'text-[11px] text-rose-500 font-bold' },
+  unsupported: { text: 'Hardware Unsupported', cls: 'text-[11px] text-rose-500 font-bold' },
+  standby: { text: 'Sensors Standby', cls: 'text-[11px] text-tertiary font-semibold' }
+};
 
-  switch (status) {
-    case 'active':
-      labelSensorStatus.textContent = '60Hz Gyro Active';
-      labelSensorStatus.className = 'font-label-sm text-[11px] text-emerald-500 font-bold';
-      bannerEnableMotion?.classList.add('hidden');
-      break;
-    case 'no-sensor-data':
-      labelSensorStatus.textContent = 'No Sensor Data';
-      labelSensorStatus.className = 'font-label-sm text-[11px] text-amber-500 font-bold';
-      break;
-    case 'denied':
-      labelSensorStatus.textContent = 'Motion Denied';
-      labelSensorStatus.className = 'font-label-sm text-[11px] text-rose-500 font-bold';
-      break;
-    case 'unsupported':
-      labelSensorStatus.textContent = 'Hardware Unsupported';
-      labelSensorStatus.className = 'font-label-sm text-[11px] text-rose-500 font-bold';
-      break;
-    case 'standby':
-    default:
-      labelSensorStatus.textContent = 'Sensors Standby';
-      labelSensorStatus.className = 'font-label-sm text-[11px] text-tertiary';
-      break;
+function updateSensorUI(status: SensorStatus): void {
+  if (!labelSensorStatus) return;
+  const cfg = SENSOR_UI_MAP[status] ?? SENSOR_UI_MAP.standby;
+  labelSensorStatus.textContent = cfg.text;
+  labelSensorStatus.className = cfg.cls;
+  if (status === 'active') bannerEnableMotion?.classList.add('hidden');
+}
+
+function setLayoutMode(mode: 'portrait' | 'landscape'): void {
+  const portraitView = document.getElementById('portrait-controller-view');
+  const landscapeView = document.getElementById('landscape-controller-view');
+  if (mode === 'landscape') {
+    portraitView?.classList.add('hidden');
+    landscapeView?.classList.remove('hidden');
+    landscapeView?.classList.add('flex');
+    showToast('Switched to Flight Deck', 1200);
+  } else {
+    landscapeView?.classList.add('hidden');
+    landscapeView?.classList.remove('flex');
+    portraitView?.classList.remove('hidden');
+    showToast('Switched to Wand Mode', 1200);
   }
-  if (detail) console.log(`[SensorUI] ${status}: ${detail}`);
 }
 
 function send60HzFrame(): void {
@@ -90,21 +93,20 @@ function send60HzFrame(): void {
   const telemetry = sensors.getTelemetry();
   const bitmask = touch.getBitmask();
 
+  // Update landscape horizon pip if present
+  const horizonPip = document.getElementById('landscape-horizon-pip');
+  if (horizonPip) {
+    const tiltOffset = Math.max(-1, Math.min(1, telemetry.acceleration.y / 6.5));
+    horizonPip.style.transform = `translateX(${tiltOffset * 24}px)`;
+  }
+
   const packet: CompactMotionPacket = {
     t: 'F',
     s: ++packetSequence,
     ts: Date.now(),
     b: bitmask,
-    r: [
-      telemetry.rotationRate.alpha,
-      telemetry.rotationRate.beta,
-      telemetry.rotationRate.gamma
-    ],
-    a: [
-      telemetry.acceleration.x,
-      telemetry.acceleration.y,
-      telemetry.acceleration.z
-    ]
+    r: [telemetry.rotationRate.alpha, telemetry.rotationRate.beta, telemetry.rotationRate.gamma],
+    a: [telemetry.acceleration.x, telemetry.acceleration.y, telemetry.acceleration.z]
   };
 
   networkClient.send(packet);
@@ -176,9 +178,11 @@ function initNetwork(): void {
       if (labelRtt) labelRtt.textContent = `${rttMs}ms`;
     },
     onMessage: (message: NimbusNetworkMessage) => {
-      if (!isCompactPacket(message) && message.type === 'COMMAND_HAPTIC') {
-        const cmd = message as HapticFeedbackCommand;
-        immersion.vibrate(cmd.pattern);
+      if (isCompactPacket(message)) return;
+      if (message.type === 'COMMAND_HAPTIC') {
+        immersion.vibrate((message as HapticFeedbackCommand).pattern);
+      } else if (message.type === 'COMMAND_LAYOUT_MODE') {
+        setLayoutMode((message as LayoutModeCommand).mode);
       }
     }
   });

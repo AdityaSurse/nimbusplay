@@ -28,9 +28,9 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Phase R0** | Reference Analysis, Video Breakdown & Master Architecture | **Complete** | 2026-11-06 | 2026-11-06 | Approved |
 | **Phase R1** | Channel Matrix Remake (4-Tile Top Row) & Direct QR Dock | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
-| **Phase R2** | Controller Dynamic Layout Mode (Landscape Flight Yoke) | Not Started | — | — | — |
+| **Phase R2** | Controller Dynamic Layout Mode (Landscape Flight Yoke) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R3** | Game 1: Fruit Ninja (Cedar Planks, `X X X` Strikes & Splatters) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
-| **Phase R4** | Game 2: Alien Attack (3D Cosmic Rail Shooter & Dual Thumb) | Not Started | — | — | — |
+| **Phase R4** | Game 2: Alien Attack (3D Cosmic Rail Shooter & Dual Thumb) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R5** | Game 3: Shooting Range (Carnival Sky, Grass & Bullseyes) | Not Started | — | — | — |
 | **Phase R6** | Game 4: Sketch (Interactive Whiteboard & Spline Ink) | Not Started | — | — | — |
 | **Phase R7** | Remake System Integration, Latency Profiling & QA | Not Started | — | — | — |
@@ -382,4 +382,35 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] 28/28 unit tests pass across 7 suites (`npm test`).
   - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors.
   - [x] All modules adhere strictly to line count limits (<250 lines per module, <350 lines for game loop).
+
+---
+
+### Phase R4: Game 2 — Alien Attack Remake
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/shared/protocol.ts`: Added `LayoutModeCommand` (`COMMAND_LAYOUT_MODE`, `'portrait' | 'landscape'`) enabling console to dynamically switch mobile controller UI.
+  - `controller/index.html`: Implemented `#landscape-controller-view` with wide dual-thumb firing triggers (`FIRE L`, `FIRE R`), horizon tilt indicator bar, pause and center shortcuts.
+  - `src/controller/main.ts` & `touch.ts`: Handled `COMMAND_LAYOUT_MODE` transition, multi-touch dual firing pads, haptic feedback, and real-time horizon tilt meter.
+  - `src/console/games/alien-attack/space-backdrop.ts`: Deep royal-blue space void (`#0a163c` to `#162e70`), soft drifting glowing nebula blobs (purple `0x8b5cf6`, pink `0xec4899`, cyan `0x06b6d4`), concentric-ringed orange Saturn-like planet, and 70 downward-streaking white warp speed lines.
+  - `src/console/games/alien-attack/alien-graphics.ts`: 100% original procedural vector artwork for player white & red jet fighter (cockpit canopy, swept red delta wings, engine nozzles, shield bubble), craggy tumbling asteroids, alien saucers, alien in a glowing ring bubble, dual plasma lasers, and power-up capsules.
+  - `src/console/games/alien-attack/player-ship.ts`: Starship physics, banking roll animation ($\pm 24^\circ$) under lateral tilt, blue thruster exhaust particle trail, dual laser rate limiting, and energy shield deflection.
+  - `src/console/games/alien-attack/enemy-manager.ts`: Spawning and movement for tumbling asteroids, waving saucers, and the ring-bubble alien. Bubble alien drops shield power-up capsule on defeat.
+  - `src/console/games/alien-attack/particles.ts`: Combat particle manager for laser impact sparks, alien explosions, and shield flares.
+  - `src/console/games/alien-attack/alien-hud.ts`: Top-left bold white score (`640`) + `BEST: <score>`, top-right 3 green hearts (`💚 💚 💚`) vector-rendered, shield active badge, wave announcements, and Game Over card with Retry and Menu pill buttons.
+  - `src/console/games/alien-attack/alien-attack-game.ts`: Master `IGame` loop ($< 350$ lines) connecting landscape tilt accelerometer input, wand pointer/keyboard fallbacks, laser firing, collisions, Web Audio SFX (`playLaserFire`, `playAlienExplosion`, `playBombExplode`, `playStrikeBuzz`), haptics, and clean teardown.
+  - `src/console/games/game-manager.ts`: Wired `alienAttack` channel tile launch and layout mode negotiation.
+  - `tests/alien-attack.test.ts`: Added 9 new unit tests verifying ship positioning, boundary clamping, tilt banking roll, laser firing intervals, shield absorption, life tracking, and collision mathematics.
+- **Verification Criteria**:
+  - [x] Deep royal-blue cosmic space backdrop matching `reel-games.png` (top-right).
+  - [x] Ringed orange planet drifting in the background.
+  - [x] Downward-streaking white speed lines creating forward-flight sensation.
+  - [x] Player starship with white fuselage, red delta wings, and blue thruster exhaust dots.
+  - [x] Steer ship left/right via landscape phone tilt (with pointer & keyboard fallbacks).
+  - [x] Enemies descend from top: tumbling asteroids, saucers, and alien in glowing ring bubble.
+  - [x] Top-left score & BEST; top-right 3 green hearts (`💚 💚 💚`) for hull lives.
+  - [x] Popping bubble alien drops shield power-up capsule; collecting it creates forcefield aura.
+  - [x] Dynamic landscape flight deck on controller page with dual-thumb firing triggers.
+  - [x] 37/37 unit tests pass across 9 test suites in <100ms (`npm test`).
+  - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors.
+  - [x] All files strictly obey line count limits (<250 lines per module, <350 lines for game loop).
 

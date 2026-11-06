@@ -6,6 +6,7 @@
 
 import type { IGame, GameInputState, GameOptions } from './common/game-interface.js';
 import { SlicePartyGame } from './slice-party/slice-party-game.js';
+import { AlienAttackGame } from './alien-attack/alien-attack-game.js';
 
 export class GameManager {
   private activeGame: IGame | null = null;
@@ -35,6 +36,8 @@ export class GameManager {
     let game: IGame | null = null;
     if (gameId === 'fruitNinja' || gameId === 'sliceParty') {
       game = new SlicePartyGame();
+    } else if (gameId === 'alienAttack') {
+      game = new AlienAttackGame();
     }
 
     if (!game) {

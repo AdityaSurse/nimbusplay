@@ -802,10 +802,10 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [x] Embed live pairing QR code canvas directly into the bottom-right shelf dock.
   - [x] Hand pointer displays cyan Player 1 badge with white "1".
   - [x] Remove legacy Star Defender and Bowl Blitz channels and code.
-- [ ] **Phase R2: Controller Landscape Flight Mode & Layout Switcher**
-  - [ ] Implement `SET_LAYOUT` protocol message (`mode: 'portrait' | 'landscape'`).
-  - [ ] Build two-handed horizontal landscape flight yoke UI for Alien Attack.
-  - [ ] Implement roll/pitch flight steering filter.
+- [x] **Phase R2: Controller Landscape Flight Mode & Layout Switcher**
+  - [x] Implement `COMMAND_LAYOUT_MODE` protocol message (`mode: 'portrait' | 'landscape'`).
+  - [x] Build two-handed horizontal landscape flight yoke UI for Alien Attack with dual-thumb triggers.
+  - [x] Implement tilt flight steering filter with horizon bar feedback.
 - [x] **Phase R3: Game 1 — Fruit Ninja Remake**
   - [x] Authentic vertical timber cedar wood plank backdrop with dark recessed seams.
   - [x] Watermelon score icon with `BEST` subtitle and 3 bold red `X X X` strike markers.
@@ -813,11 +813,12 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [x] 5 reference fruits (watermelon, orange, lemon, strawberry, apple) + original bombs.
   - [x] Holding A button to slice with glowing blade trail.
   - [x] Missing intact fruit costs a strike; bombs end game immediately.
-- [ ] **Phase R4: Game 2 — Alien Attack (3D Cosmic Rail Shooter)**
-  - [ ] Forward-scrolling 3D rail-shooter perspective with warp starfield and glowing nebula.
-  - [ ] Large Saturn-like ringed gas giant planet in upper-right quadrant.
-  - [ ] Player starship with delta wings, animated blue thruster exhaust, and bank/roll tilting.
-  - [ ] Dual plasma cannons firing forward toward 3D targeting portal; 3 green shield glyphs.
+- [x] **Phase R4: Game 2 — Alien Attack (3D Cosmic Rail Shooter)**
+  - [x] Deep royal-blue cosmic space backdrop with soft glowing purple, pink, and cyan nebula blobs.
+  - [x] Ringed orange planet drifting in the background and downward-streaking white warp speed lines.
+  - [x] Player starship with white fuselage, red delta wings, animated blue thruster exhaust dots, and banking roll tilt.
+  - [x] Landscape phone tilt steering & dual firing buttons; descending asteroids, saucers, and alien in glowing ring bubble.
+  - [x] Top-left score & BEST; top-right 3 green hearts for hull lives and shield active indicator; power-up capsules.
 - [ ] **Phase R5: Game 3 — Shooting Range (Carnival Target Pop)**
   - [ ] Sunny daytime sky with drifting cartoon clouds and rolling green grass hill.
   - [ ] Pop-up animated concentric ring bullseye targets (red, orange, black).

@@ -157,123 +157,174 @@
       </button>
     </div>
 
-    <!-- Wand Remote Molded Chassis -->
-    <div class="mx-4 bg-gradient-to-b from-surface-container-lowest via-surface-container-low to-surface-variant rounded-[32px] p-5 shadow-[0_8px_24px_rgba(120,140,160,0.22)] flex flex-col items-center">
-      
-      <!-- Primary Action: Big Circular A Button -->
-      <div class="w-full flex justify-center py-2">
-        <button id="btn-a" class="w-24 h-24 rounded-full bg-gradient-to-b from-secondary-container via-primary-container to-secondary flex flex-col items-center justify-center relative shadow-[0_8px_20px_rgba(60,180,231,0.45),inset_0_2px_4px_rgba(255,255,255,0.85)] active:scale-95 transition-all duration-100 ease-out cursor-pointer" aria-label="A Button">
-          <div class="absolute top-1.5 inset-x-4 h-7 rounded-full bg-gradient-to-b from-white/70 to-transparent pointer-events-none"></div>
-          <span class="text-3xl text-on-primary font-black drop-shadow-sm tracking-wide">A</span>
-        </button>
-      </div>
-
-      <!-- Directional D-Pad Cross Inset -->
-      <div class="my-4 relative flex items-center justify-center">
-        <div class="w-[154px] h-[154px] relative bg-surface-container-low rounded-[28px] p-1.5 shadow-[inset_0_2px_6px_rgba(100,125,150,0.25),0_6px_14px_rgba(120,140,160,0.25)] flex items-center justify-center">
-          
-          <button id="dpad-up" class="absolute top-1.5 left-[52px] w-[50px] h-[48px] bg-gradient-to-b from-surface-container-lowest to-surface-container-high rounded-t-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Up">
-            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_up</span>
+    <!-- Portrait Wand Remote View -->
+    <div id="portrait-controller-view" class="flex flex-col w-full">
+      <!-- Wand Remote Molded Chassis -->
+      <div class="mx-4 bg-gradient-to-b from-surface-container-lowest via-surface-container-low to-surface-variant rounded-[32px] p-5 shadow-[0_8px_24px_rgba(120,140,160,0.22)] flex flex-col items-center">
+        
+        <!-- Primary Action: Big Circular A Button -->
+        <div class="w-full flex justify-center py-2">
+          <button id="btn-a" class="w-24 h-24 rounded-full bg-gradient-to-b from-secondary-container via-primary-container to-secondary flex flex-col items-center justify-center relative shadow-[0_8px_20px_rgba(60,180,231,0.45),inset_0_2px_4px_rgba(255,255,255,0.85)] active:scale-95 transition-all duration-100 ease-out cursor-pointer" aria-label="A Button">
+            <div class="absolute top-1.5 inset-x-4 h-7 rounded-full bg-gradient-to-b from-white/70 to-transparent pointer-events-none"></div>
+            <span class="text-3xl text-on-primary font-black drop-shadow-sm tracking-wide">A</span>
           </button>
-          
-          <button id="dpad-down" class="absolute bottom-1.5 left-[52px] w-[50px] h-[48px] bg-gradient-to-t from-surface-container-lowest to-surface-container-high rounded-b-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Down">
-            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_down</span>
-          </button>
-          
-          <button id="dpad-left" class="absolute left-1.5 top-[52px] w-[48px] h-[50px] bg-gradient-to-r from-surface-container-lowest to-surface-container-high rounded-l-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Left">
-            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_left</span>
-          </button>
-          
-          <button id="dpad-right" class="absolute right-1.5 top-[52px] w-[48px] h-[50px] bg-gradient-to-l from-surface-container-lowest to-surface-container-high rounded-r-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Right">
-            <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_right</span>
-          </button>
-
-          <!-- Center Pivot Hub -->
-          <div class="w-10 h-10 rounded-full bg-surface-container-high shadow-[inset_0_1.5px_4px_rgba(100,125,150,0.3)] flex items-center justify-center pointer-events-none">
-            <div class="w-3.5 h-3.5 rounded-full bg-surface-variant/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Utility Row: Minus, Home Cloud Orb, Plus -->
-      <div class="w-full flex items-center justify-around px-2 my-2">
-        <div class="flex flex-col items-center gap-1">
-          <button id="btn-minus" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_10px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Minus Button">
-            <span class="material-symbols-outlined text-[20px] text-tertiary font-bold">remove</span>
-          </button>
-          <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Minus</span>
         </div>
 
-        <div class="flex flex-col items-center gap-1">
-          <button id="btn-home" class="w-14 h-14 rounded-full bg-surface-container-lowest shadow-[0_6px_16px_rgba(60,180,231,0.35),inset_0_2px_0_rgba(255,255,255,1)] p-1 flex items-center justify-center active:scale-90 transition-transform" aria-label="Home Menu">
-            <div class="w-full h-full rounded-full bg-gradient-to-b from-secondary-container to-primary flex items-center justify-center shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.6)]">
-              <span class="material-symbols-outlined text-[22px] text-on-primary">cloud</span>
+        <!-- Directional D-Pad Cross Inset -->
+        <div class="my-4 relative flex items-center justify-center">
+          <div class="w-[154px] h-[154px] relative bg-surface-container-low rounded-[28px] p-1.5 shadow-[inset_0_2px_6px_rgba(100,125,150,0.25),0_6px_14px_rgba(120,140,160,0.25)] flex items-center justify-center">
+            
+            <button id="dpad-up" class="absolute top-1.5 left-[52px] w-[50px] h-[48px] bg-gradient-to-b from-surface-container-lowest to-surface-container-high rounded-t-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Up">
+              <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_up</span>
+            </button>
+            
+            <button id="dpad-down" class="absolute bottom-1.5 left-[52px] w-[50px] h-[48px] bg-gradient-to-t from-surface-container-lowest to-surface-container-high rounded-b-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Down">
+              <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_down</span>
+            </button>
+            
+            <button id="dpad-left" class="absolute left-1.5 top-[52px] w-[48px] h-[50px] bg-gradient-to-r from-surface-container-lowest to-surface-container-high rounded-l-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Left">
+              <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_left</span>
+            </button>
+            
+            <button id="dpad-right" class="absolute right-1.5 top-[52px] w-[48px] h-[50px] bg-gradient-to-l from-surface-container-lowest to-surface-container-high rounded-r-xl flex items-center justify-center shadow-[0_2px_4px_rgba(120,140,160,0.2),inset_0_1.5px_0_rgba(255,255,255,0.9)] active:scale-95 transition-transform" aria-label="D-Pad Right">
+              <span class="material-symbols-outlined text-[22px] text-tertiary">keyboard_arrow_right</span>
+            </button>
+
+            <!-- Center Pivot Hub -->
+            <div class="w-10 h-10 rounded-full bg-surface-container-high shadow-[inset_0_1.5px_4px_rgba(100,125,150,0.3)] flex items-center justify-center pointer-events-none">
+              <div class="w-3.5 h-3.5 rounded-full bg-surface-variant/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.15)]"></div>
             </div>
-          </button>
-          <span class="text-[10px] font-bold text-primary uppercase tracking-wider">Home</span>
-        </div>
-
-        <div class="flex flex-col items-center gap-1">
-          <button id="btn-plus" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_10px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Plus Button">
-            <span class="material-symbols-outlined text-[20px] text-tertiary font-bold">add</span>
-          </button>
-          <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Plus</span>
-        </div>
-      </div>
-
-      <!-- Recenter Pointer Anchor Button -->
-      <div class="w-full my-3 flex justify-center">
-        <button id="btn-recenter" class="px-5 py-2.5 rounded-full bg-surface-container-high/80 backdrop-blur shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_2px_6px_rgba(120,140,160,0.15)] flex items-center gap-2 active:bg-primary-fixed transition-colors" aria-label="Recenter Pointer">
-          <span class="material-symbols-outlined text-[16px] text-primary">my_location</span>
-          <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">Recenter Pointer</span>
-        </button>
-      </div>
-
-      <!-- Vertical Button Pair: 1 and 2 with Speaker Holes -->
-      <div class="flex flex-col items-center gap-2.5 my-1">
-        <button id="btn-1" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_12px_rgba(120,140,160,0.22),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Button 1">
-          <span class="text-xl text-tertiary font-black">1</span>
-        </button>
-
-        <!-- Molded Acoustic Speaker Grille Emulation -->
-        <div class="flex flex-col items-center gap-1 py-1 px-4 opacity-70">
-          <div class="flex gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
-          </div>
-          <div class="flex gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
           </div>
         </div>
 
-        <button id="btn-2" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_12px_rgba(120,140,160,0.22),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Button 2">
-          <span class="text-xl text-tertiary font-black">2</span>
-        </button>
+        <!-- Utility Row: Minus, Home Cloud Orb, Plus -->
+        <div class="w-full flex items-center justify-around px-2 my-2">
+          <div class="flex flex-col items-center gap-1">
+            <button id="btn-minus" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_10px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Minus Button">
+              <span class="material-symbols-outlined text-[20px] text-tertiary font-bold">remove</span>
+            </button>
+            <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Minus</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1">
+            <button id="btn-home" class="w-14 h-14 rounded-full bg-surface-container-lowest shadow-[0_6px_16px_rgba(60,180,231,0.35),inset_0_2px_0_rgba(255,255,255,1)] p-1 flex items-center justify-center active:scale-90 transition-transform" aria-label="Home Menu">
+              <div class="w-full h-full rounded-full bg-gradient-to-b from-secondary-container to-primary flex items-center justify-center shadow-[inset_0_1.5px_2px_rgba(255,255,255,0.6)]">
+                <span class="material-symbols-outlined text-[22px] text-on-primary">cloud</span>
+              </div>
+            </button>
+            <span class="text-[10px] font-bold text-primary uppercase tracking-wider">Home</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1">
+            <button id="btn-plus" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_10px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Plus Button">
+              <span class="material-symbols-outlined text-[20px] text-tertiary font-bold">add</span>
+            </button>
+            <span class="text-[10px] font-bold text-tertiary uppercase tracking-wider">Plus</span>
+          </div>
+        </div>
+
+        <!-- Recenter Pointer Anchor Button -->
+        <div class="w-full my-3 flex justify-center">
+          <button id="btn-recenter" class="px-5 py-2.5 rounded-full bg-surface-container-high/80 backdrop-blur shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_2px_6px_rgba(120,140,160,0.15)] flex items-center gap-2 active:bg-primary-fixed transition-colors" aria-label="Recenter Pointer">
+            <span class="material-symbols-outlined text-[16px] text-primary">my_location</span>
+            <span class="text-[11px] text-on-surface-variant font-bold uppercase tracking-wider">Recenter Pointer</span>
+          </button>
+        </div>
+
+        <!-- Vertical Button Pair: 1 and 2 with Speaker Holes -->
+        <div class="flex flex-col items-center gap-2.5 my-1">
+          <button id="btn-1" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_12px_rgba(120,140,160,0.22),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Button 1">
+            <span class="text-xl text-tertiary font-black">1</span>
+          </button>
+
+          <!-- Molded Acoustic Speaker Grille Emulation -->
+          <div class="flex flex-col items-center gap-1 py-1 px-4 opacity-70">
+            <div class="flex gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+            </div>
+            <div class="flex gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-outline-variant shadow-[inset_0_0.5px_1px_rgba(0,0,0,0.25)]"></span>
+            </div>
+          </div>
+
+          <button id="btn-2" class="w-12 h-12 rounded-full bg-gradient-to-b from-surface-container-lowest to-surface-container-high shadow-[0_4px_12px_rgba(120,140,160,0.22),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-center active:scale-90 transition-transform" aria-label="Button 2">
+            <span class="text-xl text-tertiary font-black">2</span>
+          </button>
+        </div>
+
       </div>
 
+      <!-- Wide Underside B Trigger Bar -->
+      <div class="mx-4 mt-3">
+        <button id="btn-trigger" class="w-full py-4 bg-gradient-to-b from-surface-container-lowest via-surface-container-high to-surface-variant rounded-2xl shadow-[0_6px_18px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-between px-6 active:scale-[0.98] transition-all" aria-label="B Trigger">
+          <div class="flex items-center gap-1.5 opacity-60">
+            <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+            <span class="w-1 h-4 rounded-full bg-tertiary-container"></span>
+            <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+          </div>
+          <div class="flex items-center gap-2 text-on-surface">
+            <span class="material-symbols-outlined text-[20px] text-primary">vibration</span>
+            <span class="text-sm font-black tracking-widest uppercase">B Trigger</span>
+          </div>
+          <div class="flex items-center gap-1.5 opacity-60">
+            <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+            <span class="w-1 h-4 rounded-full bg-tertiary-container"></span>
+            <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+          </div>
+        </button>
+      </div>
     </div>
 
-    <!-- Wide Underside B Trigger Bar -->
-    <div class="mx-4 mt-3">
-      <button id="btn-trigger" class="w-full py-4 bg-gradient-to-b from-surface-container-lowest via-surface-container-high to-surface-variant rounded-2xl shadow-[0_6px_18px_rgba(120,140,160,0.25),inset_0_1.5px_0_rgba(255,255,255,0.9)] flex items-center justify-between px-6 active:scale-[0.98] transition-all" aria-label="B Trigger">
-        <div class="flex items-center gap-1.5 opacity-60">
-          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
-          <span class="w-1 h-4 rounded-full bg-tertiary-container"></span>
-          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+    <!-- Landscape Flight Deck (Alien Attack Mode) -->
+    <div id="landscape-controller-view" class="hidden flex-col flex-1 px-4 py-2 w-full max-w-4xl mx-auto">
+      <div class="flex items-center justify-between mb-3 px-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]"></span>
+          <span class="text-xs font-black tracking-widest uppercase text-cyan-600">Alien Attack Flight Deck</span>
         </div>
-        <div class="flex items-center gap-2 text-on-surface">
-          <span class="material-symbols-outlined text-[20px] text-primary">vibration</span>
-          <span class="text-sm font-black tracking-widest uppercase">B Trigger</span>
+        <div class="flex items-center gap-2">
+          <button id="btn-landscape-home" class="px-3 py-1 rounded-full bg-surface-container-high shadow text-[11px] font-bold text-primary flex items-center gap-1 active:scale-95 transition-transform" aria-label="Pause Menu">
+            <span class="material-symbols-outlined text-[14px]">cloud</span>
+            <span>PAUSE</span>
+          </button>
+          <button id="btn-landscape-recenter" class="px-3 py-1 rounded-full bg-surface-container-high shadow text-[11px] font-bold text-tertiary flex items-center gap-1 active:scale-95 transition-transform" aria-label="Recenter Gyro">
+            <span class="material-symbols-outlined text-[14px]">my_location</span>
+            <span>CENTER</span>
+          </button>
         </div>
-        <div class="flex items-center gap-1.5 opacity-60">
-          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
-          <span class="w-1 h-4 rounded-full bg-tertiary-container"></span>
-          <span class="w-1 h-3 rounded-full bg-tertiary-container"></span>
+      </div>
+
+      <!-- Flight Yoke Dual Firing Deck -->
+      <div class="flex-1 grid grid-cols-12 gap-3 min-h-[220px]">
+        <!-- Left Thumb Plasma Cannon Trigger -->
+        <button id="btn-landscape-left-fire" class="col-span-5 h-full min-h-[200px] rounded-3xl bg-gradient-to-b from-cyan-400 via-sky-500 to-blue-600 shadow-[0_8px_24px_rgba(6,182,212,0.4),inset_0_2px_4px_rgba(255,255,255,0.8)] active:scale-[0.97] transition-all flex flex-col items-center justify-center p-4 cursor-pointer text-white" aria-label="Left Cannon">
+          <span class="material-symbols-outlined text-[40px] drop-shadow-md">bolt</span>
+          <span class="text-lg font-black tracking-widest mt-1">FIRE L</span>
+          <span class="text-[10px] uppercase font-bold tracking-wider text-cyan-100">Plasma Cannon</span>
+        </button>
+
+        <!-- Center Horizon & Status Indicator -->
+        <div class="col-span-2 flex flex-col items-center justify-center py-2 px-1 bg-surface-container-lowest/80 backdrop-blur rounded-2xl shadow-inner border border-outline-variant/30">
+          <span class="material-symbols-outlined text-primary text-[28px] mb-1">flight</span>
+          <div class="w-full px-2 my-2">
+            <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden relative">
+              <div id="landscape-horizon-pip" class="absolute top-0 bottom-0 w-3 bg-primary-container rounded-full left-1/2 -translate-x-1/2 transition-transform duration-75"></div>
+            </div>
+          </div>
+          <span class="text-[9px] font-black uppercase text-tertiary tracking-tighter text-center">Tilt Phone to Steer</span>
         </div>
-      </button>
+
+        <!-- Right Thumb Plasma Cannon Trigger -->
+        <button id="btn-landscape-right-fire" class="col-span-5 h-full min-h-[200px] rounded-3xl bg-gradient-to-b from-cyan-400 via-sky-500 to-blue-600 shadow-[0_8px_24px_rgba(6,182,212,0.4),inset_0_2px_4px_rgba(255,255,255,0.8)] active:scale-[0.97] transition-all flex flex-col items-center justify-center p-4 cursor-pointer text-white" aria-label="Right Cannon">
+          <span class="material-symbols-outlined text-[40px] drop-shadow-md">bolt</span>
+          <span class="text-lg font-black tracking-widest mt-1">FIRE R</span>
+          <span class="text-[10px] uppercase font-bold tracking-wider text-cyan-100">Plasma Cannon</span>
+        </button>
+      </div>
     </div>
 
     <!-- Tactile Haptic Toast Popup -->

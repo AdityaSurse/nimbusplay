@@ -39,7 +39,11 @@ const BUTTON_CONFIGS: ButtonConfig[] = [
   { id: 'btn-home', name: 'home', mask: BUTTON_MASKS.HOME, hapticDuration: 35 },
   { id: 'btn-1', name: 'btn1', mask: BUTTON_MASKS.BTN_1, hapticDuration: 22 },
   { id: 'btn-2', name: 'btn2', mask: BUTTON_MASKS.BTN_2, hapticDuration: 22 },
-  { id: 'btn-recenter', name: 'recenter', mask: BUTTON_MASKS.RECENTER, hapticDuration: 30 }
+  { id: 'btn-recenter', name: 'recenter', mask: BUTTON_MASKS.RECENTER, hapticDuration: 30 },
+  { id: 'btn-landscape-left-fire', name: 'a', mask: BUTTON_MASKS.A, hapticDuration: 25 },
+  { id: 'btn-landscape-right-fire', name: 'b', mask: BUTTON_MASKS.B, hapticDuration: 25 },
+  { id: 'btn-landscape-recenter', name: 'recenter', mask: BUTTON_MASKS.RECENTER, hapticDuration: 30 },
+  { id: 'btn-landscape-home', name: 'home', mask: BUTTON_MASKS.HOME, hapticDuration: 35 }
 ];
 
 export type ButtonChangeCallback = (bitmask: number, pressedButton: ButtonName | null) => void;

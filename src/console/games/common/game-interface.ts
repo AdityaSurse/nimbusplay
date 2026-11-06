@@ -18,6 +18,7 @@ export interface GameOptions {
   width: number;
   height: number;
   sendHaptic: (pattern: number[]) => void;
+  setLayoutMode?: (mode: 'portrait' | 'landscape') => void;
   onExitToMenu: () => void;
   onScoreUpdate?: (score: number) => void;
 }

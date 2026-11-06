@@ -11,7 +11,8 @@ import {
   BUTTON_MASKS,
   type NimbusNetworkMessage, 
   type HapticFeedbackCommand, 
-  type MotionInputFrame
+  type MotionInputFrame,
+  type LayoutModeCommand
 } from '../shared/protocol.js';
 
 interface LanInfo {
@@ -160,12 +161,24 @@ function bindModalButtons(): void {
       await gameManager?.launchGame(game.id, {
         sendHaptic: (pattern) => {
           if (networkClient) {
-            networkClient.send({
+            const cmd: HapticFeedbackCommand = {
               type: 'COMMAND_HAPTIC',
               seq: Date.now(),
               timestamp: Date.now(),
               pattern
-            });
+            };
+            networkClient.send(cmd);
+          }
+        },
+        setLayoutMode: (mode) => {
+          if (networkClient) {
+            const cmd: LayoutModeCommand = {
+              type: 'COMMAND_LAYOUT_MODE',
+              seq: Date.now(),
+              timestamp: Date.now(),
+              mode
+            };
+            networkClient.send(cmd);
           }
         }
       });

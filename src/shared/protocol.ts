@@ -113,6 +113,11 @@ export interface HapticFeedbackCommand extends BaseMessage {
   pattern: number[];
 }
 
+export interface LayoutModeCommand extends BaseMessage {
+  type: 'COMMAND_LAYOUT_MODE';
+  mode: 'portrait' | 'landscape';
+}
+
 export type StandardMessage =
   | JoinRoomRequest
   | JoinRoomAck
@@ -121,7 +126,8 @@ export type StandardMessage =
   | PongMessage
   | MotionInputFrame
   | RecenterCommand
-  | HapticFeedbackCommand;
+  | HapticFeedbackCommand
+  | LayoutModeCommand;
 
 export type NimbusNetworkMessage = StandardMessage | CompactMotionPacket;
 
