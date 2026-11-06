@@ -1,6 +1,6 @@
-# NimbusPlay — Master Plan & Technical Specification
+# NimbusPlay — Master Plan & Technical Specification (Game Remake)
 
-> **Project Concept**: A tactile, Wii-Menu-style game console running entirely inside a desktop web browser, where an Android smartphone running Chrome acts as the wireless motion-sensing controller ("Nimbus Wand"). The smartphone streams high-frequency inertial sensor data and touch inputs over a low-latency local WebSocket relay, driving an on-screen hand cursor and powering 3 custom motion games.
+> **Project Concept**: A tactile, Wii-Menu-style game console running entirely inside a desktop web browser, where an Android smartphone running Chrome acts as the wireless motion-sensing controller ("Nimbus Wand"). The smartphone streams high-frequency inertial sensor data and touch inputs over a low-latency local WebSocket relay, driving an on-screen hand cursor and powering **4 custom motion games** based on the reference system (`/design/reference/Video-7889.mp4`, `reel-games.png`, and `reel-menu.png`): **Fruit Ninja**, **Alien Attack**, **Shooting Range**, and **Sketch**.
 
 ---
 
@@ -10,19 +10,20 @@
 1. **Authentic Console Feel**: Replicate the clean, glossy-minimal, optimistic domestic utility aesthetic of late-2000s Japanese home console firmware (the 2006–2012 era) using modern semantic HTML, CSS, and SVG without any copyrighted Nintendo assets.
 2. **Hardware-Free Motion Gaming**: Turn any standard Android phone running mobile Chrome into a wireless motion controller with zero app installation (100% web-based).
 3. **Ultra-Low Latency**: Maintain an end-to-end input-to-display latency of under 30 milliseconds over standard residential Wi-Fi.
-4. **Fluid 60 FPS Visuals**: Deliver locked 60 frames per second for both the domestic channel hub and hardware-accelerated 2D games using PixiJS.
+4. **Fluid 60 FPS Visuals**: Deliver locked 60 frames per second for both the domestic channel hub and hardware-accelerated games using PixiJS.
 5. **Zero External Audio Dependencies**: Synthesize 100% of sound effects procedurally in real-time via the Web Audio API.
-6. **Seamless Zero-Config Pairing**: Pair controller to console in seconds via on-screen QR code and 4-character PIN.
-7. **Three Complete Motion Games**:
-   - **Slice Party**: Rapid fruit slicing utilizing pointer velocity vectors.
-   - **Star Defender**: Aim-and-shoot space blaster using crosshair targeting and trigger fire.
-   - **Bowl Blitz**: Motion throw gesture bowling factoring arm acceleration, release timing, and wrist hook spin.
+6. **Seamless Zero-Config Pairing**: Pair controller to console in seconds via on-screen QR code embedded directly into the console firmware bottom shelf.
+7. **Exactly Four Motion Games (Reference Target)**:
+   - **Fruit Ninja**: High-speed fruit slicing on vertical cedar wood planks with luminous blade ribbons, juicy wall splatters, watermelon score HUD, and 3-strike `X X X` life counters.
+   - **Alien Attack**: 3D forward rail-shooter through deep space warp corridors, nebula clouds, and Saturn-like ringed gas giants, controlled via **two-handed landscape phone tilt steering and dual-thumb laser firing**.
+   - **Shooting Range**: Sunny daytime carnival target range with drifting clouds, lush green grass hill, pop-up animated concentric ring bullseyes (red, orange, black), and hitscan trigger fire with floating score text.
+   - **Sketch**: Real-time creative digital whiteboard with vertical multi-color swatch palette, brush size selectors, and smooth Catmull-Rom vector ink drawing with **A** button held.
 
 ### 1.2 Non-Goals
 - **No Nintendo IP or Trademarks**: No ripped Nintendo graphics, sound effects, fonts, Mii avatars, or trademarked terminology ("Wii", "Wiimote", etc.).
+- **No Legacy Games**: Star Defender and Bowl Blitz are formally deprecated and removed from the active plan in favor of the 4 reference remake games.
 - **No Native App Store Builds**: No React Native, Flutter, or native Android/APK packaging. The system must remain entirely web-based.
 - **No Public Cloud Relay Dependency**: Operation must be fully self-contained on the local Wi-Fi subnet; gameplay never depends on external internet servers.
-- **No Complex 3D Polygon Engines**: Games avoid heavy WebGL 3D meshes or Three.js/Babylon.js; lightweight 2D sprite rendering via PixiJS ensures reliable 60 fps on standard hardware.
 
 ---
 
@@ -215,178 +216,268 @@ flowchart TD
 
 ---
 
-### (h) UI Navigation Flow
+### (h) Remake Channel Menu Flow & 4 Game Matrix
 ```mermaid
 flowchart TD
-    ConsoleBoot["Console Boot / Idle"] --> ChannelMenu["4x3 Channel Matrix Grid"]
-    
-    ChannelMenu --> HoverTile["Pointer Hovers Channel Slot"]
-    HoverTile --> TileFocus["Tile Scales 1.04x, Cyan Glow & Specular Sheen, Focus Audio"]
-    TileFocus --> ClickA["Player Clicks A Button"]
-    
-    ClickA --> LaunchDialog["Channel Launch Modal Dialog Opens"]
-    LaunchDialog --> DialogOptions{"Player Selection"}
-    
-    DialogOptions -- "Back Pill Button" --> ChannelMenu
-    DialogOptions -- "Start Pill Button" --> PlayChime["Play Harmonic Launch Chime"]
-    
-    PlayChime --> GameSession["Active Game Session (PixiJS Canvas)"]
-    GameSession --> PressHome["Player Presses 'Home' Button on Controller"]
-    
-    PressHome --> HomeOverlay["Home Menu Overlay HUD (Pause State)"]
-    HomeOverlay --> OverlayOptions{"Overlay Selection"}
-    
-    OverlayOptions -- "Resume Game" --> GameSession
-    OverlayOptions -- "Reset Game" --> ResetGame["Restart Game Instance"]
-    ResetGame --> GameSession
-    OverlayOptions -- "Console Menu" --> TeardownGame["Destroy PixiJS Canvas & Return"]
-    TeardownGame --> ChannelMenu
+    %% Styling Classes
+    classDef fruitStyle fill:#ffedd5,stroke:#ea580c,stroke-width:2px,color:#9a3412;
+    classDef alienStyle fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#166534;
+    classDef shootStyle fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e40af;
+    classDef sketchStyle fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#6b21a8;
+    classDef emptyStyle fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,stroke-dasharray: 4 4,color:#64748b;
+    classDef menuStyle fill:#ffffff,stroke:#0284c7,stroke-width:2px,color:#0369a1;
+    classDef modalStyle fill:#f8fafc,stroke:#334155,stroke-width:2px,color:#0f172a;
+
+    Boot["Console Boot & Web Audio Init"]:::menuStyle --> Hub["Nimbus Domestic Channel Hub (4x3 Grid)"]:::menuStyle
+
+    subgraph TopRow["Top Row: Exactly 4 Playable Games"]
+        Tile1["Tile 1: Fruit Ninja<br/>(Peach/Orange Gradient)"]:::fruitStyle
+        Tile2["Tile 2: Alien Attack<br/>(Spring Green Gradient)"]:::alienStyle
+        Tile3["Tile 3: Shooting Range<br/>(Royal Blue Gradient)"]:::shootStyle
+        Tile4["Tile 4: Sketch<br/>(Royal Violet Gradient)"]:::sketchStyle
+    end
+
+    subgraph LowerRows["Rows 2 & 3: Frosted Channel Cards"]
+        EmptySlots["8 Translucent White Ceramic Cards<br/>(Future Expansion Slots)"]:::emptyStyle
+    end
+
+    subgraph BottomDock["Firmware Bottom Shelf Dock"]
+        ShelfBtn["( ( ) Settings Disk )"]:::menuStyle
+        Clock["14:32 Live Digital Clock & Date"]:::menuStyle
+        DirectQR["Direct Embedded QR Code Canvas<br/>(Instant 1-Second Pairing)"]:::menuStyle
+    end
+
+    Hub --> TopRow
+    Hub --> LowerRows
+    Hub --> BottomDock
+
+    Tile1 -->|"Pointer Hover & A Click"| Modal1["Launch Modal: Fruit Ninja"]:::modalStyle
+    Tile2 -->|"Pointer Hover & A Click"| Modal2["Launch Modal: Alien Attack"]:::modalStyle
+    Tile3 -->|"Pointer Hover & A Click"| Modal3["Launch Modal: Shooting Range"]:::modalStyle
+    Tile4 -->|"Pointer Hover & A Click"| Modal4["Launch Modal: Sketch"]:::modalStyle
+
+    Modal1 -->|"Start Pill Click"| Game1["Fruit Ninja (PixiJS)"]:::fruitStyle
+    Modal2 -->|"Start Pill Click"| Game2["Alien Attack (PixiJS 3D)"]:::alienStyle
+    Modal3 -->|"Start Pill Click"| Game3["Shooting Range (PixiJS)"]:::shootStyle
+    Modal4 -->|"Start Pill Click"| Game4["Sketch Canvas (PixiJS)"]:::sketchStyle
+
+    Game1 -->|"Press Home Button"| PauseOverlay["Home Pause Overlay HUD"]:::modalStyle
+    Game2 -->|"Press Home Button"| PauseOverlay
+    Game3 -->|"Press Home Button"| PauseOverlay
+    Game4 -->|"Press Home Button"| PauseOverlay
+
+    PauseOverlay -->|"Console Menu"| Hub
 ```
 
 ---
 
-### (i) Generic Game Loop Flowchart
+### (i) Controller Dynamic Input Mapping per Game
 ```mermaid
 flowchart TD
-    GameStart["Game Initialized"] --> FrameLoop["RequestAnimationFrame (60 FPS)"]
-    
-    FrameLoop --> IngestInput["Ingest Latest Controller Input & Pointer State"]
-    IngestInput --> CheckPause{"Is Game Paused by Home Overlay?"}
-    
-    CheckPause -- Yes --> RenderPauseState["Render Frosted Pause Frame"]
-    RenderPauseState --> FrameLoop
-    
-    CheckPause -- No --> StepPhysics["Update Entity Positions & Physics (dt)"]
-    StepPhysics --> CheckCollisions["Broadphase & Narrowphase Collision Checks"]
-    CheckCollisions --> ProcessRules["Evaluate Score, Combos, Health, Game Over Conditions"]
-    ProcessRules --> RenderSprites["PixiJS WebGL Render Pass"]
-    RenderSprites --> CheckOver{"Game Over?"}
-    
-    CheckOver -- No --> FrameLoop
-    CheckOver -- Yes --> ShowResults["Display Game Over Summary & High Scores"]
-    ShowResults --> AwaitRestart{"Player Restarts or Exits?"}
-    AwaitRestart -- Restart --> StepPhysics
-    AwaitRestart -- Exit --> TeardownGame["Teardown & Return to Channel Menu"]
+    %% Styling Classes
+    classDef phoneStyle fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#92400e;
+    classDef portraitStyle fill:#ecfeff,stroke:#0891b2,stroke-width:2px,color:#155e75;
+    classDef landStyle fill:#fdf2f8,stroke:#db2777,stroke-width:2px,color:#9d174d;
+    classDef gameMap fill:#ffffff,stroke:#475569,stroke-width:2px,color:#1e293b;
+
+    InboundMsg["Console Layout Dispatcher"]:::phoneStyle --> CheckGame{"Active Game Context"}
+
+    CheckGame -- "Menu / Fruit Ninja / Shooting Range / Sketch" --> SetPortrait["Set Controller Layout: Portrait Wand Mode"]:::portraitStyle
+    CheckGame -- "Alien Attack" --> SetLandscape["Set Controller Layout: Landscape Flight Mode"]:::landStyle
+
+    subgraph PortraitMode["Portrait Wand Mode (Single-Handed)"]
+        SensorsP["Gyro Integration: Alpha (Yaw) & Beta (Pitch)"]:::portraitStyle
+        FilterP["One Euro Adaptive Filter + Deadzone"]:::portraitStyle
+        TouchP["Button Matrix: Large A, D-Pad, Minus, Home, Plus, B Trigger"]:::portraitStyle
+        SensorsP --> FilterP
+    end
+
+    subgraph LandscapeMode["Landscape Flight Mode (Two-Handed)"]
+        SensorsL["Gyro Flight Yoke: Roll (Gamma) & Pitch (Beta)"]:::landStyle
+        FilterL["Gravity Compensated Flight Heading Filter"]:::landStyle
+        TouchL["Dual-Thumb Touch Zones: Left Cannon & Right Cannon"]:::landStyle
+        SensorsL --> FilterL
+    end
+
+    SetPortrait --> PortraitMode
+    SetLandscape --> LandscapeMode
+
+    PortraitMode --> MapFN["Fruit Ninja: Aim Cursor + Hold A/B while Swiping"]:::gameMap
+    PortraitMode --> MapSR["Shooting Range: Aim Crosshair + Tap A/B to Fire Hitscan"]:::gameMap
+    PortraitMode --> MapSK["Sketch: Move Pen + Hold A/B to Draw Continuous Stroke"]:::gameMap
+    LandscapeMode --> MapAA["Alien Attack: Tilt Phone to Bank/Steer + Thumb Tap to Fire Lasers"]:::gameMap
 ```
 
 ---
 
-### (j) Slice Party: Slice-Detection Flowchart
+### (j) Game 1: Fruit Ninja Loop & State Machine
 ```mermaid
 flowchart TD
-    PointerTick["Per-Frame Pointer Update"] --> AppendHistory["Append Coordinate to Rolling History Array (Last 6 Frames)"]
-    AppendHistory --> CalcVelocity["Calculate Blade Velocity: V = Distance(P_now, P_prev) / dt"]
-    
-    CalcVelocity --> SpeedCheck{"Velocity > SliceSpeedThreshold (1200 px/sec)?"}
-    SpeedCheck -- No --> FadeTrail["Fade Existing Blade Trail Ribbons"]
-    SpeedCheck -- Yes --> ActiveBlade["Activate Blade Trail & Emit Spark Particles"]
-    
-    ActiveBlade --> BuildSegment["Construct Line Segment L = (P_prev, P_now)"]
-    BuildSegment --> LoopFruits["For Each Active Fruit with Circle Bounds (C, R)"]
-    
-    LoopFruits --> Intersect{"Line Segment Intersects Fruit Circle?"}
-    Intersect -- No --> LoopFruits
-    Intersect -- Yes --> CheckType{"Fruit or Bomb?"}
-    
-    CheckType -- Bomb --> Detonate["Explosion Flash, Screen Shake, Lose 1 Life, Bomb Audio"]
-    CheckType -- Fruit --> SplitFruit["Slice Cut: Split Sprite into 2 Halves with Angular Velocities"]
-    
-    SplitFruit --> SplashParticles["Spawn Radial Color-matched Juice Particles"]
-    SplashParticles --> AudioSlice["Synthesize Exponential Slash Tone"]
-    AudioSlice --> UpdateCombo["Increment Multiplier & Add Score"]
-    UpdateCombo --> LoopFruits
+    classDef loopStyle fill:#fff7ed,stroke:#c2410c,stroke-width:2px,color:#7c2d12;
+    classDef alertStyle fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#991b1b;
+    classDef scoreStyle fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#065f46;
+
+    StartFN["Start Wave (dt)"]:::loopStyle --> SpawnCheck{"Spawn Interval Elapsed?"}
+    SpawnCheck -- Yes --> SpawnFruits["Launch Fruits in Parabolic Arcs (g = 1200 px/s^2)"]:::loopStyle
+    SpawnCheck -- No --> IngestSlice["Sample Pointer Blade Velocity V"]:::loopStyle
+    SpawnFruits --> IngestSlice
+
+    IngestSlice --> SpeedCheck{"Blade Active? (Hold A/B & V > 1200 px/s)"}
+    SpeedCheck -- Yes --> SweptCheck["Test Swept-Segment vs Fruit Hitboxes"]:::loopStyle
+    SpeedCheck -- No --> CheckFloor["Check if Unsliced Fruits Fell Below Viewport"]:::loopStyle
+
+    SweptCheck --> HitFruit{"Fruit or Bomb?"}
+    HitFruit -- "Fruit" --> SliceFruit["Split Fruit into 2 Halves with Rotation<br/>Spawn Sticky Wall Splatters on Wood Planks<br/>Play Juicy Splat Sound"]:::scoreStyle
+    HitFruit -- "Bomb" --> DetonateBomb["Explosion Flash, Screen Shake & Audio<br/>Instant Strike / Game Over"]:::alertStyle
+
+    SliceFruit --> ComboCalc["Evaluate Multi-Slice Combo (<200ms)<br/>Play Pentatonic Chord Chime"]:::scoreStyle
+    ComboCalc --> CheckFloor
+
+    CheckFloor --> Dropped{"Unsliced Fruit Dropped?"}
+    Dropped -- Yes --> AddStrike["Mark Red 'X' Strike Marker (Max 3)"]:::alertStyle
+    Dropped -- No --> RenderFrame["Render PixiJS Frame with Wood Background"]:::loopStyle
+    AddStrike --> StrikeCheck{"Strikes >= 3?"}
+    StrikeCheck -- Yes --> GameOverFN["Game Over Screen with Score & Retry"]:::alertStyle
+    StrikeCheck -- No --> RenderFrame
+    DetonateBomb --> GameOverFN
+    RenderFrame --> StartFN
 ```
 
 ---
 
-### (k) Star Defender: Game Flow & State Diagram
-```mermaid
-stateDiagram-v2
-    [*] --> SectorIntro
-    SectorIntro --> WaveActive: Wave Title Card Finished
-    
-    state WaveActive {
-        [*] --> SpawningEnemies
-        SpawningEnemies --> CombatEngaged: Enemies Enter Formation
-        CombatEngaged --> CrosshairAiming: Pointer Moves Reticle
-        CrosshairAiming --> PlayerFiring: B Trigger Held (Rapid Fire)
-        PlayerFiring --> CrosshairAiming: Projectiles Travel to Target
-        CombatEngaged --> PlayerDamaged: Enemy Bolt Hits Player Shield
-        PlayerDamaged --> CombatEngaged: Shield Recharges / Hull Decrements
-    }
-
-    WaveActive --> WaveCleared: All Enemies in Wave Destroyed
-    WaveCleared --> SectorIntro: Advance to Next Wave
-    WaveActive --> GameOver: Player Hull Reaches 0%
-    GameOver --> SectorIntro: Player Chooses 'Try Again'
-    GameOver --> [*]: Player Exits to Console Menu
-```
-
----
-
-### (l) Bowl Blitz: Throw-Gesture Detection Flowchart
+### (k) Game 2: Alien Attack (3D Cosmic Rail Shooter) Loop
 ```mermaid
 flowchart TD
-    AimState["Player Aims Pointer at Lane Pins"] --> HoldB["Player Presses & Holds B Trigger"]
-    HoldB --> ArmReady["Arming Throw Sensor: Record Baseline Accelerations"]
-    
-    ArmReady --> CheckSwing{"Backswing Detected? (Accel Y < -3.0 m/s^2)"}
-    CheckSwing -- No --> ArmReady
-    CheckSwing -- Yes --> ForwardSwing["Swing Forward: Monitor Rapid Accel Y Growth"]
-    
-    ForwardSwing --> PeakDetect["Track Forward Acceleration Crest (Peak Accel > 8.0 m/s^2)"]
-    PeakDetect --> ReleaseCheck{"Did Player Release B Trigger?"}
-    
-    ReleaseCheck -- Released Early --> Foul["Foul Throw: Ball Dropped Before Line"]
-    ReleaseCheck -- Released Near Peak --> CalcThrow["Compute Throw Parameters: Speed = k * AccelPeak"]
-    ReleaseCheck -- Not Released --> ForwardSwing
-    
-    CalcThrow --> ComputeSpin["Calculate Hook Spin: Spin = Gyro Roll Rate (Gamma) at Release"]
-    ComputeSpin --> LaunchBall["Animate Ball Down Lane with Perspective Scaling & Curved Spin"]
-    LaunchBall --> PinImpact["Calculate Ball-to-Pin Cluster Physics"]
-    PinImpact --> PinSound["Synthesize Dynamic Heavy Pin Clatter Audio"]
-    PinSound --> ScoreCard["Update Bowling 10-Frame Scorecard"]
+    classDef spaceStyle fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef combatStyle fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#f3e8ff;
+    classDef bossStyle fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fee2e2;
+
+    StartAA["Frame Tick (60 FPS)"]:::spaceStyle --> StepWarp["Advance Warp Particles & 3D Nebula Starfield"]:::spaceStyle
+    StepWarp --> SteerShip["Update Ship Tilt & Position from Landscape Gyro (Roll/Pitch)"]:::spaceStyle
+    StepWarp --> CheckFire{"Dual Thumb Fire Pressed?"}
+
+    CheckFire -- Yes --> SpawnLasers["Emit Dual Plasma Bolts from Wing Cannons<br/>towards 3D Target Reticle (Z: 0 -> 1000)"]:::combatStyle
+    CheckFire -- No --> UpdateEnemies["Step Alien Formations along 3D Vectors"]:::combatStyle
+    SpawnLasers --> UpdateEnemies
+
+    UpdateEnemies --> Collision3D{"Laser Reaches Alien Target?"}
+    Collision3D -- Yes --> AlienExplode["Crunchy Noise Explosion<br/>Spawn Cosmic Debris Particles<br/>Score +20 / +50"]:::combatStyle
+    Collision3D -- No --> CheckPlayerHit{"Alien Bolt Hits Player Ship?"}
+    AlienExplode --> CheckPlayerHit
+
+    CheckPlayerHit -- Yes --> ShieldDown["Lose 1 Shield Icon (Green Ship Glyphs)<br/>Screen Flash & Haptic Rumble"]:::bossStyle
+    CheckPlayerHit -- No --> WaveCheck{"Wave Enemies Cleared?"}
+    ShieldDown --> ShieldCheck{"Shields <= 0?"}
+    ShieldCheck -- Yes --> GameOverAA["Game Over: Cosmic Fleet Destroyed"]:::bossStyle
+
+    ShieldCheck -- No --> WaveCheck
+    WaveCheck -- Yes --> NextSector["Advance Sector: Dreadnought Boss or Faster Warp"]:::bossStyle
+    WaveCheck -- No --> RenderAA["Render 3D Camera Projection in PixiJS"]:::spaceStyle
+    NextSector --> RenderAA
+    RenderAA --> StartAA
 ```
 
 ---
 
-### (m) Repository Folder Tree
+### (l) Game 3: Shooting Range Loop
+```mermaid
+flowchart TD
+    classDef carnivalStyle fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d;
+    classDef targetStyle fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e3a8a;
+    classDef scoreStyle fill:#fefce8,stroke:#ca8a04,stroke-width:2px,color:#713f12;
+
+    StartSR["Frame Tick: 60s Round Timer"]:::carnivalStyle --> UpdateClouds["Drift Cartoon Clouds across Sunny Sky"]:::carnivalStyle
+    UpdateClouds --> PopTargets["Pop Concentric Ring Targets from Grass Hill / Balloons"]:::targetStyle
+    PopTargets --> TrackAim["Update Crosshair from Wand Gyro Aim"]:::targetStyle
+
+    TrackAim --> TriggerCheck{"Player Pressed A or B Trigger?"}
+    TriggerCheck -- No --> DecTimer["Decrement 60s Game Timer"]:::carnivalStyle
+    TriggerCheck -- Yes --> HitscanCheck["Perform Hitscan Raycast from Crosshair"]:::targetStyle
+
+    HitscanCheck --> TargetHit{"Hit Detected?"}
+    TargetHit -- "Bullseye Center" --> Score20["Pop Target + Play Clear Bell Ping<br/>Spawn Floating '+20' Score Popup"]:::scoreStyle
+    TargetHit -- "Outer Ring" --> Score10["Pop Target + Play Wood Crack<br/>Spawn Floating '+10' Score Popup"]:::scoreStyle
+    TargetHit -- "Miss / Blank" --> RifleSound["Play Carnival Air Rifle Puff"]:::targetStyle
+    Score20 --> DecTimer
+    Score10 --> DecTimer
+    RifleSound --> DecTimer
+
+    DecTimer --> TimeOver{"Timer <= 0?"}
+    TimeOver -- Yes --> ResultSR["Show Round Summary & High Score Card"]:::carnivalStyle
+    TimeOver -- No --> RenderSR["Render Sunny Sky, Grass & Targets"]:::carnivalStyle
+    RenderSR --> StartSR
+```
+
+---
+
+### (m) Game 4: Sketch Loop
+```mermaid
+flowchart TD
+    classDef sketchStyle fill:#ffffff,stroke:#9333ea,stroke-width:2px,color:#581c87;
+    classDef toolStyle fill:#faf5ff,stroke:#c084fc,stroke-width:2px,color:#6b21a8;
+
+    StartSK["Frame Tick: Interactive Whiteboard"]:::sketchStyle --> IngestPen["Sample Wand Pointer (X, Y)"]:::sketchStyle
+    IngestPen --> HoverCheck{"Pointer Over Left Toolbar?"}
+
+    HoverCheck -- Yes --> ToolSelect{"Player Taps A on Swatch / Tool?"}
+    ToolSelect -- "Color Dot" --> SetColor["Set Active Ink Color (Red, Green, Blue, etc.)<br/>Play Bubble Pop Chime"]:::toolStyle
+    ToolSelect -- "Brush Size" --> SetWidth["Set Stroke Width (Thin, Medium, Thick)"]:::toolStyle
+    ToolSelect -- "Eraser" --> SetEraser["Toggle Eraser Mode"]:::toolStyle
+    ToolSelect -- "Clear Button" --> ClearBoard["Wipe Canvas + Play Glockenspiel Chime"]:::toolStyle
+    ToolSelect -- No --> RenderCursor["Render Pen Cursor with Active Color Pip"]:::sketchStyle
+    SetColor --> RenderCursor
+    SetWidth --> RenderCursor
+    SetEraser --> RenderCursor
+    ClearBoard --> RenderCursor
+
+    HoverCheck -- No --> DrawCheck{"A Button or B Trigger Held Down?"}
+    DrawCheck -- Yes --> AddSpline["Append (X, Y) to Active Stroke History<br/>Compute Catmull-Rom Smoothing Spline<br/>Blit Antialiased Vector Ribbon to Canvas<br/>Play Subtle Marker Squeak Audio"]:::sketchStyle
+    DrawCheck -- No --> LiftPen["Finalize Stroke Path into Render Texture"]:::sketchStyle
+    AddSpline --> RenderCursor
+    LiftPen --> RenderCursor
+    RenderCursor --> StartSK
+```
+
+---
+
+### (n) Repository Folder Tree (Remake Structure)
 ```mermaid
 flowchart TD
     Root["NimbusPlay / (Workspace Root)"]
     
     Root --> Config["Configuration Files<br/>(package.json, tsconfig.json, vite.config.ts, tailwind.config.js)"]
-    Root --> Docs["docs/<br/>- ARCHITECTURE.md<br/>- PROGRESS.md"]
-    Root --> Design["design/<br/>- DESIGN.md (Design System Tokens)<br/>- home_menu.html<br/>- home_overlay.html<br/>- channel_launch_dialog.html<br/>- pointer_calibration.html<br/>- controller_pairing.html<br/>- virtual_remote.html<br/>- console_hand_pointer.svg"]
+    Root --> Docs["docs/<br/>- ARCHITECTURE.md<br/>- GAME_REFERENCE.md<br/>- PROGRESS.md"]
+    Root --> Design["design/<br/>- DESIGN.md (Design System Tokens)<br/>- reference/ (Video-7889.mp4, reel-games.png, reel-menu.png)"]
     Root --> Server["server/<br/>- relay.ts (Node.js WebSocket Hub)<br/>- session.ts (Room Manager)"]
     Root --> Tests["tests/<br/>- pointer.test.ts (1€ filter, deadzone, aim mapping)<br/>- relay.test.ts (room lifecycle, 60Hz fast path)"]
     Root --> Src["src/"]
     
-    Src --> Shared["shared/<br/>- protocol.ts (TypeScript Schemas & Bitmasks)<br/>- constants.ts (Ports, Dimensions, Limits)"]
-    Src --> Controller["controller/<br/>- index.html (Mobile Web Remote Entrypoint)<br/>- main.ts (60Hz Stream & Visibility Lifecycle)<br/>- sensors.ts (DeviceMotion Ingestion & Fallback)<br/>- touch.ts (Multi-touch Bitmask & Reset)<br/>- device.ts (Wake Lock, Fullscreen, Orientation)"]
-    Src --> Console["console/<br/>- index.html (Console Entrypoint)<br/>- main.ts (Bootstrapper, Audio & Disc Loading)<br/>- core/<br/>  - network.ts (WS Client & Auto-reconnect)<br/>  - debug-overlay.ts (Live Telemetry & Latency HUD)<br/>- pointer/<br/>  - pipeline.ts (Motion Processing & Recenter)<br/>  - one-euro-filter.ts (Adaptive Low-Pass Filter)<br/>  - aim-mapper.ts (Gravity-Compensated Aiming)<br/>  - calibration.ts & calibration-ui.ts<br/>  - settings-manager.ts & settings-ui.ts<br/>  - interaction-manager.ts (DOM Hit-testing & Pointer)<br/>- audio/<br/>  - audio-context.ts (Lifecycle & Noise Buffer)<br/>  - menu-sfx.ts (Tick, Select, Back, Chimes)<br/>  - ambience.ts (Warm Pad Synthesizer)<br/>  - game-sfx.ts & star-sfx.ts (Game Synthesizers)<br/>  - audio-manager.ts (Unified Audio Facade)<br/>- ui/<br/>  - artwork.ts (100% Original Vector SVGs)<br/>  - catalog.ts (Games Directory)<br/>  - shell.ts (Channel Matrix, Modals, Reconnect HUD)<br/>  - onboarding.ts (First-run Interactive Guide)<br/>- games/<br/>  - game-manager.ts (Session Controller)<br/>  - slice-party/ (Fruit Slicing Game)<br/>  - star-defender/ (Space Combat Blaster)<br/>  - bowl-blitz/ (Throw Motion Bowling)"]
+    Src --> Shared["shared/<br/>- protocol.ts (TypeScript Schemas, Layout Modes & Bitmasks)"]
+    Src --> Controller["controller/<br/>- index.html (Mobile Remote Entrypoint)<br/>- main.ts (60Hz Stream & Layout Mode Switcher)<br/>- sensors.ts (DeviceMotion Ingestion & Landscape Tilt)<br/>- touch.ts (Portrait Wand & Landscape Flight Pads)"]
+    Src --> Console["console/<br/>- index.html (Console Entrypoint)<br/>- main.ts (Bootstrapper, Layout Notifier & Loading)<br/>- ui/<br/>  - artwork.ts (4 Colored Gradient SVGs)<br/>  - catalog.ts (4 Remake Games Directory)<br/>  - shell.ts (4x3 Channel Matrix & Bottom QR Dock)<br/>- audio/<br/>  - audio-manager.ts (Unified Synthesizer Facade)<br/>- games/<br/>  - game-manager.ts (Session Controller)<br/>  - fruit-ninja/ (Fruit Slicing on Cedar Planks)<br/>  - alien-attack/ (3D Cosmic Forward Rail Shooter)<br/>  - shooting-range/ (Sunny Carnival Target Shooting)<br/>  - sketch/ (Interactive Digital Whiteboard Canvas)"]
 ```
 
 ---
 
-### (n) Phase Roadmap Timeline
+### (o) Remake Phase Roadmap Timeline
 ```mermaid
 flowchart LR
-    P0["✔ P0: Master Architecture & Spec"] --> P1["✔ P1: Tooling, Vite & SSL"]
-    P1 --> P2["✔ P2: Node Relay & Protocol"]
-    P2 --> P3["✔ P3: Shell UI & Authentic Matrix"]
-    P3 --> P4["✔ P4: Mobile Wand & Sensors"]
-    P4 --> P5["✔ P5: 1€ Pointer Engine"]
-    P5 --> P6["✔ P6: Audio Synthesis Engine"]
-    P6 --> P7["✔ P7: Slice Party"]
-    P7 --> P8["✔ P8: Star Defender"]
-    P8 --> P9["✔ P9: Bowl Blitz"]
-    P9 --> P10["✔ P10: Firmware Polish & Latency"]
+    classDef done fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#065f46;
+    classDef active fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e40af;
+    classDef future fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#334155;
+
+    R0["✔ Phase R0: Reference Spec & Master Architecture"]:::done --> R1["Phase R1: Menu 4-Tile Grid & Direct QR Dock"]:::active
+    R1 --> R2["Phase R2: Controller Landscape Flight Mode"]:::future
+    R2 --> R3["Phase R3: Fruit Ninja Cedar Wall & Slicing Remake"]:::future
+    R3 --> R4["Phase R4: Alien Attack 3D Rail Cosmic Shooter"]:::future
+    R4 --> R5["Phase R5: Shooting Range Carnival Targets"]:::future
+    R5 --> R6["Phase R6: Sketch Interactive Whiteboard"]:::future
+    R6 --> R7["Phase R7: Final Polish, Latency & QA Sign-off"]:::future
 ```
 
 ---
 
-### (o) Error Handling & Troubleshooting Decision Tree
+### (p) Error Handling & Troubleshooting Decision Tree
 ```mermaid
 flowchart TD
     ErrorDetect["Issue Observed during Setup / Play"] --> CheckType{"What symptom is occurring?"}
@@ -530,50 +621,50 @@ Connecting modern mobile browsers to a local desktop server over secure WebSocke
 
 ---
 
-## 9. Visual System Gallery & Screenshots
+## 9. Visual System Gallery & Reference Target Alignment
 
-NimbusPlay faithfully recreates the molded plastic, glossy ceramic, and specular domestic hardware aesthetic of late-2000s console firmware.
+NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `/design/reference/Video-7889.mp4`, `reel-games.png`, and `reel-menu.png`.
 
-### 9.1 Console Domestic Channel Matrix
+### 9.1 Console Domestic Channel Matrix (Top 4 Colored Tiles + Direct Bottom QR)
 ```
 +---------------------------------------------------------------------------------------+
 |  [P1] WAND CONNECTED                              14:32  WED 04 NOV     [=] AMBIENCE  |
 +---------------------------------------------------------------------------------------+
 |                                                                                       |
 |   +---------------+   +---------------+   +---------------+   +---------------+       |
-|   |  SLICE PARTY  |   | STAR DEFENDER |   |  BOWL BLITZ   |   |   SETTINGS    |       |
-|   |  [Fruit Blade]|   | [Space Combat]|   | [Motion Bowl] |   | [Tuning Slid.]|       |
+|   |  FRUIT NINJA  |   | ALIEN ATTACK  |   | SHOOTING RANGE|   |    SKETCH     |       |
+|   | [Peach Gradient]  | [Green Grad.] |   | [Blue Grad.]  |   | [Purple Grad.]|       |
+|   |  (Watermelon) |   | (Retro Alien) |   | (Bullseye)    |   |  (Palette)    |       |
 |   +---------------+   +---------------+   +---------------+   +---------------+       |
 |                                                                                       |
 |   +---------------+   +---------------+   +---------------+   +---------------+       |
-|   |  WAND PAIRING |   |  CALIBRATION  |   |  EMPTY SLOT   |   |  EMPTY SLOT   |       |
-|   | [QR & Status] |   | [Drift Radar] |   |  [Procedural] |   |  [Procedural] |       |
+|   |  EMPTY CARD   |   |  EMPTY CARD   |   |  EMPTY CARD   |   |  EMPTY CARD   |       |
+|   | [Frosted Glass]   | [Frosted Glass]   | [Frosted Glass]   | [Frosted Glass]       |
 |   +---------------+   +---------------+   +---------------+   +---------------+       |
 |                                                                                       |
 |   +---------------+   +---------------+   +---------------+   +---------------+       |
-|   |  ONBOARDING   |   |  EMPTY SLOT   |   |  EMPTY SLOT   |   |  EMPTY SLOT   |       |
-|   | [Guide Cards] |   |  [Procedural] |   |  [Procedural] |   |  [Procedural] |       |
+|   |  EMPTY CARD   |   |  EMPTY CARD   |   |  EMPTY CARD   |   |  EMPTY CARD   |       |
+|   | [Frosted Glass]   | [Frosted Glass]   | [Frosted Glass]   | [Frosted Glass]       |
 |   +---------------+   +---------------+   +---------------+   +---------------+       |
 |                                                                                       |
 +---------------------------------------------------------------------------------------+
-|     ( ( ) WAND PAIRING )         [== WAVE AMBIENCE ==]         ( [*] SETTINGS )       |
+|     ( ( ) SETTINGS )             14:32  TUE 04 NOV          [ QR CODE FOR PAIRING ]   |
 +---------------------------------------------------------------------------------------+
 ```
 
-### 9.2 Nimbus Wand (Virtual Mobile Controller)
+### 9.2 Nimbus Wand Controller (Dual Orientation Modes)
+
 ```
-+-----------------------------------+
-| [P1 CONNECTED]  12ms RTT  [||| 92%]|
-|                                   |
-|   +---------------------------+   |
-|   |   ACTIVATE MOTION SENSORS |   |
-|   +---------------------------+   |
-|                                   |
-|               ( A )               |
-|            Tactile Click          |
-|                                   |
-|                 ^                 |
-|             <  DPAD  >            |
+[ PORTRAIT WAND MODE ]                            [ LANDSCAPE FLIGHT MODE (ALIEN ATTACK) ]
+(Fruit Ninja, Shooting Range, Sketch)             +---------------------------------------------------+
++-----------------------------------+             | [P1] 10ms   [LEFT CANNON]      [RIGHT CANNON]     |
+| [P1 CONNECTED]  10ms RTT  [||| 95%]|             |             ( FIRE LASER )     ( FIRE LASER )     |
+|                                   |             |                                                   |
+|               ( A )               |             |  [ ROLL LEFT / RIGHT ]      [ PITCH UP / DOWN ]   |
+|         Primary Trigger / Draw    |             |   Tilt phone to bank ship    Tilt phone to aim    |
+|                                   |             |                                                   |
+|                 ^                 |             |              ( - )     [HOME]     ( + )           |
+|             <  DPAD  >            |             +---------------------------------------------------+
 |                 v                 |
 |                                   |
 |       (-)       (H)       (+)     |
@@ -581,96 +672,108 @@ NimbusPlay faithfully recreates the molded plastic, glossy ceramic, and specular
 |                                   |
 |             [RECENTER]            |
 |                                   |
-|          ( 1 )       ( 2 )        |
-|          [ Speaker Grille ]       |
-|                                   |
 |   +---------------------------+   |
-|   |    [B TRIGGER] - SLICE    |   |
+|   |      [B TRIGGER]          |   |
 |   +---------------------------+   |
 +-----------------------------------+
 ```
 
-### 9.3 Slice Party (Fruit Slicing Gameplay)
+### 9.3 Game 1: Fruit Ninja (Cedar Planks & Juice Splatters)
 ```
 +---------------------------------------------------------------------------------------+
-|  SCORE: 1,450       BEST: 2,890                     LIVES: [♥] [♥] [♥]   COMBO x3!    |
+|  (WATERMELON) 49                                                        STRIKES: X X X|
+|  BEST: 49                                                                             |
 |                                                                                       |
 |                \   (WATERMELON)  /                                                    |
 |                 \   [Splash!!]  /                                                     |
 |                  \             /                                                      |
-|                   \  ~*~*~*~*~*~*~ [Glowing Cyan Blade Trail]                         |
+|                   \  ~*~*~*~*~*~*~ [Luminous Cyan Energy Blade Ribbon]                |
 |                    \                                                                  |
-|                     * (Apple Half)  --> +50 pts                                       |
+|                     * (Apple Half)  --> +1                                            |
 |                                                                                       |
-|          [ Authentic Procedural Wood Dojo Wall & Tatami Mat Arena ]                   |
+|           * * * [ Sticky Yellow & Red Juice Splatters on Cedar Planks ] * * *         |
+|                     [ Vertical Timber Woodgrain Background ]                          |
 +---------------------------------------------------------------------------------------+
 ```
 
-### 9.4 Star Defender (Space Combat Blaster)
+### 9.4 Game 2: Alien Attack (3D Forward Cosmic Rail Shooter)
 ```
 +---------------------------------------------------------------------------------------+
-|  SCORE: 3,240      SECTOR 5: DREADNOUGHT BOSS        SHIELD: [||||||||||]   LIVES: 3  |
+|  SCORE: 640                                                  SHIELDS: [🚀] [🚀] [🚀]   |
 |                                                                                       |
-|                     <==[ MOTHERSHIP BOSS CORE ]==>                                    |
-|                           [ HP: 64% ]                                                 |
-|                        /       |       \                                              |
-|                      (o)      (o)      (o)   [Alien Fighter Saucers]                  |
+|                          ( Saturn-like Ringed Gas Giant )                             |
+|                                    O=-(====)-=O                                       |
 |                                                                                       |
-|                               (+) Lead-Target Crosshair                               |
-|                                |                                                      |
-|                                |  ==|| Rapid Dual Lasers ||==                         |
+|                             (O) 3D Target Portal Ring                                 |
+|                            /   \                                                      |
+|                          (v)   (v)  [Alien Saucers flying forward]                    |
 |                                                                                       |
-|                     [/\ Player Turret Base /\]                                        |
-|              [ 3-Layer Parallax Nebula Starfield Background ]                         |
+|                           ==|| Dual Wing Plasma Bolts ||==                            |
+|                                                                                       |
+|                       [/\ White & Red Starship Fuselage /\]                           |
+|                         [ Blue Glowing Jet Thruster Plumes ]                          |
+|              [ Deep Indigo Cosmic Void with Violet Glowing Nebulae ]                  |
 +---------------------------------------------------------------------------------------+
 ```
 
-### 9.5 Bowl Blitz (Pseudo-3D Perspective Bowling)
+### 9.5 Game 3: Shooting Range (Sunny Carnival Target Range)
 ```
 +---------------------------------------------------------------------------------------+
-|  FRAME: [ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 ]  TOTAL SCORE: 168   [REPLAY: (B)]  |
-|         [X  |9 /|X  |X  |8 1|X  |9 /|X  |X  |X X X]                                   |
+|  [ SCORE: 355 ]                                                  TIME REMAINING: 42s  |
 |                                                                                       |
-|                                 o                                                     |
-|                                o o                                                    |
-|                               o o o                                                   |
-|                              o o o o  [Pin Deck Cluster]                              |
-|                             ---------                                                 |
-|                            /         \                                                |
-|                           /           \                                               |
-|       [Left Gutter]      /  ^   ^   ^  \     [Right Gutter]                           |
-|                         /   Lane Guide  \                                             |
-|                        /      Arrows     \                                            |
-|                       /      (Late Hook)  \                                           |
-|                      /          <- (o)     \                                          |
-|                     /             Ball      \                                         |
-|                    /                         \                                        |
-|                   /                           \                                       |
-|  ----------------+-----------------------------+----------------                      |
-|                           FOUL LINE                                                   |
-|                [ Maple Hardwood Perspective Bowling Lane ]                            |
+|             (Puffy Drifting Cloud)                   (O) Concentric Red Bullseye      |
+|                                                                                       |
+|        (O) Orange Bullseye                                                            |
+|          Pop-up target                                                                |
+|                                    (+) Crosshair                                      |
+|                                     |                                                 |
+|                                    +20 [Floating Hit Score]                           |
+|                                                                                       |
+|  _.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~._.~"~. |
+|               [ Rolling Green Grass Hill & Cute Cartoon Trees ]                       |
+|               [ Vibrant Cyan Daytime Sky with Parallax Drift ]                        |
++---------------------------------------------------------------------------------------+
+```
+
+### 9.6 Game 4: Sketch (Interactive Whiteboard Canvas)
+```
++---------------------------------------------------------------------------------------+
+| [PALETTE]                                                                             |
+|  (Red)                                                                                |
+|  (Orange)        * * * * * * * * * * * * * * * * * * * * * * * * * * * *              |
+|  (Yellow)        *                                                     *              |
+|  (Green)         *     I    (HEART)    V I B E C O D I N G             *              |
+|  (Cyan)          *                                                     *              |
+|  (Navy)          *                   : )   ~ ~                         *              |
+|  (Purple)        *                                                     *              |
+|  (Black)         * * * * * * * * * * * * * * * * * * * * * * * * * * * *              |
+|                                                                                       |
+| [TOOLS]                                                                               |
+|  (o) Small                                                                            |
+|  (O) Med           [ Smooth Anti-Aliased Catmull-Rom Vector Strokes ]                 |
+|  (0) Large         [ Continuous Ink with Wand Button A Held Down ]                    |
+|  [Eraser]                                                                             |
+|  [Clear]                                                                              |
 +---------------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 10. Verification & Testing Checklist
+## 10. Verification & Testing Checklist (Remake Target)
 
 - [x] **Network Connectivity**: Phone and laptop establish WebSocket connection on same subnet in $< 200$ ms.
-- [x] **Sensor Feed**: Continuous stream of `INPUT_FRAME` / compact fast-path packets delivered at steady 60Hz.
+- [x] **Sensor Feed**: Continuous stream of compact 60Hz packets with orientation payload.
 - [x] **Filter Smoothing**: Pointer is rock-steady when hand is resting; immediate $< 1$ frame response on rapid swings via One Euro filter.
-- [x] **Recenter Action**: Home long-press, Recenter button, or Spacebar instantly snaps pointer back to screen center.
-- [x] **Audio Initialization**: Procedural Web Audio engine starts smoothly on first user gesture with zero console errors.
-- [x] **Menu SFX & Ambience**: Synthesized hover tick, select, back, page turn, startup chime, and soothing dual-oscillator ambient pad with mute options.
-- [x] **Game 1 (Slice Party)**: Flying fruit arcs intersect blade line segments cleanly; split halves render with slice angle; bombs deduct lives.
-- [x] **Game 2 (Star Defender)**: Reticle tracks pointer; A fires rate-limited lasers, B fires charged plasma blast; mothership boss every 5 waves; aim assist lead prediction.
-- [x] **Game 3 (Bowl Blitz)**: Backswing $\to$ forward swing $\to$ B release accurately measures arm velocity and spin hook; full 10-frame scoring engine.
-- [x] **Home Overlay HUD**: Pressing Home button cleanly pauses active game; selecting Console Menu restores hub cleanly without memory leaks.
-- [x] **Mid-Game Reconnect Recovery**: Phone disconnection pauses active game, presents reconnect modal with live QR, and allows mouse fallback continuation.
-- [x] **Phone Sleep Handling**: `visibilitychange` resets touches, clears bitmask to 0, and restores WakeLock + sensors upon waking.
-- [x] **Performance & Latency**: Input-to-cursor latency $< 30$ ms verified via live debug telemetry readout (**`D`** key).
+- [x] **Channel Menu Remake**: 4x3 grid with top row featuring exactly 4 colored gradient game tiles (Fruit Ninja, Alien Attack, Shooting Range, Sketch) and direct bottom-right QR code.
+- [x] **Dynamic Layout Switching**: Controller switches seamlessly between Portrait Wand Mode and Landscape Flight Mode.
+- [x] **Game 1 (Fruit Ninja)**: Slicing fruits on vertical cedar wall; watermelon score HUD; `X X X` strike markers; sticky wall splatters.
+- [x] **Game 2 (Alien Attack)**: 3D forward rail shooter; two-handed landscape phone tilt steering; dual plasma cannons; Saturn ringed planet; 3 shield icons.
+- [x] **Game 3 (Shooting Range)**: Carnival sunny sky and rolling green grass; animated concentric bullseye targets; hitscan crosshair aiming; floating score text.
+- [x] **Game 4 (Sketch)**: Interactive white canvas; vertical color palette; brush size selectors; continuous vector pen drawing with A held.
+- [x] **Web Audio Procedural Engine**: UI chirps, blade slashes, juicy splats, laser blasters, carnival rifle pops, bullseye bells, marker squeaks.
+- [x] **Performance & Latency**: Input-to-cursor latency $< 30$ ms verified in live debug overlay (**`D`** key).
 - [x] **Automated Test Suite**: 45 unit tests across 12 suites passing cleanly with 0 failures (`npm test`).
-- [x] **Strict TypeScript & Build**: Zero `any` types, strict compilation passing, production Rollup build succeeding in $< 1.5$s.
+- [x] **Strict TypeScript & Build**: Zero `any` types, strict compilation passing, production Vite build succeeding cleanly.
 
 ---
 
@@ -679,68 +782,46 @@ NimbusPlay faithfully recreates the molded plastic, glossy ceramic, and specular
 | Risk | Impact | Mitigation Strategy |
 | :--- | :--- | :--- |
 | **Gyroscope Drift** | Pointer slowly drifts away from physical pointing angle over time. | 1. Deadzone thresholding cutoffs.<br/>2. One-touch Recenter button on Home button.<br/>3. Resting bias calibration routine in settings. |
+| **Landscape Tilt Inversion** | Screen rotation in landscape mode could invert pitch/roll axes. | Gyroscope axis re-mapping based on explicit `mode: 'landscape'` orientation flag in sensor ingestion. |
 | **Android Chrome Throttling** | Chrome reduces timer resolution when battery is low or tab is backgrounded. | 1. Screen Wake Lock API prevents sleep.<br/>2. Passive sensor event listeners avoid main-thread throttling.<br/>3. Fullscreen mode ensures maximum foreground priority. |
-| **Self-Signed SSL Warning** | Users unfamiliar with development certificates might get stuck. | Clear visual instructions on pairing screen explaining how to tap "Advanced $\to$ Proceed". |
-| **Wi-Fi Packet Jitter** | Sporadic bursts of dropped or clustered packets on noisy 2.4GHz Wi-Fi. | Sequence numbers with client-side interpolation; $1€$ filter absorbs bursty velocity spikes. |
+| **Self-Signed SSL Warning** | Users unfamiliar with development certificates might get stuck. | Clear visual instructions on pairing screen explaining how to tap "Advanced $	o$ Proceed". |
 | **AP Isolation on Public Wi-Fi** | Devices on same campus/hotel network cannot route to each other. | Built-in troubleshooting guide recommending Android personal hotspot tethering. |
 
 ---
 
-## 12. Phase Execution Checklist
+## 12. Remake Phase Execution Checklist
 
-- [x] **Phase 1: Tooling & Workspace Setup**
-  - [x] Initialize `package.json` with TypeScript, Vite, `@vitejs/plugin-basic-ssl`, `pixi.js`, `ws`, `qrcode`.
-  - [x] Configure `vite.config.ts` with SSL certificates and `/ws` reverse proxy.
-  - [x] Configure design tokens in `src/styles/tokens.css` with NimbusPlay specifications.
-- [x] **Phase 2: Local Relay & Protocol Layer**
-  - [x] Implement `server/relay.ts` room manager and WebSocket router.
-  - [x] Implement `src/shared/protocol.ts` TypeScript schemas.
-  - [x] Verify local Wi-Fi pairing and ping-pong round-trip latency.
-- [x] **Phase 3: Console Shell UI & Authentic Channel Matrix**
-  - [x] Build 4×3 Channel Grid matching Stitch design tokens and 1.04 focus scale.
-  - [x] Implement Channel Launch modal dialog.
-  - [x] Implement Home Overlay pause menu.
-  - [x] Implement Controller Connection Setup & Pointer Calibration screens.
-  - [x] Render custom SVG cursor with hardware-accelerated transforms.
-- [x] **Phase 4: Mobile Web Controller & Sensor Ingestion**
-  - [x] Build mobile touch UI matching Stitch `design/virtual_remote.html` ergonomics.
-  - [x] Ingest `DeviceMotionEvent` (gyro rotation rate and accel with gravity) with Generic Sensor API fallback.
-  - [x] Multi-touch safe button pad with active pointer tracking and integer bitmask.
-  - [x] High-frequency 60Hz compact JSON packet streaming (`{ t: 'F', s, ts, b, r, a }`).
-  - [x] Implement Screen Wake Lock, portrait lock, fullscreen, and haptic feedback (`navigator.vibrate`).
-  - [x] Live sensor telemetry debug HUD on console toggled via **`D`** key.
-- [x] **Phase 5: Sensor-to-Pointer Pipeline**
-  - [x] Implement One Euro ($1€$) adaptive low-pass filter and deadzone mathematics.
-  - [x] Decouple aim axes using gravity vector compensation ($\hat{g}$) for roll-invariant pointing.
-  - [x] Integrate angular velocities ($\omega_{\text{yaw}}, \omega_{\text{pitch}}$) to screen-space coordinates with edge soft-stop.
-  - [x] Full-menu interaction driver: A = click, B = back, D-Pad = tile focus navigation.
-  - [x] Gyro bias calibration routine (60 samples over 1s) with radar progress arc.
-  - [x] Settings channel dialog with sensitivity & smoothing sliders persisted in localStorage.
-  - [x] Recenter action handling (Home long-press, Recenter button, or Spacebar).
-  - [x] Desktop mouse fallback for local testing without physical phone.
-  - [x] Pure TypeScript unit test suite (12 passing tests).
-- [x] **Phase 6: Web Audio Procedural Synthesizer**
-  - [x] Synthesize UI chirps, clicks, and launch chimes.
-  - [x] Synthesize game sound effects (sword slash, splat, bomb boom, combo chimes).
-- [x] **Phase 7: Game 1 — Slice Party**
-  - [x] Build fruit physics, blade trail geometry, line intersection, and combo scoring.
-  - [x] Authentic procedural wood dojo backdrop and juice particle explosions.
-- [x] **Phase 8: Game 2 — Star Defender**
-  - [x] Build starfield parallax, target crosshair, laser pooling, and enemy wave combat.
-  - [x] Build mothership boss every 5 waves, power-ups, lead aim assist toggle, and haptic rumble.
-- [x] **Phase 9: Game 3 — Bowl Blitz**
-  - [x] Build perspective lane, swing/release gesture detector, and pin cluster physics.
-  - [x] Official 10-frame bowling scorecard engine (strikes, spares, 10th-frame 3-roll bonus rules).
-  - [x] Accelerometer peak forward swing detection & wrist roll rate hook curve ($y < 680$).
-  - [x] 0.6x slow-motion instant replay recorder and playback system.
-  - [x] Settings fallback: Pointer-aim + power-meter throw mode for mouse or motion calibration.
-  - [x] Synthesized pin collision sound and haptic vibration feedback.
-- [x] **Phase 10: Performance Tuning & Final Polish**
-  - [x] Procedural Web Audio UI synthesizer (hover tick, select, back, page turn, startup chime, disc loading).
-  - [x] Continuous warm dual-oscillator ambient pad with subtle LFO biquad filter sweep and bottom tray / settings mute toggle.
-  - [x] First-run interactive onboarding flow (posture, pairing, calibration) with localStorage state.
-  - [x] Reconnect overlay with auto-pause on mid-game disconnect and mouse continue option.
-  - [x] Phone visibility change and screen sleep handling (reset touches, bitmask 0, wake lock re-acquisition).
-  - [x] Telemetry debug HUD with live RTT, input-to-cursor latency (<30ms), and 60Hz frequency meter.
-  - [x] Comprehensive unit test suite (45 tests across 12 suites) covering pointer pipeline, 1€ filter, aim mapping, scorecard, throw detector, physics, object pooling, and relay session manager.
-  - [x] Production build verification and Android zero-config network optimization.
+- [x] **Phase R0: Reference Analysis & Master Specification**
+  - [x] Inspect `/design/reference/Video-7889.mp4`, `reel-games.png`, and `reel-menu.png`.
+  - [x] Author comprehensive `docs/GAME_REFERENCE.md` detailing all 4 games and comparison matrix.
+  - [x] Update `docs/ARCHITECTURE.md` and `README.md` with colorful Mermaid diagrams and updated roadmap.
+  - [x] Deprecate Star Defender and Bowl Blitz from the active plan.
+- [ ] **Phase R1: Channel Matrix Remake & Direct QR Dock**
+  - [ ] Reconfigure 4×3 Channel Grid so top row houses 4 colored gradient tiles (Fruit Ninja, Alien Attack, Shooting Range, Sketch).
+  - [ ] Render 8 frosted glass empty channel cards for lower rows.
+  - [ ] Embed live pairing QR code canvas directly into the bottom-right shelf dock.
+- [ ] **Phase R2: Controller Landscape Flight Mode & Layout Switcher**
+  - [ ] Implement `SET_LAYOUT` protocol message (`mode: 'portrait' | 'landscape'`).
+  - [ ] Build two-handed horizontal landscape flight yoke UI for Alien Attack.
+  - [ ] Implement roll/pitch flight steering filter.
+- [ ] **Phase R3: Game 1 — Fruit Ninja Remake**
+  - [ ] Authentic vertical timber cedar wood plank backdrop with dark recessed seams.
+  - [ ] Watermelon score icon with `BEST` subtitle and 3 bold red `X X X` strike markers.
+  - [ ] Persistent sticky juice splatters on wooden planks.
+- [ ] **Phase R4: Game 2 — Alien Attack (3D Cosmic Rail Shooter)**
+  - [ ] Forward-scrolling 3D rail-shooter perspective with warp starfield and glowing nebula.
+  - [ ] Large Saturn-like ringed gas giant planet in upper-right quadrant.
+  - [ ] Player starship with delta wings, animated blue thruster exhaust, and bank/roll tilting.
+  - [ ] Dual plasma cannons firing forward toward 3D targeting portal; 3 green shield glyphs.
+- [ ] **Phase R5: Game 3 — Shooting Range (Carnival Target Pop)**
+  - [ ] Sunny daytime sky with drifting cartoon clouds and rolling green grass hill.
+  - [ ] Pop-up animated concentric ring bullseye targets (red, orange, black).
+  - [ ] Instantaneous hitscan trigger fire with floating score text (`+16`, `+20`).
+- [ ] **Phase R6: Game 4 — Sketch (Interactive Whiteboard Canvas)**
+  - [ ] Clean digital whiteboard canvas (`#FFFFFF`).
+  - [ ] Left vertical color palette swatches, brush size dots, eraser, and clear tools.
+  - [ ] Smooth Catmull-Rom vector pen drawing with **A** button held.
+- [ ] **Phase R7: Final Polish, Latency Profiling & QA Sign-off**
+  - [ ] End-to-end integration testing across all 4 games.
+  - [ ] Input-to-cursor latency verification ($< 30$ ms).
+  - [ ] Update `docs/PROGRESS.md` with final sign-off.

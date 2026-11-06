@@ -22,6 +22,21 @@ This log tracks implementation progress, milestones, verification notes, and blo
 
 ---
 
+## Game Remake Phase Overview Status Table (4-Game Target)
+
+| Phase | Description | Status | Target Date | Completed Date | Sign-off |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Phase R0** | Reference Analysis, Video Breakdown & Master Architecture | **Complete** | 2026-11-06 | 2026-11-06 | Approved |
+| **Phase R1** | Channel Matrix Remake (4-Tile Top Row) & Direct QR Dock | Not Started | — | — | — |
+| **Phase R2** | Controller Dynamic Layout Mode (Landscape Flight Yoke) | Not Started | — | — | — |
+| **Phase R3** | Game 1: Fruit Ninja (Cedar Planks, `X X X` Strikes & Splatters) | Not Started | — | — | — |
+| **Phase R4** | Game 2: Alien Attack (3D Cosmic Rail Shooter & Dual Thumb) | Not Started | — | — | — |
+| **Phase R5** | Game 3: Shooting Range (Carnival Sky, Grass & Bullseyes) | Not Started | — | — | — |
+| **Phase R6** | Game 4: Sketch (Interactive Whiteboard & Spline Ink) | Not Started | — | — | — |
+| **Phase R7** | Remake System Integration, Latency Profiling & QA | Not Started | — | — | — |
+
+---
+
 ## Detailed Phase Execution Logs
 
 ### Phase 0: Master Plan & Specifications
@@ -279,4 +294,21 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - All files strictly adhere to the line count limits ($< 250$ lines for standard modules, $< 350$ lines for core loops).
   - 100% original Web Audio procedural synthesis; zero external MP3s, WAVs, or Nintendo IP.
   - Single HTTPS origin architecture with Vite proxying `/ws` to Node relay on port 3001 enables seamless mobile sensor access in Android Chrome.
+
+---
+
+### Phase R0: Reference Analysis, Video Breakdown & Master Architecture
+- **Status**: Complete / Approved
+- **Key Deliverables**:
+  - Inspected `/design/reference/Video-7889.mp4`, `reel-games.png`, and `reel-menu.png`.
+  - Authored [`docs/GAME_REFERENCE.md`](file:///Users/adityasurse/Documents/NimbusPlay/docs/GAME_REFERENCE.md): Comprehensive specification of the 4 target games (Fruit Ninja, Alien Attack, Shooting Range, Sketch), with visual descriptions, HUD, motion, scoring, controls, procedural sound synthesis, and a detailed "Current NimbusPlay vs Reference" comparison matrix.
+  - Updated [`docs/ARCHITECTURE.md`](file:///Users/adityasurse/Documents/NimbusPlay/docs/ARCHITECTURE.md): Added colorful Mermaid flowcharts with `classDef` styles for the 4-tile top-row menu, each game's loop and state machine, controller dynamic layout mapping (portrait wand vs landscape flight), and the updated remake roadmap.
+  - Updated [`README.md`](file:///Users/adityasurse/Documents/NimbusPlay/README.md): Replaced Star Defender and Bowl Blitz with Alien Attack, Shooting Range, and Sketch; added colorful Mermaid flowcharts; updated Visual System Gallery ASCII layouts to reflect the reference target.
+  - Formally deprecated legacy games (**Star Defender** and **Bowl Blitz**) from the active plan.
+- **Verification Criteria**:
+  - [x] Zero application code touched during Phase R0 (strict Phase Gate).
+  - [x] All 4 reference games fully specified with exact visual, HUD, input, and audio parameters.
+  - [x] Landscape flight yoke and two-handed controller model specified for Alien Attack.
+  - [x] Direct QR code placement on firmware bottom shelf specified.
+  - [x] Assumptions explicitly documented.
 
