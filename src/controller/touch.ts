@@ -122,6 +122,18 @@ export class TouchInputManager {
     return (this.currentBitmask & mask) !== 0;
   }
 
+  /**
+   * Release all active button touches (e.g. when screen turns off or loses visibility)
+   */
+  public resetAll(): void {
+    for (const entry of this.activePointers.values()) {
+      entry.element.classList.remove('active-pressed');
+    }
+    this.activePointers.clear();
+    this.currentBitmask = 0;
+    this.onButtonChange(0, null);
+  }
+
   private recalculateBitmask(lastPressedName: ButtonName | null): void {
     let mask = 0;
     for (const entry of this.activePointers.values()) {

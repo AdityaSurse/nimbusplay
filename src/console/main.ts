@@ -4,6 +4,7 @@ import { DebugOverlay } from './core/debug-overlay.js';
 import { InteractionManager } from './pointer/interaction-manager.js';
 import { GameManager } from './games/game-manager.js';
 import { audioManager } from './audio/audio-manager.js';
+import { OnboardingManager } from './ui/onboarding.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
 import { 
   isCompactPacket,
@@ -27,29 +28,16 @@ let shell: ConsoleShell | null = null;
 let debugOverlay: DebugOverlay | null = null;
 let interaction: InteractionManager | null = null;
 let gameManager: GameManager | null = null;
+let onboarding: OnboardingManager | null = null;
+let hasPlayedStartupChime = false;
 
 // DOM Elements
 const stageEl = document.getElementById('stage') as HTMLElement;
 const handPointerEl = document.getElementById('hand-pointer') as HTMLElement;
-const pairingPeerBadge = document.getElementById('pairing-peer-badge') as HTMLSpanElement;
-const pairingRttVal = document.getElementById('pairing-rtt-val') as HTMLSpanElement;
-const pairingFramesVal = document.getElementById('pairing-frames-val') as HTMLSpanElement;
-const pairingLogBox = document.getElementById('pairing-log-box') as HTMLDivElement;
-const btnPairingTestVibrate = document.getElementById('btn-pairing-test-vibrate') as HTMLButtonElement;
-const headerBatteryPill = document.getElementById('header-battery-pill') as HTMLDivElement;
-
-// Modal Action Buttons
-const btnDialogBack = document.getElementById('btn-dialog-back');
-const btnDialogStart = document.getElementById('btn-dialog-start');
-const btnPairingClose = document.getElementById('btn-pairing-close');
-const diskSettings = document.getElementById('disk-settings');
-const diskMessages = document.getElementById('disk-messages');
-const btnPauseResume = document.getElementById('btn-pause-resume');
-const btnPauseCalibrate = document.getElementById('btn-pause-calibrate');
-const btnPausePairing = document.getElementById('btn-pause-pairing');
-const btnPauseMenu = document.getElementById('btn-pause-menu');
-const btnPauseClose = document.getElementById('btn-pause-close');
-const btnCalibBack = document.getElementById('btn-calib-back');
+const pairingPeerBadge = document.getElementById('pairing-peer-badge') as HTMLSpanElement | null;
+const pairingRttVal = document.getElementById('pairing-rtt-val') as HTMLSpanElement | null;
+const pairingFramesVal = document.getElementById('pairing-frames-val') as HTMLSpanElement | null;
+const pairingLogBox = document.getElementById('pairing-log-box') as HTMLDivElement | null;
 
 function appendLog(text: string): void {
   if (!pairingLogBox) return;
@@ -105,6 +93,18 @@ function initNetwork(): void {
         pairingPeerBadge.style.color = connected ? '#22c55e' : '#475569';
       }
       appendLog(`[Controller] Peer ${connected ? 'CONNECTED' : 'DISCONNECTED'}`);
+
+      // Auto-pause active game and display reconnect overlay on wand disconnect
+      if (gameManager?.isGameRunning()) {
+        if (!connected) {
+          gameManager.pause();
+          shell?.openReconnectOverlay();
+        } else {
+          shell?.closeReconnectOverlay();
+          gameManager.resume();
+          audioManager.playSelect();
+        }
+      }
     },
     onRoomJoined: (roomId: string) => {
       activeRoomId = roomId;
@@ -149,12 +149,14 @@ function initNetwork(): void {
 }
 
 function bindModalButtons(): void {
-  btnDialogBack?.addEventListener('click', () => shell?.closeLaunchDialog());
-  btnDialogStart?.addEventListener('click', async () => {
+  document.getElementById('btn-dialog-back')?.addEventListener('click', () => shell?.closeLaunchDialog());
+  document.getElementById('btn-dialog-start')?.addEventListener('click', async () => {
     const game = shell?.getActiveDialogGame();
     if (game) {
       shell?.closeLaunchDialog();
       audioManager.playLaunchChime();
+      shell?.showChannelLoading(game.title);
+      await new Promise((r) => setTimeout(r, 400));
       await gameManager?.launchGame(game.id, {
         sendHaptic: (pattern) => {
           if (networkClient) {
@@ -167,50 +169,75 @@ function bindModalButtons(): void {
           }
         }
       });
+      shell?.hideChannelLoading();
     }
   });
 
-  btnPairingClose?.addEventListener('click', () => shell?.closePairingScreen());
-  diskSettings?.addEventListener('click', (e) => {
-    e.preventDefault();
-    shell?.openSettingsScreen();
+  // Ambience Toggle in Bottom Tray
+  const btnToggleAmbience = document.getElementById('btn-toggle-ambience');
+  const settingAmbienceMusic = document.getElementById('setting-ambience-music') as HTMLInputElement | null;
+
+  btnToggleAmbience?.addEventListener('click', () => {
+    const isMuted = audioManager.toggleAmbience();
+    shell?.updateAmbienceUI(isMuted);
+    if (settingAmbienceMusic) settingAmbienceMusic.checked = !isMuted;
+    audioManager.playSelect();
   });
 
-  diskMessages?.addEventListener('click', (e) => {
-    e.preventDefault();
-    shell?.togglePauseOverlay();
+  settingAmbienceMusic?.addEventListener('change', () => {
+    const isMuted = !settingAmbienceMusic.checked;
+    audioManager.setAmbienceMuted(isMuted);
+    shell?.updateAmbienceUI(isMuted);
   });
 
-  headerBatteryPill?.addEventListener('click', () => shell?.openPairingScreen());
+  // Onboarding Guide Buttons
+  document.getElementById('btn-settings-guide')?.addEventListener('click', () => {
+    shell?.closeSettingsScreen();
+    onboarding?.open();
+  });
+  document.getElementById('btn-pairing-guide')?.addEventListener('click', () => {
+    shell?.closePairingScreen();
+    onboarding?.open();
+  });
 
-  btnPauseResume?.addEventListener('click', () => {
-    shell?.closePauseOverlay();
+  // Reconnect Overlay Buttons (Mid-game wand disconnect)
+  document.getElementById('btn-reconnect-mouse')?.addEventListener('click', () => {
+    shell?.closeReconnectOverlay();
     gameManager?.resume();
+    audioManager.playSelect();
   });
-  btnPauseCalibrate?.addEventListener('click', () => {
-    shell?.closePauseOverlay();
-    shell?.openCalibrationScreen();
-    interaction?.startCalibrationRoutine();
-  });
-  btnPausePairing?.addEventListener('click', () => {
-    shell?.closePauseOverlay();
-    shell?.openPairingScreen();
-  });
-  btnPauseMenu?.addEventListener('click', () => {
-    shell?.closePauseOverlay();
+  document.getElementById('btn-reconnect-menu')?.addEventListener('click', () => {
+    shell?.closeReconnectOverlay();
     gameManager?.teardown();
-  });
-  btnPauseClose?.addEventListener('click', () => {
-    shell?.closePauseOverlay();
-    gameManager?.resume();
+    audioManager.playBack();
   });
 
-  btnCalibBack?.addEventListener('click', () => {
-    interaction?.stopCalibrationRoutine();
-    shell?.closeCalibrationScreen();
-  });
+  // First User Gesture: initialize Web Audio context and play authentic startup chime
+  const onFirstGesture = () => {
+    audioManager.initOnGesture();
+    if (!hasPlayedStartupChime) {
+      hasPlayedStartupChime = true;
+      audioManager.playStartupChime();
+    }
+    window.removeEventListener('pointerdown', onFirstGesture);
+    window.removeEventListener('keydown', onFirstGesture);
+  };
+  window.addEventListener('pointerdown', onFirstGesture);
+  window.addEventListener('keydown', onFirstGesture);
 
-  btnPairingTestVibrate?.addEventListener('click', () => {
+  document.getElementById('btn-pairing-close')?.addEventListener('click', () => shell?.closePairingScreen());
+  document.getElementById('disk-settings')?.addEventListener('click', (e) => { e.preventDefault(); shell?.openSettingsScreen(); });
+  document.getElementById('disk-messages')?.addEventListener('click', (e) => { e.preventDefault(); shell?.togglePauseOverlay(); });
+  document.getElementById('header-battery-pill')?.addEventListener('click', () => shell?.openPairingScreen());
+
+  document.getElementById('btn-pause-resume')?.addEventListener('click', () => { shell?.closePauseOverlay(); gameManager?.resume(); });
+  document.getElementById('btn-pause-calibrate')?.addEventListener('click', () => { shell?.closePauseOverlay(); shell?.openCalibrationScreen(); interaction?.startCalibrationRoutine(); });
+  document.getElementById('btn-pause-pairing')?.addEventListener('click', () => { shell?.closePauseOverlay(); shell?.openPairingScreen(); });
+  document.getElementById('btn-pause-menu')?.addEventListener('click', () => { shell?.closePauseOverlay(); gameManager?.teardown(); });
+  document.getElementById('btn-pause-close')?.addEventListener('click', () => { shell?.closePauseOverlay(); gameManager?.resume(); });
+  document.getElementById('btn-calib-back')?.addEventListener('click', () => { interaction?.stopCalibrationRoutine(); shell?.closeCalibrationScreen(); });
+
+  document.getElementById('btn-pairing-test-vibrate')?.addEventListener('click', () => {
     if (networkClient) {
       const cmd: HapticFeedbackCommand = {
         type: 'COMMAND_HAPTIC',
@@ -230,7 +257,7 @@ function bindModalButtons(): void {
 
 // Bootstrap Console
 async function boot(): Promise<void> {
-  shell = new ConsoleShell(stageEl, handPointerEl);
+  shell = new ConsoleShell(stageEl);
   debugOverlay = new DebugOverlay();
 
   const gameContainer = document.getElementById('game-container') as HTMLElement;
@@ -273,6 +300,13 @@ async function boot(): Promise<void> {
   bindModalButtons();
   await fetchLanInfo();
   initNetwork();
+
+  // Onboarding initialization
+  onboarding = new OnboardingManager();
+  if (onboarding.shouldAutoLaunch()) {
+    onboarding.open();
+  }
+  shell?.updateAmbienceUI(audioManager.isAmbienceMuted());
 
   // 60 FPS Game Loop
   const tickGame = () => {

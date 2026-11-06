@@ -163,6 +163,70 @@ describe('PointerPipeline Integration & Boundary Tests', () => {
     assert.equal(pos.y, 540);
     assert.equal(pos.isRecentered, true);
   });
+
+  it('should scale cursor displacement proportionally with sensitivity setting', () => {
+    const pipelineLow = new PointerPipeline(viewport, { deadZone: 0.1, sensitivity: 1.0 });
+    const pipelineHigh = new PointerPipeline(viewport, { deadZone: 0.1, sensitivity: 2.0 });
+
+    const sample = {
+      rotationRate: { alpha: -20, beta: 0, gamma: 0 },
+      acceleration: { x: 0, y: 0, z: 9.8 }
+    };
+
+    let posLow = pipelineLow.getPosition();
+    let posHigh = pipelineHigh.getPosition();
+
+    for (let i = 1; i <= 10; i++) {
+      posLow = pipelineLow.processMotionSample(sample, i * 16.6);
+      posHigh = pipelineHigh.processMotionSample(sample, i * 16.6);
+    }
+
+    const deltaLow = posLow.x - 960;
+    const deltaHigh = posHigh.x - 960;
+
+    assert.ok(deltaHigh > deltaLow * 1.7, `Expected high sensitivity to move ~2x further: high=${deltaHigh}, low=${deltaLow}`);
+  });
+
+  it('should clamp cursor cleanly on all 4 screen edges without NaN or overflow', () => {
+    const pipeline = new PointerPipeline(viewport, { deadZone: 0.1, sensitivity: 3.0 });
+
+    // Extreme up/left
+    const sampleUpLeft = {
+      rotationRate: { alpha: 500, beta: 500, gamma: 0 },
+      acceleration: { x: 0, y: 0, z: 9.8 }
+    };
+
+    for (let i = 1; i <= 60; i++) {
+      pipeline.processMotionSample(sampleUpLeft, i * 16.6);
+    }
+
+    const posTopLeft = pipeline.getPosition();
+    assert.ok(posTopLeft.x >= 0 && posTopLeft.x <= 50, `X clamped near 0: ${posTopLeft.x}`);
+    assert.ok(posTopLeft.y >= 0 && posTopLeft.y <= 50, `Y clamped near 0: ${posTopLeft.y}`);
+
+    // Extreme down/right
+    const sampleDownRight = {
+      rotationRate: { alpha: -500, beta: -500, gamma: 0 },
+      acceleration: { x: 0, y: 0, z: 9.8 }
+    };
+
+    for (let i = 61; i <= 120; i++) {
+      pipeline.processMotionSample(sampleDownRight, i * 16.6);
+    }
+
+    const posBottomRight = pipeline.getPosition();
+    assert.ok(posBottomRight.x >= 1870 && posBottomRight.x <= 1920, `X clamped near 1920: ${posBottomRight.x}`);
+    assert.ok(posBottomRight.y >= 1030 && posBottomRight.y <= 1080, `Y clamped near 1080: ${posBottomRight.y}`);
+  });
+
+  it('should allow mouse fallback position override and update smoothly', () => {
+    const pipeline = new PointerPipeline(viewport);
+    pipeline.setMousePosition(450, 320);
+
+    const pos = pipeline.getPosition();
+    assert.equal(pos.x, 450);
+    assert.equal(pos.y, 320);
+  });
 });
 
 describe('CalibrationManager Unit Tests', () => {

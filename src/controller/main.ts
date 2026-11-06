@@ -146,17 +146,10 @@ function initNetwork(): void {
 
   networkClient = new ControllerNetworkClient(wsUrl, activeRoomId, {
     onStatusChange: (status: ControllerNetworkStatus) => {
-      if (statusRelayText) {
-        statusRelayText.textContent = status === 'connected' ? 'CONNECTED' : status.toUpperCase();
-      }
+      if (statusRelayText) statusRelayText.textContent = status === 'connected' ? 'CONNECTED' : status.toUpperCase();
       if (statusRelayOrb) {
-        statusRelayOrb.className = `w-2.5 h-2.5 rounded-full ${
-          status === 'connected' 
-            ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' 
-            : status === 'connecting' || status === 'reconnecting'
-            ? 'bg-amber-400 animate-ping shadow-[0_0_8px_#fbbf24]'
-            : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'
-        }`;
+        const color = status === 'connected' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : (status === 'connecting' || status === 'reconnecting') ? 'bg-amber-400 animate-ping shadow-[0_0_8px_#fbbf24]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]';
+        statusRelayOrb.className = `w-2.5 h-2.5 rounded-full ${color}`;
       }
     },
     onRoomJoined: (roomId: string, peerConnected: boolean) => {
@@ -164,17 +157,13 @@ function initNetwork(): void {
       if (labelRoomCode) labelRoomCode.textContent = roomId;
       if (statusConsolePill) {
         statusConsolePill.textContent = peerConnected ? 'TV: Linked' : 'TV: Waiting';
-        statusConsolePill.className = `font-label-sm text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
-          peerConnected ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-500'
-        }`;
+        statusConsolePill.className = `font-label-sm text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${peerConnected ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-500'}`;
       }
     },
     onConsoleStatus: (connected: boolean) => {
       if (statusConsolePill) {
         statusConsolePill.textContent = connected ? 'TV: Linked' : 'TV: Waiting';
-        statusConsolePill.className = `font-label-sm text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
-          connected ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-500'
-        }`;
+        statusConsolePill.className = `font-label-sm text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${connected ? 'bg-emerald-500/20 text-emerald-600' : 'bg-slate-200 text-slate-500'}`;
       }
       if (connected) {
         showToast('Console Linked');
@@ -221,6 +210,23 @@ function boot(): void {
 
   // Bind enable motion action
   btnEnableMotion?.addEventListener('click', handleEnableMotion);
+
+  // Handling for Phone Screen Turning Off / App Switching
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      touch.resetAll();
+      send60HzFrame();
+      stopStreamingLoop();
+    } else if (document.visibilityState === 'visible') {
+      immersion.acquireWakeLock();
+      sensors.start().then((started) => {
+        if (started) {
+          startStreamingLoop();
+          showToast('Wand Active');
+        }
+      });
+    }
+  });
 
   // Initialize network connection
   initNetwork();

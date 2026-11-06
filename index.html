@@ -106,6 +106,12 @@
             <span class="clock-time">14:28</span>
           </div>
 
+          <!-- Ambience Music Mute/Unmute Pill Button -->
+          <button id="btn-toggle-ambience" class="ambience-pill-btn" aria-label="Toggle Background Ambience">
+            <span id="ambience-icon" class="material-symbols-outlined" style="font-size: 18px; color: #006688;">music_note</span>
+            <span id="ambience-label">Music: On</span>
+          </button>
+
           <!-- Right Disk: Message Board / Pause HUD -->
           <a href="#" id="disk-messages" class="system-disk-btn" aria-label="Pause Menu / Quick Overlay">
             <div class="system-disk-inner">
@@ -189,9 +195,15 @@
             </button>
             <h2 style="font-size: 24px; font-weight: 800; color: var(--color-on-surface); line-height: 1;">Controller Connection Setup</h2>
           </div>
-          <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--color-primary); background: #e3efff; padding: 6px 14px; border-radius: 9999px;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">sensors</span>
-            <span>Nimbus Sync 2.4</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button id="btn-pairing-guide" class="pill-btn pill-btn-secondary" style="height: 38px; padding: 0 14px; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">menu_book</span>
+              <span>Guide</span>
+            </button>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--color-primary); background: #e3efff; padding: 6px 14px; border-radius: 9999px;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">sensors</span>
+              <span>Nimbus Sync 2.4</span>
+            </div>
           </div>
         </div>
 
@@ -438,6 +450,20 @@
               </span>
             </label>
           </div>
+
+          <!-- Background Audio Ambience Toggle -->
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f9; padding: 12px 16px; border-radius: 12px; border: 1px solid #d8e2ea;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #111d28;">Background Audio Ambience</div>
+              <div style="font-size: 11px; color: #6b7785; font-weight: 600; margin-top: 2px;">Synthesized ambient synth pad in menu</div>
+            </div>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+              <input type="checkbox" id="setting-ambience-music" checked style="opacity: 0; width: 0; height: 0;">
+              <span id="slider-ambience-music" style="position: absolute; inset: 0; background-color: #006688; border-radius: 24px; transition: 0.2s;">
+                <span id="knob-ambience-music" style="position: absolute; content: ''; height: 18px; width: 18px; left: 22px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>
+              </span>
+            </label>
+          </div>
         </div>
 
         <!-- Action Row -->
@@ -451,9 +477,112 @@
               <span class="material-symbols-outlined" style="font-size: 18px;">my_location</span>
               <span>Recenter</span>
             </button>
+            <button id="btn-settings-guide" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 16px; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size: 18px;">menu_book</span>
+              <span>Quick Guide</span>
+            </button>
           </div>
           <button id="btn-settings-reset" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 16px; font-size: 13px; color: #51606a;">
             Reset Defaults
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Channel Loading Screen Overlay -->
+    <div id="channel-loading-overlay">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;">
+        <div class="loading-disc-spinner"></div>
+        <div style="text-align: center;">
+          <h2 id="loading-game-title" style="font-size: 32px; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; text-transform: uppercase;">Loading Channel...</h2>
+          <p id="loading-game-status" style="font-size: 14px; color: #38bdf8; font-weight: 600; margin-top: 6px; letter-spacing: 0.08em; text-transform: uppercase;">
+            Initializing 60 FPS WebGL Engine...
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Controller Reconnect Overlay (Auto-Pause mid-game) -->
+    <div id="reconnect-overlay" class="modal-overlay">
+      <div class="modal-dialog-pod" style="max-width: 680px; padding: 36px 40px; text-align: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 20px;">
+          <div class="reconnect-pulse-orb" style="width: 72px; height: 72px; border-radius: 50%; background: #ffe4e6; display: flex; align-items: center; justify-content: center; border: 2px solid #f43f5e;">
+            <span class="material-symbols-outlined" style="font-size: 40px; color: #e11d48;">phonelink_erase</span>
+          </div>
+          <h2 style="font-size: 28px; font-weight: 800; color: #111d28; line-height: 1.1;">Nimbus Wand Disconnected</h2>
+          <p style="font-size: 15px; color: #51606a; max-width: 520px; line-height: 1.5;">
+            Communication with Player 1's wand was interrupted. Game has been paused automatically. Please keep your phone awake or scan to reconnect.
+          </p>
+        </div>
+
+        <!-- Reconnect QR canvas & code -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; background: #f7f9ff; padding: 18px; border-radius: 20px; border: 1px solid #cfd8e0; margin-bottom: 24px;">
+          <canvas id="reconnect-qr-canvas" style="width: 140px; height: 140px; background: white; border-radius: 10px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></canvas>
+          <div style="text-align: left;">
+            <span style="font-size: 11px; text-transform: uppercase; font-weight: 800; color: #6b7785; letter-spacing: 0.1em;">Room PIN</span>
+            <div id="reconnect-room-code" style="font-size: 32px; font-weight: 900; letter-spacing: 4px; color: #006688; line-height: 1.1; margin: 2px 0;">----</div>
+            <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #f59e0b; font-weight: 700; margin-top: 4px;">
+              <span class="material-symbols-outlined" style="font-size: 16px;">wifi_find</span>
+              <span>Waiting for Wand to reconnect...</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 16px; justify-content: center;">
+          <button id="btn-reconnect-mouse" class="pill-btn pill-btn-primary" style="flex: 1; height: 52px; font-size: 16px;">
+            <span class="material-symbols-outlined" style="font-size: 22px;">mouse</span>
+            <span>Continue with Mouse</span>
+          </button>
+          <button id="btn-reconnect-menu" class="pill-btn pill-btn-secondary" style="flex: 1; height: 52px; font-size: 16px; color: #ba1a1a;">
+            <span class="material-symbols-outlined" style="font-size: 22px;">home</span>
+            <span>Quit to Home Menu</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. First-Run Onboarding Guide Overlay -->
+    <div id="onboarding-overlay" class="modal-overlay">
+      <div class="modal-dialog-pod" style="max-width: 720px; padding: 36px 42px;">
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border-seam); padding-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="onboarding-icon" class="material-symbols-outlined" style="font-size: 28px; color: #006688;">smartphone</span>
+            <span id="onboarding-badge" style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #006688; background: #e3efff; padding: 4px 12px; border-radius: 999px;">Step 1 of 4: Posture</span>
+          </div>
+          <button id="btn-onboarding-skip" class="pill-btn pill-btn-secondary" style="height: 36px; padding: 0 16px; font-size: 13px;">
+            Skip Guide
+          </button>
+        </div>
+
+        <!-- Slide Body -->
+        <div style="margin: 20px 0 24px;">
+          <h2 id="onboarding-title" style="font-size: 28px; font-weight: 800; color: #111d28; line-height: 1.2;">Hold Phone Vertically</h2>
+          <p id="onboarding-desc" style="font-size: 15px; line-height: 1.6; color: #51606a; margin-top: 8px;">
+            Hold your smartphone upright in portrait mode, pointing the top of the phone toward the TV/monitor like a wand.
+          </p>
+
+          <div style="background: #f7f9ff; border: 1px solid #cfd8e0; border-radius: 18px; padding: 18px 22px; margin-top: 18px;">
+            <ul id="onboarding-tips" style="display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none;">
+              <!-- Rendered dynamically -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Navigation Controls & Pips -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--color-border-seam); padding-top: 16px;">
+          <button id="btn-onboarding-prev" class="pill-btn pill-btn-secondary" style="height: 46px; padding: 0 22px; font-size: 14px;">
+            <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+            <span>Back</span>
+          </button>
+
+          <div id="onboarding-pips" style="display: flex; gap: 6px; align-items: center;">
+            <!-- Pips rendered dynamically -->
+          </div>
+
+          <button id="btn-onboarding-next" class="pill-btn pill-btn-primary" style="height: 46px; padding: 0 24px; font-size: 14px;">
+            <span>Next</span>
+            <span class="material-symbols-outlined" style="font-size: 20px;">arrow_forward</span>
           </button>
         </div>
       </div>

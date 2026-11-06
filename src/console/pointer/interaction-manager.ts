@@ -8,8 +8,11 @@
 import { PointerPipeline } from './pipeline.js';
 import { CalibrationManager } from './calibration.js';
 import { SettingsManager } from './settings-manager.js';
+import { SettingsUiBinder } from './settings-ui.js';
+import { CalibrationUiManager } from './calibration-ui.js';
 import type { MotionSample } from './types.js';
 import { BUTTON_MASKS, type CompactMotionPacket, type MotionInputFrame } from '../../shared/protocol.js';
+import { audioManager } from '../audio/audio-manager.js';
 
 export interface ConsoleInteractionCallbacks {
   openLaunchDialog: (gameId: string) => void;
@@ -30,6 +33,7 @@ export class InteractionManager {
   private pointerEl: HTMLElement;
   private pipeline: PointerPipeline;
   private calibration: CalibrationManager;
+  private calibrationUi: CalibrationUiManager;
   private settingsManager: SettingsManager;
   private callbacks: ConsoleInteractionCallbacks;
 
@@ -41,7 +45,6 @@ export class InteractionManager {
   private isGameActive = false;
   private homePressStart = 0;
   private activeChannelIndex = 0;
-  private isCalibrating = false;
   private latestMotion: MotionSample = {
     rotationRate: { alpha: 0, beta: 0, gamma: 0 },
     acceleration: { x: 0, y: 0, z: 9.8 }
@@ -74,9 +77,12 @@ export class InteractionManager {
     }
 
     this.calibration = new CalibrationManager();
+    this.calibrationUi = new CalibrationUiManager(this.calibration, this.pipeline, {
+      recenterPointer: () => this.recenterPointer(),
+      closeCalibration: () => this.callbacks.closeCalibration()
+    });
 
     this.bindSettingsUI();
-    this.bindCalibrationUI();
     this.bindMouseFallback();
   }
 
@@ -141,7 +147,7 @@ export class InteractionManager {
     this.latestMotion = sample;
 
     // 1. If currently on Calibration screen, pass sample to calibrator
-    if (this.isCalibrating) {
+    if (this.calibrationUi.getIsCalibrating()) {
       this.calibration.ingestSample(sample);
     }
 
@@ -184,6 +190,7 @@ export class InteractionManager {
       this.hoveredElement = interactive;
       if (this.hoveredElement) {
         this.hoveredElement.classList.add('is-hovered');
+        audioManager.playHoverTick();
       }
     }
   }
@@ -277,156 +284,22 @@ export class InteractionManager {
   }
 
   private bindSettingsUI(): void {
-    const sliderSens = document.getElementById('setting-sensitivity') as HTMLInputElement;
-    const sliderSmooth = document.getElementById('setting-smoothing') as HTMLInputElement;
-    const sliderDead = document.getElementById('setting-deadzone') as HTMLInputElement;
-    const toggleAimAssist = document.getElementById('setting-aim-assist') as HTMLInputElement | null;
-    const knobAimAssist = document.getElementById('knob-aim-assist');
-    const sliderAimAssist = document.getElementById('slider-aim-assist');
-    const toggleBowlingMeter = document.getElementById('setting-bowling-meter') as HTMLInputElement | null;
-    const knobBowlingMeter = document.getElementById('knob-bowling-meter');
-    const sliderBowlingMeter = document.getElementById('slider-bowling-meter');
-    const labelSens = document.getElementById('label-val-sensitivity');
-    const labelSmooth = document.getElementById('label-val-smoothing');
-    const labelDead = document.getElementById('label-val-deadzone');
-    const btnReset = document.getElementById('btn-settings-reset');
-    const btnRecenter = document.getElementById('btn-settings-recenter');
-    const btnCalib = document.getElementById('btn-settings-calibrate');
-    const btnClose = document.getElementById('btn-settings-close');
-
-    const cur = this.settingsManager.getSettings();
-    if (sliderSens) sliderSens.value = cur.sensitivity.toString();
-    if (sliderSmooth) sliderSmooth.value = cur.minCutoff.toString();
-    if (sliderDead) sliderDead.value = cur.deadZone.toString();
-
-    const updateAimAssistVisual = (enabled: boolean) => {
-      if (toggleAimAssist) toggleAimAssist.checked = enabled;
-      if (sliderAimAssist) sliderAimAssist.style.backgroundColor = enabled ? '#006688' : '#bdc8d0';
-      if (knobAimAssist) knobAimAssist.style.left = enabled ? '22px' : '3px';
-    };
-    updateAimAssistVisual(cur.aimAssist ?? true);
-
-    const updateBowlingMeterVisual = (enabled: boolean) => {
-      if (toggleBowlingMeter) toggleBowlingMeter.checked = enabled;
-      if (sliderBowlingMeter) sliderBowlingMeter.style.backgroundColor = enabled ? '#006688' : '#bdc8d0';
-      if (knobBowlingMeter) knobBowlingMeter.style.left = enabled ? '22px' : '3px';
-    };
-    updateBowlingMeterVisual(cur.bowlingPowerMeter ?? false);
-
-    sliderSens?.addEventListener('input', () => {
-      const val = parseFloat(sliderSens.value);
-      if (labelSens) labelSens.textContent = `${val.toFixed(1)}x`;
-      this.settingsManager.update({ sensitivity: val });
-      this.pipeline.updateSettings({ sensitivity: val });
+    SettingsUiBinder.bind(this.settingsManager, this.pipeline, {
+      recenterPointer: () => this.recenterPointer(),
+      openCalibration: () => {
+        this.callbacks.closeSettings();
+        this.callbacks.openCalibration();
+      },
+      closeSettings: () => this.callbacks.closeSettings()
     });
-
-    sliderSmooth?.addEventListener('input', () => {
-      const val = parseFloat(sliderSmooth.value);
-      if (labelSmooth) labelSmooth.textContent = `${val.toFixed(1)} Hz`;
-      this.settingsManager.update({ minCutoff: val });
-      this.pipeline.updateSettings({ minCutoff: val });
-    });
-
-    sliderDead?.addEventListener('input', () => {
-      const val = parseFloat(sliderDead.value);
-      if (labelDead) labelDead.textContent = `${val.toFixed(1)} deg/s`;
-      this.settingsManager.update({ deadZone: val });
-      this.pipeline.updateSettings({ deadZone: val });
-    });
-
-    toggleAimAssist?.addEventListener('change', () => {
-      const enabled = toggleAimAssist.checked;
-      updateAimAssistVisual(enabled);
-      this.settingsManager.update({ aimAssist: enabled });
-      this.pipeline.updateSettings({ aimAssist: enabled });
-    });
-
-    toggleBowlingMeter?.addEventListener('change', () => {
-      const enabled = toggleBowlingMeter.checked;
-      updateBowlingMeterVisual(enabled);
-      this.settingsManager.update({ bowlingPowerMeter: enabled });
-      this.pipeline.updateSettings({ bowlingPowerMeter: enabled });
-    });
-
-    btnReset?.addEventListener('click', () => {
-      const def = this.settingsManager.resetToDefaults();
-      if (sliderSens) sliderSens.value = def.sensitivity.toString();
-      if (sliderSmooth) sliderSmooth.value = def.minCutoff.toString();
-      if (sliderDead) sliderDead.value = def.deadZone.toString();
-      if (labelSens) labelSens.textContent = `${def.sensitivity.toFixed(1)}x`;
-      if (labelSmooth) labelSmooth.textContent = `${def.minCutoff.toFixed(1)} Hz`;
-      if (labelDead) labelDead.textContent = `${def.deadZone.toFixed(1)} deg/s`;
-      updateAimAssistVisual(def.aimAssist ?? true);
-      updateBowlingMeterVisual(def.bowlingPowerMeter ?? false);
-      this.pipeline.updateSettings(def);
-    });
-
-    btnRecenter?.addEventListener('click', () => this.recenterPointer());
-    btnCalib?.addEventListener('click', () => {
-      this.callbacks.closeSettings();
-      this.callbacks.openCalibration();
-    });
-    btnClose?.addEventListener('click', () => this.callbacks.closeSettings());
   }
 
   public startCalibrationRoutine(): void {
-    this.isCalibrating = true;
-    const progressCircle = document.getElementById('calib-progress-circle');
-    const statusText = document.getElementById('calib-status-text');
-    const driftText = document.getElementById('calib-drift-text');
-    const btnConfirm = document.getElementById('btn-calib-confirm');
-
-    if (btnConfirm) btnConfirm.style.display = 'none';
-
-    this.calibration.start(
-      (progress, isSteady) => {
-        if (progressCircle) {
-          const circumference = 527;
-          const offset = circumference * (1.0 - progress);
-          progressCircle.style.strokeDashoffset = offset.toString();
-          progressCircle.style.stroke = isSteady ? '#3cb4e7' : '#f59e0b';
-        }
-
-        if (statusText) {
-          if (!isSteady) {
-            statusText.innerHTML = 'Status: <strong style="color: #f59e0b;">Hold Steady! Movement detected...</strong>';
-          } else {
-            const pct = Math.round(progress * 100);
-            statusText.innerHTML = `Status: <strong style="color: #006688;">Measuring Gyro Bias (${pct}%)...</strong>`;
-          }
-        }
-      },
-      (calibration) => {
-        this.isCalibrating = false;
-        this.pipeline.setCalibration(calibration);
-        this.recenterPointer();
-
-        if (progressCircle) progressCircle.style.stroke = '#22c55e';
-        if (statusText) statusText.innerHTML = 'Status: <strong style="color: #22c55e;">Calibration Complete!</strong>';
-        if (driftText) driftText.innerHTML = `Resting Drift: <strong style="color: #22c55e;">Bias: ${calibration.biasYaw.toFixed(2)}°/s</strong>`;
-        if (btnConfirm) btnConfirm.style.display = 'inline-flex';
-      }
-    );
+    this.calibrationUi.startRoutine();
   }
 
   public stopCalibrationRoutine(): void {
-    this.isCalibrating = false;
-    this.calibration.stop();
-  }
-
-  private bindCalibrationUI(): void {
-    const btnConfirm = document.getElementById('btn-calib-confirm');
-    const btnBack = document.getElementById('btn-calib-back');
-
-    btnConfirm?.addEventListener('click', () => {
-      this.recenterPointer();
-      this.callbacks.closeCalibration();
-    });
-
-    btnBack?.addEventListener('click', () => {
-      this.stopCalibrationRoutine();
-      this.callbacks.closeCalibration();
-    });
+    this.calibrationUi.stopRoutine();
   }
 
   private bindMouseFallback(): void {
