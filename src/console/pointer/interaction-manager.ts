@@ -329,6 +329,8 @@ export class InteractionManager {
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         this.recenterPointer();
+      } else if (e.code === 'Escape' || e.code === 'KeyH') {
+        this.callbacks.togglePause();
       }
     });
   }

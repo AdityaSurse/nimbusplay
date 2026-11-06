@@ -299,8 +299,10 @@ async function boot(): Promise<void> {
     },
     togglePause: () => {
       shell?.togglePauseOverlay();
+      const isOpen = document.getElementById('pause-overlay')?.classList.contains('open') ?? false;
       if (gameManager?.isGameRunning()) {
-        gameManager.pause();
+        if (isOpen) gameManager.pause();
+        else gameManager.resume();
       }
     },
     closePause: () => {

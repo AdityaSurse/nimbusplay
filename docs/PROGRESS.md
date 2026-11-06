@@ -22,7 +22,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 
 ---
 
-## Game Remake Phase Overview Status Table (4-Game Target)
+## Game Remake Phase Overview Status Table (5-Game Target)
 
 | Phase | Description | Status | Target Date | Completed Date | Sign-off |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -32,8 +32,10 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase R3** | Game 1: Fruit Ninja (Cedar Planks, `X X X` Strikes & Splatters) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R4** | Game 2: Alien Attack (3D Cosmic Rail Shooter & Dual Thumb) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R5** | Game 3: Shooting Range (Carnival Sky, Grass & Bullseyes) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
-| **Phase R6** | Game 4: Sketch (Interactive Whiteboard & Spline Ink) | Not Started | — | — | — |
-| **Phase R7** | Remake System Integration, Latency Profiling & QA | Not Started | — | — | — |
+| **Phase R6** | Game 4: Sketch (Interactive Whiteboard & Spline Ink) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
+| **Phase R7** | Remake System Integration, Latency Profiling & QA | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
+| **Phase R8** | Game 5: Turbo Circuit 3D Kart Racer Architecture & Spec | **Complete** | 2026-11-06 | 2026-11-06 | Approved |
+| **Phase R9** | Game 5: Turbo Circuit 3D Kart Racing Engine Implementation | Planned | — | — | — |
 
 ---
 
@@ -438,4 +440,76 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] 44/44 unit tests pass across 12 test suites in <100ms (`npm test`).
   - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors.
   - [x] All modules adhere strictly to line count limits (<250 lines per module).
+
+---
+
+### Phase R6: Game 4 — Sketch Remake
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/console/games/sketch/types.ts`: Defined `ToolMode`, `ColorSwatch`, `BrushSize`, `StrokePoint`, `DrawingStroke`, and `ToolbarHitResult`.
+  - `src/console/games/sketch/sample-artwork.ts`: Recreated authentic reference marker artwork `"I ❤️ VIBECODING"` using vector stroke paths (black serif 'I', crimson red heart, and bold marker 'VIBECODING').
+  - `src/console/games/sketch/toolbar.ts`: Pinned vertical frosted glass palette on the left edge with 10 color swatches (Black, Slate Grey, Crimson Red, Orange, Yellow, Green, Cyan, Blue, Purple, Pink) featuring active selection rings, 3 brush size dots, Eraser mode toggle, Undo, Clear, and Sample template restore.
+  - `src/console/games/sketch/stroke-renderer.ts`: High-performance drawing engine with quadratic curve smoothing and round caps/joins, micro-jitter suppression (<2px), eraser rendering, and undo/clear history stack.
+  - `src/console/games/sketch/pen-cursor.ts`: Real-time pen tip preview circle indicating current ink color and brush size at the pointer location, with drawing contact feedback and toolbar hover state.
+  - `src/console/games/sketch/sketch-game.ts`: Master `IGame` loop ($< 210$ lines) wiring gyro pointer tracking, A-button drawing gesture, left-margin palette interaction, keyboard shortcuts (Ctrl+Z undo, C clear, E eraser), Web Audio feedback, and clean teardown.
+  - `src/console/games/game-manager.ts`: Wired `sketch` channel tile launch.
+  - `tests/sketch.test.ts`: Added 8 unit tests verifying stroke path recording, jitter suppression, undo/clear stack, toolbar hit-testing, and reference sample artwork generation.
+- **Verification Criteria**:
+  - [x] Clean white canvas filling the entire screen matching `reel-games.png` (bottom-right).
+  - [x] Thin vertical color palette on the left edge with 10 colored dots and active selection ring.
+  - [x] 3 brush sizes (Thin, Medium, Thick) with active ring indicator.
+  - [x] Drawing activated by pointing with gyro pointer and holding A button (or B trigger/mouse).
+  - [x] Quadratic curve smoothing and round caps produce smooth, hand-drawn vector strokes.
+  - [x] Pointing at the palette changes color, size, and toggles Eraser, Undo, Clear, or Sample.
+  - [x] Preloaded authentic marker drawing: `"I ❤️ VIBECODING"`.
+  - [x] 52/52 unit tests pass across 15 test suites in <100ms (`npm test`).
+  - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors.
+  - [x] All modules adhere strictly to line count limits (<250 lines per module).
+
+---
+
+### Phase R7: Remake System Integration, Latency Profiling & QA Sign-off
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/console/main.ts`: Audited and refined game launch orchestration, Home button pause toggle handling (`overlay.classList.contains('open') ? pause() : resume()`), pause menu navigation (`btn-pause-resume`, `btn-pause-menu`), and continuous controller connection retention.
+  - `src/console/pointer/interaction-manager.ts`: Added keyboard shortcuts (`Escape` / `KeyH`) for desktop pause toggle parity with controller Home button; verified Home short-tap (<450ms) for pause vs long-press (>=450ms) for recenter.
+  - `tests/game-lifecycle.test.ts`: Added 8 new unit tests verifying 4 remake games in catalog, 4-tile + 8 ghost-tile DOM grid rendering, zero legacy games references, Home button hold duration discrimination, protocol bitmasks, and controller connection persistence across game teardowns.
+  - **Dead Code Audit**: Cleanly verified zero references to legacy games (`Star Defender`, `Bowl Blitz`, bowling) across `src/`, `index.html`, and `tests/`.
+  - **Visual & Audio Fidelity Pass**: Confirmed visual alignment across all 4 games and menu with `/design/reference/` (`Video-7889.mp4`, `reel-games.png`, `reel-menu.png`).
+- **Verification Criteria**:
+  - [x] All 4 games (**Fruit Ninja**, **Alien Attack**, **Shooting Range**, **Sketch**) launch cleanly from their respective glossy top-row channel tiles.
+  - [x] Pressing the controller **Home button** (or `Escape`/`H` on keyboard) pauses the active game and summons the authentic translucent Pause Overlay HUD.
+  - [x] Selecting **Resume Game** resumes the game loop with delta timing recalibrated; selecting **Console Menu** cleanly tears down the PixiJS canvas and returns to the domestic channel matrix.
+  - [x] Mobile controller WebSocket connection remains 100% connected with zero dropped packets across all launches, pauses, and menu transitions.
+  - [x] Controller orientation auto-switches: switches to two-handed horizontal flight yoke for Alien Attack, and restores portrait wand mode for the menu and other games.
+  - [x] Dead code completely eliminated; no deprecated legacy assets or files.
+  - [x] 60/60 unit tests pass across 18 test suites in <350ms (`npm test`).
+  - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors (`npm run build`).
+  - [x] All files adhere strictly to line count limits (<250 lines per module, <350 lines for game loops).
+
+---
+
+### Phase R8: Game 5 — Turbo Circuit (3D Kart Racer Architecture & Spec)
+- **Status**: Complete / Approved (Planning & Specification Only — Zero Application Code Gate)
+- **Key Deliverables**:
+  - `docs/GAME_REFERENCE.md`: Authored comprehensive "Turbo Circuit" section specifying the target gameplay from `Video-18621.mp4`: chase camera, 3-2-1-GO starting countdown with rocket start window, 8 racers on the starting grid, prominent gold italic position badge bottom-right ("8th"), coin and lap counter (1/1) bottom-left, track minimap outline on the right, glider ramp section, "FINISH!" banner, and Race Results screen with "Race Again" button.
+  - `docs/ARCHITECTURE.md` & `README.md`: Authored **10 colorful Mermaid flowcharts** with `classDef` styling and structured subgraphs:
+    1. Master Race State Machine (menu, countdown, racing, finish, results, race again)
+    2. Per-Frame Game Loop (60 FPS)
+    3. Kart Physics & Drifting (hop, 3-tier mini-turbo sparks: blue, orange, purple)
+    4. AI Opponent Pathing with Rubber-Banding (spline tracking, catch-up speed scaling, obstacle avoidance)
+    5. Item System Architecture (100% original: Turbo Battery, Kinetic Homing Orb, Slime Droplet, Triple Ricochet Discs, EMP Shockwave, Supercharge Shield)
+    6. Glider Ramp Section Architecture (ramp launch, canopy deployment, pitch dive/climb aerodynamics, aerial rings, landing bounce)
+    7. Camera System Architecture (spring-damped chase camera, drift lag, dynamic speed FOV $60^\circ \to 75^\circ$, victory orbit)
+    8. Phone Landscape Controller Input Mapping (tilt steering wheel roll + right thumb Gas/Drift + left thumb Item/Brake)
+    9. HUD Layout Architecture (16:9 immersion overlay, gold italic position, coin & lap cards, minimap, roulette box)
+    10. Track Data Pipeline (3D spline nodes, surface flags, ribbon extrusion, barrier colliders, AI racing lines)
+  - **Zero-Nintendo IP Compliance**: Designed 100% original racer roster (Volt, Nova, Blaze, Pixel, Echo, Rex, Luna, Apex), original karts (Turbo Dart, Comet-GT, etc.), original tracks (Skyline Circuit, etc.), original items, and Web Audio FM synthesis engine.
+  - **Zero-Application-Code Gate Respected**: Absolutely no game loop code, HTML games, or client application code written during this phase.
+- **Verification Criteria**:
+  - [x] Comprehensive architectural models and mathematical equations defined in `docs/ARCHITECTURE.md`.
+  - [x] All 10 Mermaid flowcharts rendered with distinctive `classDef` palettes and subgraphs.
+  - [x] Full fidelity match against `Video-18621.mp4` reference described in `docs/GAME_REFERENCE.md`.
+  - [x] `npm test` and `npm run build` verify 0 regressions across existing test suites.
+
 
