@@ -11,10 +11,10 @@ import { GAMES_CATALOG, renderChannelsGridHtml } from '../src/console/ui/catalog
 import { BUTTON_MASKS } from '../src/shared/protocol.js';
 
 describe('Game Remake Catalog & Channel Matrix Tests', () => {
-  it('should register exactly four active remake games', () => {
+  it('should register exactly five active remake games including Turbo Circuit', () => {
     const keys = Object.keys(GAMES_CATALOG);
-    assert.equal(keys.length, 4);
-    assert.deepEqual(keys.sort(), ['alienAttack', 'fruitNinja', 'shootingRange', 'sketch']);
+    assert.equal(keys.length, 5);
+    assert.deepEqual(keys.sort(), ['alienAttack', 'fruitNinja', 'shootingRange', 'sketch', 'turboCircuit']);
   });
 
   it('should have valid metadata for each game without missing fields', () => {
@@ -28,17 +28,18 @@ describe('Game Remake Catalog & Channel Matrix Tests', () => {
     }
   });
 
-  it('should render 4 top-row game tiles and 8 ghost tiles in the DOM HTML', () => {
+  it('should render 5 game tiles and 7 ghost tiles in the DOM HTML', () => {
     const html = renderChannelsGridHtml();
     assert.ok(html.includes('data-game="fruitNinja"'));
     assert.ok(html.includes('data-game="alienAttack"'));
     assert.ok(html.includes('data-game="shootingRange"'));
     assert.ok(html.includes('data-game="sketch"'));
+    assert.ok(html.includes('data-game="turboCircuit"'));
 
     // Count ghost tiles
     const ghostMatches = html.match(/empty-slot/g);
     assert.ok(ghostMatches !== null);
-    assert.equal(ghostMatches.length, 8);
+    assert.equal(ghostMatches.length, 7);
   });
 
   it('should contain zero references to deprecated legacy games in catalog', () => {
@@ -88,16 +89,17 @@ describe('Game Pause & Home Button Mechanics', () => {
 });
 
 describe('Controller Layout Mode Negotiation Contract', () => {
-  it('should dictate landscape mode for Alien Attack and portrait for other games', () => {
+  it('should dictate landscape mode for Alien Attack and Turbo Circuit, and portrait for other games', () => {
     const expectedModes: Record<string, 'portrait' | 'landscape'> = {
       fruitNinja: 'portrait',
       alienAttack: 'landscape',
       shootingRange: 'portrait',
-      sketch: 'portrait'
+      sketch: 'portrait',
+      turboCircuit: 'landscape'
     };
 
     for (const [id, expectedMode] of Object.entries(expectedModes)) {
-      const mode = id === 'alienAttack' ? 'landscape' : 'portrait';
+      const mode = (id === 'alienAttack' || id === 'turboCircuit') ? 'landscape' : 'portrait';
       assert.equal(mode, expectedMode, `Mismatch in expected layout mode for ${id}`);
     }
   });

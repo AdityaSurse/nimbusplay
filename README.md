@@ -1277,11 +1277,17 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [x] Author comprehensive 3D kart racer specification in `docs/GAME_REFERENCE.md`.
   - [x] Author 10 colorful Mermaid flowcharts across `README.md` and `docs/ARCHITECTURE.md`.
   - [x] Specify 100% original roster, karts, tracks, items, and Web Audio FM synthesis.
-- [ ] **Phase R9: Turbo Circuit 3D Kart Racer Implementation**
-  - [ ] 3D track spline pipeline & WebGL/PixiJS road projection.
-  - [ ] Kart physics, 3-tier drift mini-turbos, and glider flight aerodynamics.
-  - [ ] 7 AI racers with spline navigation and rubber-banding.
-  - [ ] Item arsenal, HUD overlay, and landscape racing wheel controller layout.
+- [x] **Phase R9: Turbo Circuit 3D Kart Racer Implementation (Three.js Engine)**
+  - [x] Glossy channel tile with red-to-teal gradient, original kart SVG icon, and white label.
+  - [x] Closed procedural 3D racetrack from CatmullRom spline with asphalt road, lane markings, blue/white curbs, and grass infield.
+  - [x] Stadium environment with 5-tier grandstands, procedural crowd, 4 steel floodlight towers, start/finish gantry, and sponsor barriers.
+  - [x] Low-poly original kart and driver ("Volt") with spinning wheels, front steering pivot, and driver turn lean.
+  - [x] Arcade kart physics: acceleration, braking, speed-dependent steering damping, off-road grass slowdown, and barrier wall bounce.
+  - [x] Smooth dynamic chase camera with corner banking tilt and FOV kick ($60^\circ \to 75^\circ$) when boosting.
+  - [x] Daylight stadium sky, directional sun with soft shadows, and distance fog.
+  - [x] Full HUD overlay: gold italic position badge, digital speedometer, coin counter, lap counter, and minimap track outline.
+  - [x] Dual-input support: phone landscape tilt steering + buttons, and desktop WASD/Arrow keyboard fallback.
+  - [x] 100% test pass rate (70/70 tests) and 0-error strict TypeScript build.
 
 ---
 

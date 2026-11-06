@@ -56,12 +56,22 @@ export const GAMES_CATALOG: Record<string, GameMetadata> = {
     bannerGradient: 'linear-gradient(145deg, #7e22ce 0%, #a855f7 50%, #ec4899 100%)',
     description: 'An interactive drawing canvas! Pick vibrant ink colors from the palette and paint smooth vector curves by holding the A button.',
     artHtml: CHANNEL_ART.sketch
+  },
+  turboCircuit: {
+    id: 'turboCircuit',
+    title: 'Turbo Circuit',
+    category: 'Racing / 3D Arcade Kart',
+    rating: 'E (Everyone)',
+    revision: 'Rev 1.00',
+    bannerGradient: 'linear-gradient(145deg, #ef4444 0%, #f97316 50%, #0d9488 100%)',
+    description: 'High-octane 3D kart racing! Steer with horizontal phone tilt, drift through stadium hairpins with mini-turbo sparks, and rocket across the finish line.',
+    artHtml: CHANNEL_ART.turboCircuit
   }
 };
 
 export function renderChannelsGridHtml(): string {
   return `
-    <!-- Top Row: 4 Colorful Glossy Game Tiles -->
+    <!-- Top Row: 4 Colorful Glossy Game Tiles + Row 2 Start: Turbo Circuit -->
     <div class="channel-tile game-tile group" data-action="launch" data-game="fruitNinja" data-slot="1">
       ${CHANNEL_ART.fruitNinja}
     </div>
@@ -78,9 +88,13 @@ export function renderChannelsGridHtml(): string {
       ${CHANNEL_ART.sketch}
     </div>
 
-    <!-- Rows 2 & 3: 8 Faint Ghost Tiles -->
-    ${Array.from({ length: 8 }).map((_, i) => `
-      <div class="channel-tile ghost-tile empty-slot group" data-slot="${i + 5}">
+    <!-- Row 2: Tile 5 (Turbo Circuit) + 7 Faint Ghost Tiles -->
+    <div class="channel-tile game-tile group" data-action="launch" data-game="turboCircuit" data-slot="5">
+      ${CHANNEL_ART.turboCircuit}
+    </div>
+
+    ${Array.from({ length: 7 }).map((_, i) => `
+      <div class="channel-tile ghost-tile empty-slot group" data-slot="${i + 6}">
         ${CHANNEL_ART.ghostTile}
       </div>
     `).join('')}

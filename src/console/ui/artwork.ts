@@ -89,6 +89,35 @@ export const CHANNEL_ART = {
     </div>
   `,
 
+  turboCircuit: `
+    <div class="channel-card-body bg-gradient-to-br from-[#ef4444] via-[#f97316] to-[#0d9488]">
+      <div class="tile-specular-glare"></div>
+      <div class="channel-icon-cluster">
+        <svg viewBox="0 0 64 64" class="channel-svg-icon" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Rear Spoiler Wing -->
+          <path d="M12 17 H52 V21 H12 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+          <path d="M20 21 L18 27 M44 21 L46 27" stroke="#ffffff" stroke-width="2"/>
+          <!-- Driver Helmet -->
+          <circle cx="32" cy="27" r="7" fill="#ffffff"/>
+          <path d="M28 27 H36" stroke="#ef4444" stroke-width="2.2"/>
+          <!-- Kart Body & Cockpit -->
+          <path d="M18 27 L23 48 H41 L46 27 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2"/>
+          <path d="M25 33 H39 L37 46 H27 Z" fill="#0d9488"/>
+          <!-- Front Nose Bumper -->
+          <path d="M21 48 H43 V52 H21 Z" fill="#ffffff"/>
+          <!-- Wheels -->
+          <rect x="9" y="44" width="7" height="11" rx="2.5" fill="#ffffff"/>
+          <rect x="48" y="44" width="7" height="11" rx="2.5" fill="#ffffff"/>
+          <rect x="7" y="23" width="7" height="13" rx="2.5" fill="#ffffff"/>
+          <rect x="50" y="23" width="7" height="13" rx="2.5" fill="#ffffff"/>
+        </svg>
+      </div>
+      <div class="channel-label-box">
+        <span class="channel-label-text">Turbo Circuit</span>
+      </div>
+    </div>
+  `,
+
   ghostTile: `
     <div class="channel-card-body ghost-tile-body">
       <div class="ghost-specular-glare"></div>

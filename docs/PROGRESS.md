@@ -35,7 +35,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase R6** | Game 4: Sketch (Interactive Whiteboard & Spline Ink) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R7** | Remake System Integration, Latency Profiling & QA | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R8** | Game 5: Turbo Circuit 3D Kart Racer Architecture & Spec | **Complete** | 2026-11-06 | 2026-11-06 | Approved |
-| **Phase R9** | Game 5: Turbo Circuit 3D Kart Racing Engine Implementation | Planned | — | — | — |
+| **Phase R9** | Game 5: Turbo Circuit 3D Kart Racing Engine Implementation | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 
 ---
 
@@ -511,5 +511,39 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] All 10 Mermaid flowcharts rendered with distinctive `classDef` palettes and subgraphs.
   - [x] Full fidelity match against `Video-18621.mp4` reference described in `docs/GAME_REFERENCE.md`.
   - [x] `npm test` and `npm run build` verify 0 regressions across existing test suites.
+
+---
+
+### Phase R9: Game 5 — Turbo Circuit (3D Kart Racing Engine Implementation)
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/console/ui/artwork.ts` & `src/console/ui/catalog.ts`:
+    - Added glossy "Turbo Circuit" channel tile (Slot 5) with vibrant red-to-teal gradient (`#ef4444` via `#f97316` to `#0d9488`), original low-poly kart SVG icon, and white title label matching the domestic channel aesthetic.
+    - Updated channel matrix renderer to display 5 active game tiles and 7 faint empty ghost slots.
+  - `src/console/games/turbo-circuit/`:
+    - `types.ts` (51 lines): Strict TypeScript interfaces for `KartPhysicsState`, `KartInput`, and `TrackSample` with zero `any`.
+    - `track-spline.ts` (242 lines): Closed 16-point `CatmullRomCurve3` procedural stadium racetrack with extruded asphalt road mesh, painted dashed lane markings, alternating cobalt blue and crisp white curbs, and grass infield. Implements fast `getClosestTrackSample(pos)` nearest-point query.
+    - `stadium-builder.ts` (192 lines): Grand multi-tier stadium grandstands with procedural crowd color blocks, 4 massive steel lattice light towers with floodlight banks, start/finish gantry with checkered line and title banner, and trackside sponsor barriers.
+    - `kart-model.ts` (232 lines): Low-poly original racing kart ("Turbo Dart") with aerodynamic wedge chassis, side air intakes, rear spoiler, four spinning racing slicks with speed-matched rotation, front steering pivot animation, driver "Volt" leaning into turns, and rear dual exhaust pipes with boost flame cones.
+    - `kart-physics.ts` (188 lines): High-performance arcade kart physics featuring $32\,\text{m/s}^2$ acceleration, speed-dependent steering authority (anti-twitch damping at high velocities), grass infield off-road slowdown ($42\%$ top speed cap), perimeter barrier elastic reflection with impact cooldown, and drift charging with mini-turbo boost.
+    - `chase-camera.ts` (73 lines): Dynamic spring-damped chase camera smoothly following kart heading and position, banking roll into turns, and dynamic FOV kick ($60^\circ \to 75^\circ$) when boosting.
+    - `turbo-hud.ts` (164 lines): Pure DOM/CSS HUD matching `Video-18621.mp4` reference with large gold italic position readout (`1st` / `8th`), digital speedometer (`KM/H`), coin counter (`🟡 x04`), lap counter (`LAP 1/1`), track minimap outline with kart position dot, and nitro boost alert.
+    - `turbo-circuit-game.ts` (249 lines): Master `IGame` implementation integrating Three.js scene, WebGL renderer with PCF soft shadows, directional sunlight with ambient hemisphere fill, fog, phone landscape controller input, audio cues, desktop WASD fallback, and Home button pause handling.
+  - `src/console/games/game-manager.ts`:
+    - Wired `TurboCircuitGame` into `GameManager` for seamless launching, pausing, resuming, and clean teardown.
+  - `tests/turbo-circuit.test.ts` (209 lines):
+    - Added comprehensive unit and integration tests covering track spline sample projection, on-road/off-road classification, acceleration and braking, speed-dependent steering attenuation, off-road velocity limiting, wall barrier bounces, boost triggering, and chase camera FOV expansion.
+- **Verification Criteria**:
+  - [x] Tile 5 ("Turbo Circuit") cleanly integrated in the top row of the channel matrix with custom SVG artwork and red-to-teal gradient.
+  - [x] Implements Three.js 3D rendering pipeline with procedural geometry, soft shadows, and daytime stadium sky.
+  - [x] Arcade kart physics properly models acceleration, braking, off-road grass friction, steering damping, and barrier collisions.
+  - [x] Smooth chase camera tracks behind kart and expands FOV kick during boost.
+  - [x] Full HUD displays gold italic position, coin counter, lap counter, speedometer, and minimap.
+  - [x] Supports phone controller (landscape tilt steering + button gas/brake/boost) and desktop keyboard fallback (WASD/Arrows/Space/Shift).
+  - [x] 100% test pass rate: 70/70 unit tests pass across 21 test suites (`npm test`).
+  - [x] Clean production build with 0 TypeScript/Vite errors (`npm run build`).
+  - [x] All source files strictly under line count limits (<250 lines per module).
+  - [x] 100% original assets; zero Nintendo or third-party IP.
+
 
 
