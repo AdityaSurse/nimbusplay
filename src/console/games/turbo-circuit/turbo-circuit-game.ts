@@ -100,7 +100,7 @@ export class TurboCircuitGame implements IGame {
     this.hud = new TurboHUD(() => this.restartRace(), () => options.onExitToMenu());
     container.appendChild(this.hud.container);
 
-    this.options.setLayoutMode?.('landscape');
+    this.options.setLayoutMode?.('landscape-racing', 'turboCircuit');
     window.addEventListener('keydown', this.keydownHandler);
     window.addEventListener('keyup', this.keyupHandler);
     this.startCountdown();
@@ -243,19 +243,10 @@ export class TurboCircuitGame implements IGame {
   }
 
   private deployPlayerItem(item: string): void {
-    if (item === 'boost') {
-      this.physics.triggerBoost(1.8, 72.0);
-      turboAudio.playBoostWhoosh();
-      this.options?.sendHaptic([60, 40, 80]);
-    } else if (item === 'rocket') {
-      this.itemSystem.deployRocket(this.physics.state.x, this.physics.state.y, this.physics.state.z, this.physics.state.heading);
-      turboAudio.playRocketLaunch();
-    } else if (item === 'oil') {
-      this.itemSystem.deployOil(this.physics.state.x, this.physics.state.y, this.physics.state.z);
-    } else if (item === 'shield') {
-      this.physics.triggerShield(5.0);
-      turboAudio.playBoostWhoosh();
-    }
+    if (item === 'boost') { this.physics.triggerBoost(1.8, 72.0); turboAudio.playBoostWhoosh(); this.options?.sendHaptic([60, 40, 80]); }
+    else if (item === 'rocket') { this.itemSystem.deployRocket(this.physics.state.x, this.physics.state.y, this.physics.state.z, this.physics.state.heading); turboAudio.playRocketLaunch(); }
+    else if (item === 'oil') { this.itemSystem.deployOil(this.physics.state.x, this.physics.state.y, this.physics.state.z); }
+    else if (item === 'shield') { this.physics.triggerShield(5.0); turboAudio.playBoostWhoosh(); }
   }
 
   private handlePlayerHazardHit(): void {
@@ -270,13 +261,8 @@ export class TurboCircuitGame implements IGame {
       this.wasBoosting = true;
       turboAudio.playBoostWhoosh();
       this.options?.sendHaptic([60, 40, 80]);
-    } else if (!isBoosting) {
-      this.wasBoosting = false;
-    }
-
-    if (kartInput.drift && Math.abs(kartInput.steer) > 0.3) {
-      turboAudio.playDriftScreech();
-    }
+    } else if (!isBoosting) this.wasBoosting = false;
+    if (kartInput.drift && Math.abs(kartInput.steer) > 0.3) turboAudio.playDriftScreech();
   }
 
   private processInput(input: GameInputState): KartInput {
@@ -287,13 +273,22 @@ export class TurboCircuitGame implements IGame {
     let boost = false;
     let useItem = false;
 
-    if (input.gyro && Math.abs(input.gyro.gamma) > 0.8) {
-      steer = Math.max(-1.0, Math.min(1.0, -input.gyro.gamma / 22.0));
+    // 1. Phone Steering Wheel Tilt (Landscape / Gyro) with Dead Zone
+    if (input.accel && Math.abs(input.accel.y) > 0.4) {
+      const deadzone = 0.4;
+      const raw = input.accel.y;
+      steer = Math.sign(raw) * Math.min(1.0, (Math.abs(raw) - deadzone) / 4.8);
+    } else if (input.gyro && Math.abs(input.gyro.beta) > 2.5) {
+      steer = Math.max(-1.0, Math.min(1.0, input.gyro.beta / 42.0));
     } else if (input.accel && Math.abs(input.accel.x) > 0.5) {
       steer = Math.max(-1.0, Math.min(1.0, -input.accel.x / 5.0));
+    } else if (input.gyro && Math.abs(input.gyro.gamma) > 0.8) {
+      steer = Math.max(-1.0, Math.min(1.0, -input.gyro.gamma / 22.0));
     }
 
     const mask = input.rawBitmask;
+    if (mask & BUTTON_MASKS.DPAD_LEFT) steer = -1.0;
+    if (mask & BUTTON_MASKS.DPAD_RIGHT) steer = 1.0;
     if ((mask & BUTTON_MASKS.A) || input.isTriggerPressed) gas = true;
     if (mask & BUTTON_MASKS.B) brake = true;
     if (mask & (BUTTON_MASKS.PLUS | BUTTON_MASKS.DPAD_UP)) drift = true;

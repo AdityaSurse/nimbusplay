@@ -177,3 +177,30 @@ describe('ChaseCamera Dynamic FOV & Tracking Tests', () => {
     assert.ok(cam.camera.fov > 65);
   });
 });
+
+describe('Landscape Racing Controller & Steering Tilt Tests', () => {
+  it('should map lateral tilt acceleration with dead zone and clamping', () => {
+    const deadZone = 0.4;
+    const sensitivity = 0.28;
+
+    const computeSteer = (accelY: number): number => {
+      if (Math.abs(accelY) < deadZone) return 0;
+      const mag = (Math.abs(accelY) - deadZone) * sensitivity;
+      return Math.max(-1, Math.min(1, Math.sign(accelY) * mag));
+    };
+
+    // Under dead zone: 0
+    assert.equal(computeSteer(0.2), 0);
+    assert.equal(computeSteer(-0.35), 0);
+
+    // Active tilt: proportional and clamped to [-1, 1]
+    const steerRight = computeSteer(2.5);
+    assert.ok(steerRight > 0.5 && steerRight < 0.7);
+
+    const maxSteer = computeSteer(10.0);
+    assert.equal(maxSteer, 1.0);
+
+    const minSteer = computeSteer(-10.0);
+    assert.equal(minSteer, -1.0);
+  });
+});

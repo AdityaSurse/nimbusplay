@@ -113,9 +113,12 @@ export interface HapticFeedbackCommand extends BaseMessage {
   pattern: number[];
 }
 
+export type LayoutMode = 'portrait' | 'landscape' | 'landscape-racing';
+
 export interface LayoutModeCommand extends BaseMessage {
   type: 'COMMAND_LAYOUT_MODE';
-  mode: 'portrait' | 'landscape';
+  mode: LayoutMode;
+  gameId?: string;
 }
 
 export type StandardMessage =

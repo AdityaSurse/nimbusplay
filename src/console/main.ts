@@ -7,12 +7,8 @@ import { audioManager } from './audio/audio-manager.js';
 import { OnboardingManager } from './ui/onboarding.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
 import { 
-  isCompactPacket,
-  BUTTON_MASKS,
-  type NimbusNetworkMessage, 
-  type HapticFeedbackCommand, 
-  type MotionInputFrame,
-  type LayoutModeCommand
+  isCompactPacket, BUTTON_MASKS, type NimbusNetworkMessage, 
+  type HapticFeedbackCommand, type MotionInputFrame, type LayoutModeCommand
 } from '../shared/protocol.js';
 
 interface LanInfo {
@@ -170,13 +166,14 @@ function bindModalButtons(): void {
             networkClient.send(cmd);
           }
         },
-        setLayoutMode: (mode) => {
+        setLayoutMode: (mode, gameId) => {
           if (networkClient) {
             const cmd: LayoutModeCommand = {
               type: 'COMMAND_LAYOUT_MODE',
               seq: Date.now(),
               timestamp: Date.now(),
-              mode
+              mode,
+              gameId
             };
             networkClient.send(cmd);
           }

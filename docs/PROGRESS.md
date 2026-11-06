@@ -37,6 +37,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase R8** | Game 5: Turbo Circuit 3D Kart Racer Architecture & Spec | **Complete** | 2026-11-06 | 2026-11-06 | Approved |
 | **Phase R9** | Game 5: Turbo Circuit 3D Kart Racing Engine Implementation | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R10**| Game 5: Turbo Circuit Full Race Championship & AI Opponents | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
+| **Phase R11**| Game 5: Turbo Circuit Landscape Controller & Steering Wheel Tilt | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 
 ---
 
@@ -606,6 +607,66 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] 69/69 tests passing across 23 test suites (`npm test`).
   - [x] Clean production build with 0 TypeScript/Vite errors (`npm run build`).
   - [x] All files strictly adhere to modularity limits (<250 lines per module, <350 lines for game loop).
+
+---
+
+### Phase R11: Game 5 — Turbo Circuit Landscape Controller & Steering Wheel Tilt
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/shared/protocol.ts`:
+    - Extended `LayoutMode` type with `'landscape-racing'` (`'portrait' | 'landscape' | 'landscape-racing'`).
+    - Extended `LayoutModeCommand` with optional `gameId?: string` parameter.
+  - `src/console/games/common/game-interface.ts`:
+    - Updated `GameOptions.setLayoutMode` interface to accept `mode: 'portrait' | 'landscape' | 'landscape-racing', gameId?: string`.
+  - `src/console/main.ts`:
+    - Updated `setLayoutMode` handler to forward `gameId` in `LayoutModeCommand` packet to the connected phone controller.
+  - `src/console/games/turbo-circuit/turbo-circuit-game.ts`:
+    - Integrated automatic layout negotiation: calls `setLayoutMode('landscape-racing', 'turboCircuit')` on `init()`, and resets to `setLayoutMode('portrait')` on `destroy()`.
+    - Integrated steering wheel tilt processing from `input.accel.y`:
+      - Applies $0.4\,\text{m/s}^2$ resting jitter dead zone.
+      - Applies linear sensitivity curve ($0.28$) clamped to $[-1, 1]$.
+      - Fallback to gyro roll rate (`input.gyro.beta`) or D-pad Left/Right buttons.
+  - `controller/index.html`:
+    - Built `#racing-controller-view` matching `/design/reference/Video-18621.mp4`:
+      - Light, clean controller aesthetic with dual-handed horizontal grip ergonomics.
+      - Top utility bar: live status indicator dot, steering balance bar (`#racing-horizon-pip`), tilt degree readout (`#racing-tilt-angle`), Center re-zero button (`#btn-racing-center`), and Home pause button (`#btn-racing-home`).
+      - Left thumb section: D-Pad cluster (`#btn-racing-dpad-up/down/left/right`) for digital steer and look-back.
+      - Center-left: Big circular A gas button (`#btn-racing-a`) with tall molded vertical grip/divider bar.
+      - Center-right: 12-dot acoustic speaker grid matrix graphic with subtle tilt guidance indicator.
+      - Right thumb section: B brake/reverse button (`#btn-racing-b`), Drift/Hop button (`#btn-racing-drift`), and Item weapon button (`#btn-racing-item`).
+    - Built `#racing-calibration-modal`:
+      - First-time interactive steering wheel calibration prompt with live spirit level bubble (`#calib-bubble`) and "CALIBRATE & RACE" confirmation button (`#btn-confirm-calibration`).
+  - `src/controller/touch.ts`:
+    - Registered touch and multi-touch bindings for all racing buttons:
+      - `btn-racing-a` -> `BUTTON_MASKS.A` (Gas)
+      - `btn-racing-b` -> `BUTTON_MASKS.B` (Brake / Reverse)
+      - `btn-racing-drift` -> `BUTTON_MASKS.PLUS` (Drift / Hop)
+      - `btn-racing-item` -> `BUTTON_MASKS.BTN_1` (Deploy Item)
+      - `btn-racing-home` -> `BUTTON_MASKS.HOME` (Pause Menu)
+      - `btn-racing-center` -> `BUTTON_MASKS.RECENTER` (Center Steering)
+      - `btn-racing-dpad-left/right/up/down` -> D-Pad masks.
+  - `src/controller/main.ts`:
+    - Manages `calibratedTiltY` zero offset and `hasCalibratedRacing` state.
+    - Updated `setLayoutMode()` to dynamically reveal `#racing-controller-view`, acquire Screen Wake Lock, and present the calibration modal on first entry.
+    - Updated `send60HzFrame()` to update live balance pip, degree text, and calibrate `packet.a.y` before transmission over WebSocket.
+    - Center button and calibration confirmation recalibrate current tilt angle as zero with haptic feedback.
+  - `tests/turbo-circuit.test.ts` & `tests/game-lifecycle.test.ts`:
+    - Added unit tests for tilt steering calculation, dead zone filtering, clamping, and layout mode negotiation contract.
+- **Verification Criteria**:
+  - [x] Phone controller automatically switches to `landscape-racing` layout when Turbo Circuit launches.
+  - [x] Returns to `portrait` wand layout when exiting to console menu without WebSocket disconnection.
+  - [x] Replicates reference video (`Video-18621.mp4`) layout: D-pad left, big A button + tall vertical bar center-left, dot-grid speaker graphic center-right, small action buttons on right (B, Drift, Item).
+  - [x] Smooth steering wheel tilt controls using calibrated accelerometer ($a_y$) with dead zone and sensitivity.
+  - [x] First-time steering wheel calibration modal with live spirit level bubble.
+  - [x] Center button on top utility bar allows instant re-zeroing at any time during the race.
+  - [x] Multi-touch safety: simultaneous gas + drift or gas + item supported without gesture dropping.
+  - [x] Screen Wake Lock acquired while playing to prevent screen timeout.
+  - [x] Haptic vibration feedback on button presses, drifts, boosts, bumps, and collisions.
+  - [x] Full flow tested: Menu -> Countdown -> Race -> Finish -> Results -> Race Again & Back to Menu.
+  - [x] 70/70 unit tests passing across 24 test suites (`npm test`).
+  - [x] 0 TypeScript and Vite compilation errors (`npm run build`).
+  - [x] All source files strictly under modularity limits (<250 lines per module, <350 lines for game loops).
+
 
 
 

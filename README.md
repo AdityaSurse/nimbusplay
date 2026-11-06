@@ -735,38 +735,52 @@ flowchart TD
 flowchart TD
     classDef gripStyle fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f;
     classDef steerStyle fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#064e3b;
-    classDef rightThumb fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e40af;
-    classDef leftThumb fill:#fce7f3,stroke:#db2777,stroke-width:2px,color:#831843;
+    classDef leftCluster fill:#fce7f3,stroke:#db2777,stroke-width:2px,color:#831843;
+    classDef centerLeft fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e40af;
+    classDef centerRight fill:#e0e7ff,stroke:#6366f1,stroke-width:2px,color:#3730a3;
+    classDef rightCluster fill:#fef2f2,stroke:#ef4444,stroke-width:2px,color:#991b1b;
     classDef utilStyle fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#0f172a;
 
-    subgraph Grip["Horizontal Two-Handed Landscape Grip (Racing Wheel)"]
-        PhoneGrip["Phone held with both hands like a Formula / Kart Steering Wheel"]:::gripStyle
+    subgraph PhoneGripSection["Horizontal Two-Handed Landscape Grip (Racing Wheel)"]
+        PhoneGrip["Phone held sideways in both hands like a Formula / Kart Steering Wheel"]:::gripStyle
     end
 
-    subgraph Steering["Motion Steering Pipeline"]
-        PhoneGrip --> GyroRoll["Ingest Gyroscope Roll Angle (Gamma)"]:::steerStyle
-        GyroRoll --> Deadzone["Deadzone Filter: Ignore micro-jitters |Gamma| < 0.6 deg"]:::steerStyle
-        Deadzone --> NonLinear["Non-Linear Sensitivity Curve: Steer = sign(Gamma) * (|Gamma| / MaxAngle)^1.4"]:::steerStyle
-        NonLinear --> HorizonBar["Update Real-Time Horizon Tilt Meter on Controller UI"]:::steerStyle
+    subgraph MotionSteering["Motion Steering Pipeline (Calibrated Tilt)"]
+        PhoneGrip --> CalibStep["First-Time Tilt Calibration Modal (Spirit Level Bubble)"]:::steerStyle
+        CalibStep --> AccelTilt["Ingest Lateral Acceleration (a.y - zeroBias)"]:::steerStyle
+        AccelTilt --> Deadzone["Deadzone Threshold: Ignore |a.y| < 0.4 m/s² (No Resting Jitter)"]:::steerStyle
+        Deadzone --> Sensitivity["Linear Sensitivity Curve: Steer = clamp(sign(a.y) * (|a.y| - 0.4) * 0.28, -1, 1)"]:::steerStyle
+        Sensitivity --> LiveHorizon["Live Steering Pip & Tilt Degree Readout on Top Bar"]:::steerStyle
     end
 
-    subgraph RightHand["Right Thumb Control Cluster"]
-        PhoneGrip --> RightPad["Right Thumb Touch Area"]:::rightThumb
-        RightPad --> GasBtn["GAS (Accelerate): Hold for Forward Drive Force"]:::rightThumb
-        RightPad --> DriftBtn["DRIFT / HOP: Tap to Hop, Hold to Slide & Charge Mini-Turbo"]:::rightThumb
+    subgraph LeftCluster["Left Thumb: D-Pad Directional Cluster"]
+        PhoneGrip --> DpadLeft["D-Pad Left: Steer Hard Left (Digital Fallback)"]:::leftCluster
+        PhoneGrip --> DpadRight["D-Pad Right: Steer Hard Right (Digital Fallback)"]:::leftCluster
+        PhoneGrip --> DpadUp["D-Pad Up: Auxiliary Menu / Pitch Up"]:::leftCluster
+        PhoneGrip --> DpadDown["D-Pad Down: Auxiliary Menu / Look Back"]:::leftCluster
     end
 
-    subgraph LeftHand["Left Thumb Control Cluster"]
-        PhoneGrip --> LeftPad["Left Thumb Touch Area"]:::leftThumb
-        LeftPad --> ItemBtn["ITEM: Tap to Deploy Equipped Weapon (Homing, Boost, Slime)"]:::leftThumb
-        LeftPad --> BrakeBtn["BRAKE / REVERSE: Tap to Slow Down, Hold to Reverse"]:::leftThumb
+    subgraph CenterLeftSection["Center-Left: Primary Drive Controls"]
+        PhoneGrip --> BigA["Large Circular A Button: GAS / ACCELERATE"]:::centerLeft
+        PhoneGrip --> GripBar["Tall Molded Vertical Grip / Divider Bar"]:::centerLeft
     end
 
-    subgraph Utilities["Center Utility Controls"]
-        PhoneGrip --> CenterBar["Top Utility Bar"]:::utilStyle
-        CenterBar --> RearBtn["REAR VIEW: Hold to Look Backward"]:::utilStyle
-        CenterBar --> RecenterBtn["RECENTER: Re-zero Steering Wheel Center Angle"]:::utilStyle
-        CenterBar --> HomeBtn["HOME: Open Pause Overlay HUD on Console"]:::utilStyle
+    subgraph CenterRightSection["Center-Right: Acoustic Matrix Graphic"]
+        PhoneGrip --> SpeakerGrid["12-Dot Acoustic Speaker Grid Matrix Graphic"]:::centerRight
+        PhoneGrip --> TiltHint["Subtle Tilt Guidance Legend: 'STEER ◀ ▶'"]:::centerRight
+    end
+
+    subgraph RightCluster["Right Thumb: Tactical Action Cluster"]
+        PhoneGrip --> SmallB["B Button: BRAKE / REVERSE (Red / Rounded)"]:::rightCluster
+        PhoneGrip --> DriftHop["Drift Button: DRIFT / HOP (Indigo / Rounded)"]:::rightCluster
+        PhoneGrip --> ItemAction["Item Button: USE WEAPON (Emerald / Rounded)"]:::rightCluster
+    end
+
+    subgraph TopBarUtil["Top Utility Bar"]
+        PhoneGrip --> StatusDot["Live WebSocket Connection Dot"]:::utilStyle
+        PhoneGrip --> HorizonBar["Steering Balance Bar & Angle Readout (e.g. +14°)"]:::utilStyle
+        PhoneGrip --> CenterBtn["CENTER: Instant Steering Re-zero Button"]:::utilStyle
+        PhoneGrip --> HomePause["HOME: Pause Race & Open Console Overlay HUD"]:::utilStyle
     end
 ```
 
@@ -887,7 +901,9 @@ flowchart LR
     R5 --> R6["✔ Phase R6: Sketch Interactive Whiteboard"]:::done
     R6 --> R7["✔ Phase R7: System Integration, Latency & QA Sign-off"]:::done
     R7 --> R8["✔ Phase R8: 5th Game (Turbo Circuit) Architecture & Spec"]:::done
-    R8 --> R9["Phase R9: Turbo Circuit 3D Kart Racer Implementation"]:::future
+    R8 --> R9["✔ Phase R9: Turbo Circuit 3D Kart Racer Implementation"]:::done
+    R9 --> R10["✔ Phase R10: Turbo Circuit Championship & AI Opponents"]:::done
+    R10 --> R11["✔ Phase R11: Landscape Racing Controller & Steering Tilt"]:::done
 ```
 
 ---
@@ -1301,12 +1317,21 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [x] HUD matching reference: gold italic position pop, coin/lap counters, minimap dots, and top-left item roulette.
   - [x] "FINISH!" banner and Race Results screen with "Race Again" and "Back to Menu" buttons.
   - [x] Web Audio synthesized engine, drift, boost, item, and finish sounds; controller vibration on boosts, bumps, and hits.
+- [x] **Phase R11: Turbo Circuit Landscape Controller & Steering Wheel Tilt**
+  - [x] Mobile landscape controller layout tailored for Turbo Circuit (`/controller` with `mode: 'landscape-racing'`).
+  - [x] Matches reference video (`/design/reference/Video-18621.mp4`): light clean styling, D-pad cluster on left, big round A button in center-left with tall vertical accent bar, 12-dot acoustic speaker grid in center-right, action buttons on right (B brake, Drift/Hop, Item), and Home pause button.
+  - [x] Motion steering wheel pipeline: lateral tilt accelerometer data ($a_y$) with dead zone ($0.4\,\text{m/s}^2$), linear sensitivity ($0.28$), and clamping $[-1, 1]$.
+  - [x] Illustrated first-time steering wheel calibration modal with live spirit level bubble.
+  - [x] Top utility bar with live steering horizon balance bar, tilt degree readout, Center re-zero button, and Home pause button.
+  - [x] Dynamic layout negotiation via WebSocket: switches to `landscape-racing` on race launch, reverts cleanly to `portrait` on exit without WebSocket disconnect.
+  - [x] Full flow tested: Menu -> Launch Modal -> 3-2-1-GO Countdown -> Race & Items -> Finish Banner -> Race Results -> Race Again & Back to Menu.
+  - [x] Multi-touch safety, Wake Lock to prevent screen sleep during play, and haptic vibration feedback.
 
 ---
 
 ## 13. Remaining Differences & Technical Adaptations from the Reference Reel
 
-While NimbusPlay faithfully reproduces the visual composition, motion dynamics, HUD layout, and game loops demonstrated in `/design/reference/Video-7889.mp4`, `reel-games.png`, and `reel-menu.png`, the following intentional adaptations and technical boundaries exist:
+While NimbusPlay faithfully reproduces the visual composition, motion dynamics, HUD layout, and game loops demonstrated in `/design/reference/Video-7889.mp4`, `reel-games.png`, `reel-menu.png`, and `/design/reference/Video-18621.mp4`, the following intentional adaptations and technical boundaries exist:
 
 ### 13.1 Audio Synthesis vs. Pre-Recorded Samples
 - **Reference Reel**: Uses pre-recorded sampled audio files (e.g. licensed wav sound effects from original arcade releases).
@@ -1325,9 +1350,19 @@ While NimbusPlay faithfully reproduces the visual composition, motion dynamics, 
 - **NimbusPlay**: Operates on a **local LAN WebSocket relay** with zero cloud dependencies or native apps. It uses a single HTTPS origin (`https://<laptop-ip>:5173`) served by Vite with an internal Node.js relay proxy, unlocking motion sensor APIs in Android Chrome without native compilation or APK sideloading.
 
 ### 13.4 Controller Dynamic Orientation & Touch Yoke
-- **Reference Reel**: The player holds the smartphone sideways in both hands for Alien Attack, and upright for other titles.
-- **NimbusPlay**: Formalizes this through an automated **dynamic orientation negotiation protocol** (`COMMAND_LAYOUT_MODE: 'portrait' | 'landscape'`). The controller automatically morphs its layout into a dual-thumb touch deck with a live horizon tilt bar when launching Alien Attack, and seamlessly reverts to the portrait wand upon returning to the menu or other games, keeping the WebSocket link continuously active.
+- **Reference Reel**: The player holds the smartphone sideways in both hands for Alien Attack and Turbo Circuit, and upright for other titles.
+- **NimbusPlay**: Formalizes this through an automated **dynamic orientation negotiation protocol** (`COMMAND_LAYOUT_MODE: 'portrait' | 'landscape' | 'landscape-racing'`). The controller automatically morphs its layout:
+  - Into a dual-thumb touch deck with a live horizon tilt bar when launching **Alien Attack**.
+  - Into an authentic racing steering wheel with D-pad, big circular A gas button, vertical accent bar, speaker grid, B/Drift/Item buttons, and spirit level calibration when launching **Turbo Circuit**.
+  - Reverts seamlessly to the portrait wand upon returning to the menu or other games, keeping the WebSocket link continuously active.
 
 ### 13.5 Resolution Scaling & 16:9 Letterboxing
 - **Reference Reel**: Captured on a fixed 16:9 display.
 - **NimbusPlay**: Implements a responsive 16:9 stage container (`stageEl`) with pillarboxing/letterboxing, ensuring pixel-perfect aspect ratios across any desktop monitor resolution from 1080p to 4K Ultrawide.
+
+### 13.6 Turbo Circuit 3D Kart Racing Reference Differences
+- **Reference Video (`Video-18621.mp4`)**: Shows a commercial kart racing title with copyrighted characters, proprietary tracks, and pre-baked engine assets.
+- **NimbusPlay Original Implementation**:
+  - **Characters & Roster**: 100% original low-poly driver ("Volt") with leaning animation and 7 original AI opponents (Nova, Blaze, Pixel, Echo, Rex, Luna, Apex) with custom chassis and neon colors.
+  - **Track & Environment**: Original closed CatmullRom spline circuit with high-contrast curbs, asphalt shader, grass infield, 5-tier grandstands, steel floodlights, and a dynamic glider ramp that deploys an aerodynamic delta wing.
+  - **Controller Ergonomics**: The phone interface precisely replicates the light, clean controller layout seen in the reference video: left D-pad cluster, center-left large A button with tall vertical grip bar, center-right dot-grid speaker graphic, right thumb action buttons (B brake, Drift/Hop, Item), and top status bar with live tilt indicator and Center re-zero button.

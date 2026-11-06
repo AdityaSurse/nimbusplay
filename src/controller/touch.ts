@@ -43,7 +43,17 @@ const BUTTON_CONFIGS: ButtonConfig[] = [
   { id: 'btn-landscape-left-fire', name: 'a', mask: BUTTON_MASKS.A, hapticDuration: 25 },
   { id: 'btn-landscape-right-fire', name: 'b', mask: BUTTON_MASKS.B, hapticDuration: 25 },
   { id: 'btn-landscape-recenter', name: 'recenter', mask: BUTTON_MASKS.RECENTER, hapticDuration: 30 },
-  { id: 'btn-landscape-home', name: 'home', mask: BUTTON_MASKS.HOME, hapticDuration: 35 }
+  { id: 'btn-landscape-home', name: 'home', mask: BUTTON_MASKS.HOME, hapticDuration: 35 },
+  { id: 'btn-racing-a', name: 'a', mask: BUTTON_MASKS.A, hapticDuration: 25 },
+  { id: 'btn-racing-b', name: 'b', mask: BUTTON_MASKS.B, hapticDuration: 30 },
+  { id: 'btn-racing-drift', name: 'plus', mask: BUTTON_MASKS.PLUS, hapticDuration: 25 },
+  { id: 'btn-racing-item', name: 'btn1', mask: BUTTON_MASKS.BTN_1, hapticDuration: 25 },
+  { id: 'btn-racing-home', name: 'home', mask: BUTTON_MASKS.HOME, hapticDuration: 35 },
+  { id: 'btn-racing-center', name: 'recenter', mask: BUTTON_MASKS.RECENTER, hapticDuration: 30 },
+  { id: 'btn-racing-dpad-up', name: 'dpadUp', mask: BUTTON_MASKS.DPAD_UP, hapticDuration: 18 },
+  { id: 'btn-racing-dpad-down', name: 'dpadDown', mask: BUTTON_MASKS.DPAD_DOWN, hapticDuration: 18 },
+  { id: 'btn-racing-dpad-left', name: 'dpadLeft', mask: BUTTON_MASKS.DPAD_LEFT, hapticDuration: 18 },
+  { id: 'btn-racing-dpad-right', name: 'dpadRight', mask: BUTTON_MASKS.DPAD_RIGHT, hapticDuration: 18 }
 ];
 
 export type ButtonChangeCallback = (bitmask: number, pressedButton: ButtonName | null) => void;

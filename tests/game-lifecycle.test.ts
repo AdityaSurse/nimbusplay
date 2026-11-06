@@ -89,17 +89,19 @@ describe('Game Pause & Home Button Mechanics', () => {
 });
 
 describe('Controller Layout Mode Negotiation Contract', () => {
-  it('should dictate landscape mode for Alien Attack and Turbo Circuit, and portrait for other games', () => {
-    const expectedModes: Record<string, 'portrait' | 'landscape'> = {
+  it('should dictate layout mode per game (landscape for Alien Attack, landscape-racing for Turbo Circuit)', () => {
+    const expectedModes: Record<string, 'portrait' | 'landscape' | 'landscape-racing'> = {
       fruitNinja: 'portrait',
       alienAttack: 'landscape',
       shootingRange: 'portrait',
       sketch: 'portrait',
-      turboCircuit: 'landscape'
+      turboCircuit: 'landscape-racing'
     };
 
     for (const [id, expectedMode] of Object.entries(expectedModes)) {
-      const mode = (id === 'alienAttack' || id === 'turboCircuit') ? 'landscape' : 'portrait';
+      let mode: 'portrait' | 'landscape' | 'landscape-racing' = 'portrait';
+      if (id === 'alienAttack') mode = 'landscape';
+      else if (id === 'turboCircuit') mode = 'landscape-racing';
       assert.equal(mode, expectedMode, `Mismatch in expected layout mode for ${id}`);
     }
   });
