@@ -11,9 +11,11 @@ export interface OverlayState {
   totalPackets: number;
   rttMs: number;
   inputLatencyMs: number;
+  transport: string;
   rotation: [number, number, number]; // [alpha, beta, gamma]
   accel: [number, number, number];    // [x, y, z]
   bitmask: number;
+  ptr: [number, number, number, number]; // [fx, fy, rx, ry]
 }
 
 const BTN_DEFS: [string, string, number][] = [
@@ -33,9 +35,11 @@ export class DebugOverlay {
     totalPackets: 0,
     rttMs: 0,
     inputLatencyMs: 0,
+    transport: 'WebSocket (relay)',
     rotation: [0, 0, 0],
     accel: [0, 0, 9.8],
-    bitmask: 0
+    bitmask: 0,
+    ptr: [960, 540, 960, 540]
   };
 
   private frameTimestamps: number[] = [];
@@ -48,11 +52,23 @@ export class DebugOverlay {
     this.startRenderLoop();
   }
 
+  public setTransport(transport: string): void {
+    this.state.transport = transport;
+    this.isDirty = true;
+  }
+
   public toggle(): void {
     this.isVisible = !this.isVisible;
     if (this.containerEl) {
       this.containerEl.style.display = this.isVisible ? 'flex' : 'none';
     }
+    const boundsEl = document.getElementById('debug-clamp-bounds');
+    if (boundsEl) boundsEl.style.display = this.isVisible ? 'block' : 'none';
+  }
+
+  public updatePointer(fx: number, fy: number, rx: number, ry: number): void {
+    this.state.ptr = [fx, fy, rx, ry];
+    this.isDirty = true;
   }
 
   public updateLatency(rttMs: number): void {
@@ -138,8 +154,17 @@ export class DebugOverlay {
             <span id="dbg-input-lat" class="dbg-value" style="color: #34d399;">-- ms</span>
           </div>
           <div class="debug-metric-box" style="grid-column: span 2;">
-            <span class="dbg-label">Stream Status & Packets</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="dbg-label">Stream Status & Transport</span>
+              <span id="dbg-transport" style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">WebSocket</span>
+            </div>
             <span id="dbg-packets" class="dbg-value" style="font-size: 13px; font-weight: 600;">0 pkts</span>
+          </div>
+          <div class="debug-metric-box" style="grid-column: span 2;">
+            <span class="dbg-label">Pointer & Clamp Bounds (1920×1080)</span>
+            <span id="dbg-ptr-info" class="dbg-value" style="font-size: 11px; font-weight: 700; color: #facc15;">
+              Pos: (960, 540) | Raw: (960, 540) | Bounds: [0, 1920]×[0, 1080]
+            </span>
           </div>
 
           <div class="debug-section-full">
@@ -199,16 +224,23 @@ export class DebugOverlay {
     const elInputLat = document.getElementById('dbg-input-lat');
     const elPackets = document.getElementById('dbg-packets');
     const elBitmask = document.getElementById('dbg-bitmask');
+    const elPtr = document.getElementById('dbg-ptr-info');
+    const elTransport = document.getElementById('dbg-transport');
 
+    if (elTransport) elTransport.textContent = this.state.transport;
     if (elHz) elHz.textContent = `${this.state.packetRateHz} Hz`;
     if (elRtt) elRtt.textContent = `${this.state.rttMs} ms`;
     if (elInputLat) {
       const lat = this.state.inputLatencyMs;
-      elInputLat.textContent = `${lat} ms ${lat <= 30 ? '✔ OPTIMAL' : '▲ HIGH'}`;
+      elInputLat.textContent = `${lat} ms ${lat <= 30 ? '[OK]' : '[HIGH]'}`;
       elInputLat.style.color = lat <= 30 ? '#34d399' : '#f59e0b';
     }
     if (elPackets) elPackets.textContent = `${this.state.totalPackets} pkts (${this.state.packetRateHz >= 55 ? '60Hz Link' : 'Syncing'})`;
     if (elBitmask) elBitmask.textContent = mask.toString(2).padStart(12, '0');
+    if (elPtr) {
+      const [fx, fy, rx, ry] = this.state.ptr;
+      elPtr.textContent = `Pos: (${Math.round(fx)}, ${Math.round(fy)}) | Raw: (${Math.round(rx)}, ${Math.round(ry)}) | Bounds: [0, 1920]×[0, 1080]`;
+    }
 
     this.updateAxis('dbg-gyro-a', 'dbg-bar-gyro-a', a, 180);
     this.updateAxis('dbg-gyro-b', 'dbg-bar-gyro-b', b, 180);

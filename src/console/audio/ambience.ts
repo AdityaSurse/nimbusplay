@@ -13,7 +13,9 @@ export class AmbienceSynthesizer {
   private nodes: Array<OscillatorNode | GainNode | BiquadFilterNode> = [];
 
   constructor() {
-    this.isMutedState = localStorage.getItem('nimbusplay_ambience_muted') === 'true';
+    this.isMutedState = typeof localStorage !== 'undefined'
+      ? localStorage.getItem('nimbusplay_ambience_muted') === 'true'
+      : false;
   }
 
   public isMuted(): boolean {
@@ -22,7 +24,9 @@ export class AmbienceSynthesizer {
 
   public setMuted(muted: boolean): void {
     this.isMutedState = muted;
-    localStorage.setItem('nimbusplay_ambience_muted', muted ? 'true' : 'false');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('nimbusplay_ambience_muted', muted ? 'true' : 'false');
+    }
     if (this.ambienceGain) {
       const ctx = audioContextManager.getContext();
       if (ctx) {

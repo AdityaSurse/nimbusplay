@@ -14,6 +14,7 @@ import { RangeHUD } from './range-hud.js';
 import { gameSfx } from '../../audio/game-sfx.js';
 import { audioManager } from '../../audio/audio-manager.js';
 import { BUTTON_MASKS } from '../../../shared/protocol.js';
+import { GameEndModal } from '../common/game-end-modal.js';
 
 export class ShootingRangeGame implements IGame {
   public readonly id = 'shootingRange';
@@ -22,6 +23,7 @@ export class ShootingRangeGame implements IGame {
   private app: Application | null = null;
   private gameStage = new Container();
   private options: GameOptions | null = null;
+  private endModal: GameEndModal | null = null;
 
   private backdrop!: RangeBackdrop;
   private crosshair!: RangeCrosshair;
@@ -77,6 +79,8 @@ export class ShootingRangeGame implements IGame {
     });
     this.gameStage.addChild(this.hud.container);
 
+    this.endModal = new GameEndModal(container);
+
     this.crosshair = new RangeCrosshair();
     this.gameStage.addChild(this.crosshair.container);
 
@@ -99,8 +103,15 @@ export class ShootingRangeGame implements IGame {
 
     if (this.roundTimer <= 0) {
       this.isGameOver = true;
-      this.hud.showRoundOver();
       audioManager.playLaunchChime();
+      this.endModal?.show({
+        title: 'ROUND COMPLETE!',
+        score: this.hud.getScore(),
+        accentColor: '#0284c7',
+        restartLabel: 'Play Again',
+        onRestart: () => this.restartRound(),
+        onExit: () => this.exit()
+      });
       return;
     }
 
@@ -172,6 +183,7 @@ export class ShootingRangeGame implements IGame {
   }
 
   public restartRound(): void {
+    this.endModal?.hide();
     this.isGameOver = false;
     this.isPaused = false;
     this.roundTimer = 60.0;
@@ -182,7 +194,18 @@ export class ShootingRangeGame implements IGame {
     audioManager.playLaunchChime();
   }
 
+  public restart(): void {
+    this.restartRound();
+  }
+
+  public exit(): void {
+    this.options?.onExitToMenu();
+  }
+
   public destroy(): void {
+    this.endModal?.destroy();
+    this.endModal = null;
+
     window.removeEventListener('keydown', this.keydownHandler);
     window.removeEventListener('keyup', this.keyupHandler);
 

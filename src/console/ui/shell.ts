@@ -110,6 +110,14 @@ export class ConsoleShell {
     audioManager.playBack();
   }
 
+  public openPauseOverlay(): void {
+    const overlay = document.getElementById('pause-overlay');
+    if (overlay && !overlay.classList.contains('open')) {
+      overlay.classList.add('open');
+      audioManager.playSelect();
+    }
+  }
+
   public togglePauseOverlay(): void {
     const overlay = document.getElementById('pause-overlay');
     if (overlay) {

@@ -10,7 +10,8 @@ import {
   CylinderGeometry,
   MeshStandardMaterial,
   Mesh,
-  CanvasTexture
+  CanvasTexture,
+  PointLight
 } from 'three';
 
 export class StadiumBuilder {
@@ -97,6 +98,10 @@ export class StadiumBuilder {
       bulb.rotation.x = 0.25;
       tower.add(bulb);
 
+      const light = new PointLight(0xfef08a, 0.8, 55, 1.4);
+      light.position.set(0, 26, 1.2);
+      tower.add(light);
+
       tower.position.set(pos.x, 0, pos.z);
       this.stadiumGroup.add(tower);
     }
@@ -117,25 +122,24 @@ export class StadiumBuilder {
 
     // Crossbar span
     const barGeo = new BoxGeometry(26, 3.2, 3.0);
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, 512, 128);
-    // Checkered border
-    for (let c = 0; c < 16; c++) {
-      ctx.fillStyle = c % 2 === 0 ? '#ffffff' : '#000000';
-      ctx.fillRect(c * 32, 0, 32, 28);
+    let barMat = new MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+    if (typeof document !== 'undefined') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, 512, 128);
+      for (let c = 0; c < 16; c++) {
+        ctx.fillStyle = c % 2 === 0 ? '#ffffff' : '#000000';
+        ctx.fillRect(c * 32, 0, 32, 28);
+      }
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('TURBO CIRCUIT', 256, 80);
+      barMat = new MeshStandardMaterial({ map: new CanvasTexture(canvas), roughness: 0.4 });
     }
-    // Neon Title
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 36px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('TURBO CIRCUIT', 256, 80);
-
-    const texture = new CanvasTexture(canvas);
-    const barMat = new MeshStandardMaterial({ map: texture, roughness: 0.4 });
     const crossbar = new Mesh(barGeo, barMat);
     crossbar.position.set(-50, 13.5, -80);
     crossbar.castShadow = true;
@@ -153,20 +157,21 @@ export class StadiumBuilder {
       { x: 75, z: -135, angle: 3.5 }
     ];
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#ea580c';
-    ctx.fillRect(0, 0, 256, 64);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('HYPER BOOST', 128, 42);
-
-    const texture = new CanvasTexture(canvas);
+    let bannerMat = new MeshStandardMaterial({ color: 0xea580c, roughness: 0.6 });
+    if (typeof document !== 'undefined') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(0, 0, 256, 64);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 26px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('HYPER BOOST', 128, 42);
+      bannerMat = new MeshStandardMaterial({ map: new CanvasTexture(canvas), roughness: 0.6 });
+    }
     const bannerGeo = new BoxGeometry(12, 2.2, 0.4);
-    const bannerMat = new MeshStandardMaterial({ map: texture, roughness: 0.6 });
 
     for (const spot of bannerSpots) {
       const banner = new Mesh(bannerGeo, bannerMat);

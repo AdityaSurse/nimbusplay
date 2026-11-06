@@ -19,9 +19,11 @@ export class KartPhysics {
   private readonly coastDecel = 12.0;
 
   private checkpointMask = 0;
+  private onWallBounceCallback?: () => void;
 
-  constructor(track: TrackSpline) {
+  constructor(track: TrackSpline, onWallBounce?: () => void) {
     this.track = track;
+    this.onWallBounceCallback = onWallBounce;
     const start = track.getStartGridTransform(7); // 8th position
     const initialT = (1.0 - 8 * 0.007) % 1.0;
 
@@ -188,6 +190,7 @@ export class KartPhysics {
   private handleWallBounce(sample: { center: Vector3 }): void {
     this.state.wallBounceCooldown = 0.35;
     this.state.speed *= 0.55;
+    this.onWallBounceCallback?.();
     const toCenter = new Vector3().subVectors(sample.center, new Vector3(this.state.x, this.state.y, this.state.z));
     toCenter.y = 0;
     toCenter.normalize();

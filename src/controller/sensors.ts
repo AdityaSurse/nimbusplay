@@ -43,9 +43,12 @@ interface GenericAccelerometer {
   stop(): void;
 }
 
+export type SensorMotionCallback = (telemetry: Readonly<SensorTelemetry>, timestampMs: number) => void;
+
 export class SensorManager {
   private status: SensorStatus = 'standby';
   private onStatusChange: SensorStatusCallback;
+  private onMotionFrame: SensorMotionCallback | null = null;
   private telemetry: SensorTelemetry = {
     rotationRate: { alpha: 0, beta: 0, gamma: 0 },
     acceleration: { x: 0, y: 0, z: 9.8 }
@@ -68,6 +71,10 @@ export class SensorManager {
 
   public getStatus(): SensorStatus {
     return this.status;
+  }
+
+  public setMotionCallback(cb: SensorMotionCallback | null): void {
+    this.onMotionFrame = cb;
   }
 
   /**
@@ -180,6 +187,11 @@ export class SensorManager {
       }
       this.setStatus('active', 'Receiving real-time motion events');
     }
+
+    if (gotData && this.onMotionFrame) {
+      const now = typeof performance !== 'undefined' ? performance.timeOrigin + performance.now() : Date.now();
+      this.onMotionFrame(this.telemetry, now);
+    }
   };
 
   private tryStartGenericSensors(): boolean {
@@ -198,6 +210,10 @@ export class SensorManager {
           if (!this.hasReceivedValidData) {
             this.hasReceivedValidData = true;
             this.setStatus('active', 'Generic Gyroscope active');
+          }
+          if (this.onMotionFrame) {
+            const now = typeof performance !== 'undefined' ? performance.timeOrigin + performance.now() : Date.now();
+            this.onMotionFrame(this.telemetry, now);
           }
         });
         gyro.start();

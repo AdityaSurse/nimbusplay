@@ -157,7 +157,42 @@ sequenceDiagram
 
 ---
 
-### (e) Controller Connection State Machine (Including Reconnect)
+### (e) In-Game Controls & Game Switching Sequence Diagram
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Player as Player
+    participant Controller as Phone Controller
+    participant Relay as Node WS Relay
+    participant Console as Desktop Console
+    participant ActiveGame as Current Game Session
+    participant NewGame as New Game Session
+
+    Note over Controller, Console: Pause / Resume Synchronization
+    Player->>Controller: Tap PAUSE Button
+    Controller->>Relay: COMMAND_PAUSE
+    Relay->>Console: Forward COMMAND_PAUSE
+    Console->>ActiveGame: pause()
+    Console->>Console: Open Pause Overlay & Update Cluster UI
+    Console->>Relay: STATE_GAME_SYNC { isGameRunning: true, isPaused: true }
+    Relay-->>Controller: Forward STATE_GAME_SYNC
+    Controller->>Controller: Toggle Button to RESUME (Amber Icon)
+
+    Note over Controller, Console: Instant Switch Game (Zero Page Reload)
+    Player->>Controller: Tap SWITCH Button -> Select Turbo Circuit
+    Controller->>Relay: COMMAND_SWITCH_GAME { gameId: "turboCircuit" }
+    Relay->>Console: Forward COMMAND_SWITCH_GAME
+    Console->>ActiveGame: destroy() [Clean Teardown]
+    Console->>NewGame: init() & launch [Turbo Circuit Engine]
+    Console->>Relay: STATE_GAME_SYNC { isGameRunning: true, isPaused: false, activeGameId: "turboCircuit" }
+    Console->>Relay: COMMAND_LAYOUT_MODE { mode: "landscape-racing" }
+    Relay-->>Controller: Forward SYNC & LAYOUT_MODE
+    Controller->>Controller: Transform to Racing Wheel Layout & Haptic Confirm
+```
+
+---
+
+### (f) Controller Connection State Machine (Including Reconnect)
 ```mermaid
 stateDiagram-v2
     [*] --> Disconnected
@@ -946,6 +981,12 @@ All frames exchange structured JSON packets with a unified schema over the `/ws`
 | `INPUT_FRAME` | Controller $\to$ Console | 60 Hz ($\approx 16.6\text{ms}$) | `buttons` (object), `rotationRate` (object), `accel` (object), `timestamp` | High-frequency sensor & touch frame. |
 | `COMMAND_RECENTER` | Controller $\to$ Console | On demand (Home/Btn) | `timestamp` | Re-anchors cursor to screen viewport midpoint. |
 | `COMMAND_HAPTIC` | Console $\to$ Controller | Event-triggered | `pattern` (number array in ms) | Triggers device vibration (e.g. on click/slice). |
+| `COMMAND_PAUSE` | Controller $\to$ Console | On demand (Pause Tap) | `timestamp` | Toggles or requests game pause state on console. |
+| `COMMAND_RESUME` | Controller $\to$ Console | On demand (Resume Tap) | `timestamp` | Resumes active game from paused state. |
+| `COMMAND_RESTART` | Controller $\to$ Console | On demand | `timestamp` | Resets active game state cleanly with zero reload. |
+| `COMMAND_EXIT_MENU` | Controller $\to$ Console | On demand (Menu Tap) | `timestamp` | Tears down active game and returns to Channel Matrix. |
+| `COMMAND_SWITCH_GAME` | Controller $\to$ Console | On demand | `gameId` (string) | Destroys active game and launches chosen game immediately. |
+| `STATE_GAME_SYNC` | Console $\to$ Controller | On state change | `isGameRunning` (bool), `isPaused` (bool), `activeGameId` | Synchronizes paused, running, and game layout state. |
 | `CALIBRATION_START`| Console $\to$ Controller | On user request | `timestamp` | Enters high-precision bias drift sampling mode. |
 | `CALIBRATION_OFFSET`| Controller $\to$ Console| Post-calibration | `offsetBeta` (float), `offsetGamma` (float) | Sends computed resting gyro bias to console. |
 | `PING` / `PONG` | Both directions | Every 3000 ms | `timestamp` | Calculates real-time round-trip latency (RTT). |

@@ -85,7 +85,7 @@ export class AlienHUD {
     this.finalScoreText.anchor.set(0.5); this.finalScoreText.x = 960; this.finalScoreText.y = 540 - 45;
     this.gameOverContainer.addChild(this.finalScoreText);
 
-    this.newBestLabel = new Text({ text: '★ NEW HIGH SCORE ★', style: new TextStyle({ fontFamily: 'Nunito, sans-serif', fontSize: 16, fontWeight: '800', fill: 0x38bdf8 }) });
+    this.newBestLabel = new Text({ text: 'NEW HIGH SCORE', style: new TextStyle({ fontFamily: 'Nunito, sans-serif', fontSize: 16, fontWeight: '800', fill: 0x38bdf8 }) });
     this.newBestLabel.anchor.set(0.5); this.newBestLabel.x = 960; this.newBestLabel.y = 540 - 12; this.newBestLabel.visible = false;
     this.gameOverContainer.addChild(this.newBestLabel);
 

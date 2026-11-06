@@ -190,6 +190,16 @@ export class SketchGame implements IGame {
     this.isPaused = false;
   }
 
+  public restart(): void {
+    this.strokeRenderer.clear();
+    this.strokeRenderer.loadStrokes(SampleArtwork.getSampleStrokes());
+    audioManager.playLaunchChime();
+  }
+
+  public exit(): void {
+    this.options?.onExitToMenu();
+  }
+
   public destroy(): void {
     window.removeEventListener('keydown', this.keydownHandler);
 

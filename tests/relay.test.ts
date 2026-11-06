@@ -1,7 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { SessionManager } from '../server/session.js';
-import { isCompactPacket, type CompactMotionPacket, type NimbusNetworkMessage } from '../src/shared/protocol.js';
+import { 
+  isCompactPacket, 
+  createMessage, 
+  type CompactMotionPacket, 
+  type NimbusNetworkMessage 
+} from '../src/shared/protocol.js';
 
 // Mock WebSocket implementation for unit testing relay session manager
 class MockWebSocket {
@@ -120,6 +125,37 @@ describe('Compact 60Hz Packet Fast-Path Validation Tests', () => {
     };
 
     assert.equal(isCompactPacket(verbose), false);
+  });
+
+  it('should construct valid pause, resume, restart, switchGame, and sync protocol commands', () => {
+    const pauseMsg = createMessage({ type: 'COMMAND_PAUSE' });
+    assert.equal(pauseMsg.type, 'COMMAND_PAUSE');
+    assert.ok(pauseMsg.seq > 0);
+    assert.ok(pauseMsg.timestamp > 0);
+
+    const resumeMsg = createMessage({ type: 'COMMAND_RESUME' });
+    assert.equal(resumeMsg.type, 'COMMAND_RESUME');
+
+    const restartMsg = createMessage({ type: 'COMMAND_RESTART' });
+    assert.equal(restartMsg.type, 'COMMAND_RESTART');
+
+    const exitMsg = createMessage({ type: 'COMMAND_EXIT_MENU' });
+    assert.equal(exitMsg.type, 'COMMAND_EXIT_MENU');
+
+    const switchMsg = createMessage({ type: 'COMMAND_SWITCH_GAME', gameId: 'turboCircuit' });
+    assert.equal(switchMsg.type, 'COMMAND_SWITCH_GAME');
+    assert.equal(switchMsg.gameId, 'turboCircuit');
+
+    const syncMsg = createMessage({
+      type: 'STATE_GAME_SYNC',
+      isGameRunning: true,
+      isPaused: true,
+      activeGameId: 'fruitNinja'
+    });
+    assert.equal(syncMsg.type, 'STATE_GAME_SYNC');
+    assert.equal(syncMsg.isGameRunning, true);
+    assert.equal(syncMsg.isPaused, true);
+    assert.equal(syncMsg.activeGameId, 'fruitNinja');
   });
 });
 

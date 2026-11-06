@@ -10,10 +10,14 @@ import {
   type JoinRoomAck, 
   type PeerStatusUpdate, 
   type PingMessage, 
-  type PongMessage 
+  type PongMessage,
+  type WebRtcSignalMessage,
+  createMessage
 } from '../../shared/protocol.js';
+import { NimbusDataChannelPeer } from '../../shared/webrtc.js';
 
 export type NetworkStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
+export type TransportType = 'websocket' | 'webrtc';
 
 export interface ConsoleNetworkCallbacks {
   onStatusChange: (status: NetworkStatus, info?: string) => void;
@@ -21,6 +25,7 @@ export interface ConsoleNetworkCallbacks {
   onRoomJoined: (roomId: string) => void;
   onMessage: (message: NimbusNetworkMessage) => void;
   onLatencyUpdate: (rttMs: number) => void;
+  onTransportChange?: (transport: TransportType) => void;
 }
 
 export class ConsoleNetworkClient {
@@ -32,6 +37,8 @@ export class ConsoleNetworkClient {
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isExplicitlyClosed = false;
+  private rtcPeer: NimbusDataChannelPeer | null = null;
+  private currentTransport: TransportType = 'websocket';
 
   constructor(wsUrl: string, targetRoomId: string, callbacks: ConsoleNetworkCallbacks) {
     this.wsUrl = wsUrl;
@@ -80,15 +87,26 @@ export class ConsoleNetworkClient {
     };
   }
 
+  public getTransportType(): TransportType {
+    return this.currentTransport;
+  }
+
   public send(msg: NimbusNetworkMessage): void {
+    const raw = JSON.stringify(msg);
+    if (this.rtcPeer && this.rtcPeer.isOpen()) {
+      if (this.rtcPeer.send(raw)) return;
+    }
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(msg));
+      this.socket.send(raw);
     }
   }
 
   public disconnect(): void {
     this.isExplicitlyClosed = true;
     this.stopHeartbeat();
+    this.rtcPeer?.close();
+    this.rtcPeer = null;
+    this.setTransport('websocket');
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -98,6 +116,13 @@ export class ConsoleNetworkClient {
       this.socket = null;
     }
     this.callbacks.onStatusChange('disconnected', 'Explicitly closed');
+  }
+
+  private setTransport(t: TransportType): void {
+    if (this.currentTransport !== t) {
+      this.currentTransport = t;
+      this.callbacks.onTransportChange?.(t);
+    }
   }
 
   private sendJoinRoom(): void {
@@ -130,7 +155,44 @@ export class ConsoleNetworkClient {
 
       case 'PEER_STATUS': {
         const status = msg as PeerStatusUpdate;
-        this.callbacks.onPeerStatus(status.status === 'connected');
+        const connected = status.status === 'connected';
+        this.callbacks.onPeerStatus(connected);
+        if (!connected) {
+          this.rtcPeer?.close();
+          this.rtcPeer = null;
+          this.setTransport('websocket');
+        }
+        break;
+      }
+
+      case 'RTC_SIGNAL': {
+        const rtcMsg = msg as WebRtcSignalMessage;
+        if (rtcMsg.fromRole === 'controller') {
+          if (!this.rtcPeer && NimbusDataChannelPeer.isSupported()) {
+            this.rtcPeer = new NimbusDataChannelPeer('console', {
+              sendSignal: (signal) => {
+                const reply = createMessage<WebRtcSignalMessage>({
+                  type: 'RTC_SIGNAL',
+                  fromRole: 'console',
+                  signal
+                });
+                if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                  this.socket.send(JSON.stringify(reply));
+                }
+              },
+              onOpen: () => this.setTransport('webrtc'),
+              onClose: () => this.setTransport('websocket'),
+              onMessage: (raw) => {
+                try {
+                  const parsed = JSON.parse(raw) as NimbusNetworkMessage;
+                  this.handleMessage(parsed);
+                } catch { /* ignore */ }
+              }
+            });
+            this.rtcPeer.start().catch(() => this.setTransport('websocket'));
+          }
+          this.rtcPeer?.handleSignal(rtcMsg.signal);
+        }
         break;
       }
 

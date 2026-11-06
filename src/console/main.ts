@@ -5,10 +5,12 @@ import { InteractionManager } from './pointer/interaction-manager.js';
 import { GameManager } from './games/game-manager.js';
 import { audioManager } from './audio/audio-manager.js';
 import { OnboardingManager } from './ui/onboarding.js';
+import { CHANNEL_ART } from './ui/artwork.js';
 import { WS_PATH, API_INFO_PATH } from '../shared/constants.js';
 import { 
-  isCompactPacket, BUTTON_MASKS, type NimbusNetworkMessage, 
-  type HapticFeedbackCommand, type MotionInputFrame, type LayoutModeCommand
+  isCompactPacket, BUTTON_MASKS, createMessage, type NimbusNetworkMessage, type CompactMotionPacket,
+  type HapticFeedbackCommand, type HapticWaveformType, type MotionInputFrame, type LayoutModeCommand,
+  type SwitchGameCommand, type GameStateSyncMessage
 } from '../shared/protocol.js';
 
 interface LanInfo {
@@ -27,6 +29,102 @@ let interaction: InteractionManager | null = null;
 let gameManager: GameManager | null = null;
 let onboarding: OnboardingManager | null = null;
 let hasPlayedStartupChime = false;
+let currentActiveGameId: string | undefined;
+
+function broadcastStateSync(isGameRunning: boolean, isPaused: boolean, activeGameId?: string): void {
+  if (networkClient) {
+    networkClient.send(createMessage<GameStateSyncMessage>({
+      type: 'STATE_GAME_SYNC',
+      isGameRunning,
+      isPaused,
+      activeGameId
+    }));
+  }
+}
+
+function updateClusterUI(isPaused: boolean): void {
+  const icon = document.getElementById('cluster-pause-icon');
+  const label = document.getElementById('cluster-pause-label');
+  if (icon) icon.textContent = isPaused ? 'play_arrow' : 'pause';
+  if (label) label.textContent = isPaused ? 'Resume' : 'Pause';
+}
+
+async function launchGameSession(gameId: string, gameTitle?: string): Promise<void> {
+  shell?.closeLaunchDialog();
+  document.getElementById('switch-game-overlay')?.classList.remove('open');
+  audioManager.playLaunchChime();
+  shell?.showChannelLoading(gameTitle || gameId);
+  currentActiveGameId = gameId;
+
+  await new Promise((r) => setTimeout(r, 300));
+  await gameManager?.launchGame(gameId, {
+    sendHaptic: (pattern) => {
+      if (networkClient) {
+        networkClient.send(createMessage<HapticFeedbackCommand>({ type: 'COMMAND_HAPTIC', pattern }));
+      }
+    },
+    setLayoutMode: (mode, gid) => {
+      if (networkClient) {
+        networkClient.send(createMessage<LayoutModeCommand>({ type: 'COMMAND_LAYOUT_MODE', mode, gameId: gid }));
+      }
+    }
+  });
+
+  shell?.hideChannelLoading();
+  interaction?.setGameActive(true, gameId);
+  updateClusterUI(false);
+  broadcastStateSync(true, false, gameId);
+}
+
+function togglePauseGame(): void {
+  if (!gameManager?.isGameRunning()) return;
+  const pauseOverlay = document.getElementById('pause-overlay');
+  const wasOpen = pauseOverlay?.classList.contains('open') ?? false;
+  if (wasOpen) {
+    shell?.closePauseOverlay();
+    gameManager.resume();
+    updateClusterUI(false);
+    broadcastStateSync(true, false, currentActiveGameId);
+  } else {
+    shell?.openPauseOverlay();
+    gameManager.pause();
+    updateClusterUI(true);
+    broadcastStateSync(true, true, currentActiveGameId);
+  }
+}
+
+function updateConsoleDiagUI(c: CompactMotionPacket): void {
+  const overlay = document.getElementById('controller-test-overlay');
+  if (!overlay || !overlay.classList.contains('open')) return;
+
+  const elPitch = document.getElementById('ct-pitch-val');
+  const elRoll = document.getElementById('ct-roll-val');
+  const elYaw = document.getElementById('ct-yaw-val');
+  const elTransport = document.getElementById('ct-transport-badge');
+  const elRtt = document.getElementById('ct-rtt-val');
+
+  if (elPitch) elPitch.textContent = `${c.r[1].toFixed(1)}°`;
+  if (elRoll) elRoll.textContent = `${c.r[2].toFixed(1)}°`;
+  if (elYaw) elYaw.textContent = `${c.r[0].toFixed(1)}°/s`;
+  if (elTransport && networkClient) elTransport.textContent = networkClient.getTransportType().toUpperCase();
+  if (elRtt && pairingRttVal) elRtt.textContent = pairingRttVal.textContent || '-- ms';
+
+  const btnMap: [string, number][] = [
+    ['ct-btn-a', BUTTON_MASKS.A],
+    ['ct-btn-b', BUTTON_MASKS.B],
+    ['ct-btn-up', BUTTON_MASKS.DPAD_UP],
+    ['ct-btn-down', BUTTON_MASKS.DPAD_DOWN],
+    ['ct-btn-left', BUTTON_MASKS.DPAD_LEFT],
+    ['ct-btn-right', BUTTON_MASKS.DPAD_RIGHT],
+    ['ct-btn-home', BUTTON_MASKS.HOME],
+    ['ct-btn-recenter', BUTTON_MASKS.RECENTER]
+  ];
+
+  for (const [id, mask] of btnMap) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', (c.b & mask) !== 0);
+  }
+}
 
 // DOM Elements
 const stageEl = document.getElementById('stage') as HTMLElement;
@@ -117,6 +215,10 @@ function initNetwork(): void {
       }
       debugOverlay?.updateLatency(rttMs);
     },
+    onTransportChange: (transport) => {
+      debugOverlay?.setTransport(transport === 'webrtc' ? 'WebRTC DataChannel (p2p)' : 'WebSocket (relay)');
+      appendLog(`[Network] Transport active: ${transport.toUpperCase()}`);
+    },
     onMessage: (message: NimbusNetworkMessage) => {
       frameCounter++;
       if (pairingFramesVal) {
@@ -125,6 +227,7 @@ function initNetwork(): void {
 
       // Handle Compact 60Hz Packet
       if (isCompactPacket(message)) {
+        updateConsoleDiagUI(message);
         debugOverlay?.ingestPacket(message);
         interaction?.ingestFrame(message);
         return;
@@ -135,6 +238,47 @@ function initNetwork(): void {
         const frame = message as MotionInputFrame;
         debugOverlay?.ingestPacket(frame);
         interaction?.ingestFrame(frame);
+        return;
+      }
+
+      if (message.type === 'COMMAND_PAUSE') {
+        if (gameManager?.isGameRunning()) {
+          shell?.openPauseOverlay();
+          gameManager.pause();
+          updateClusterUI(true);
+          broadcastStateSync(true, true, currentActiveGameId);
+        }
+        return;
+      }
+
+      if (message.type === 'COMMAND_RESUME') {
+        if (gameManager?.isGameRunning()) {
+          shell?.closePauseOverlay();
+          gameManager.resume();
+          updateClusterUI(false);
+          broadcastStateSync(true, false, currentActiveGameId);
+        }
+        return;
+      }
+
+      if (message.type === 'COMMAND_RESTART') {
+        gameManager?.getActiveGame()?.restart();
+        return;
+      }
+
+      if (message.type === 'COMMAND_EXIT_MENU') {
+        shell?.closePauseOverlay();
+        document.getElementById('switch-game-overlay')?.classList.remove('open');
+        gameManager?.teardown();
+        currentActiveGameId = undefined;
+        broadcastStateSync(false, false);
+        return;
+      }
+
+      if (message.type === 'COMMAND_SWITCH_GAME') {
+        const cmd = message as SwitchGameCommand;
+        shell?.closePauseOverlay();
+        launchGameSession(cmd.gameId);
         return;
       }
 
@@ -150,37 +294,53 @@ function bindModalButtons(): void {
   document.getElementById('btn-dialog-start')?.addEventListener('click', async () => {
     const game = shell?.getActiveDialogGame();
     if (game) {
-      shell?.closeLaunchDialog();
-      audioManager.playLaunchChime();
-      shell?.showChannelLoading(game.title);
-      await new Promise((r) => setTimeout(r, 400));
-      await gameManager?.launchGame(game.id, {
-        sendHaptic: (pattern) => {
-          if (networkClient) {
-            const cmd: HapticFeedbackCommand = {
-              type: 'COMMAND_HAPTIC',
-              seq: Date.now(),
-              timestamp: Date.now(),
-              pattern
-            };
-            networkClient.send(cmd);
-          }
-        },
-        setLayoutMode: (mode, gameId) => {
-          if (networkClient) {
-            const cmd: LayoutModeCommand = {
-              type: 'COMMAND_LAYOUT_MODE',
-              seq: Date.now(),
-              timestamp: Date.now(),
-              mode,
-              gameId
-            };
-            networkClient.send(cmd);
-          }
-        }
-      });
-      shell?.hideChannelLoading();
+      await launchGameSession(game.id, game.title);
     }
+  });
+
+  // Persistent in-game cluster controls
+  document.getElementById('btn-cluster-pause')?.addEventListener('click', () => {
+    togglePauseGame();
+    audioManager.playSelect();
+  });
+  document.getElementById('btn-cluster-switch')?.addEventListener('click', () => {
+    document.getElementById('switch-game-overlay')?.classList.add('open');
+    audioManager.playSelect();
+  });
+  document.getElementById('btn-cluster-menu')?.addEventListener('click', () => {
+    gameManager?.teardown();
+    currentActiveGameId = undefined;
+    broadcastStateSync(false, false);
+    audioManager.playBack();
+  });
+
+  // Wii-style switch game overlay bindings
+  const switchGrid = document.getElementById('switch-game-grid');
+  if (switchGrid) {
+    const list: [string, string][] = [
+      ['fruitNinja', CHANNEL_ART.fruitNinja],
+      ['alienAttack', CHANNEL_ART.alienAttack],
+      ['shootingRange', CHANNEL_ART.shootingRange],
+      ['sketch', CHANNEL_ART.sketch],
+      ['turboCircuit', CHANNEL_ART.turboCircuit]
+    ];
+    switchGrid.innerHTML = list.map(([id, art]) => `
+      <div class="switch-game-tile channel-tile" data-game="${id}">
+        ${art}
+      </div>
+    `).join('');
+
+    switchGrid.querySelectorAll('.switch-game-tile').forEach((tile) => {
+      tile.addEventListener('click', () => {
+        const gid = tile.getAttribute('data-game');
+        if (gid) launchGameSession(gid);
+      });
+    });
+  }
+
+  document.getElementById('btn-switch-close')?.addEventListener('click', () => {
+    document.getElementById('switch-game-overlay')?.classList.remove('open');
+    audioManager.playBack();
   });
 
   // Ambience Toggle in Bottom Tray
@@ -243,9 +403,43 @@ function bindModalButtons(): void {
   document.getElementById('btn-pause-resume')?.addEventListener('click', () => { shell?.closePauseOverlay(); gameManager?.resume(); });
   document.getElementById('btn-pause-calibrate')?.addEventListener('click', () => { shell?.closePauseOverlay(); shell?.openCalibrationScreen(); interaction?.startCalibrationRoutine(); });
   document.getElementById('btn-pause-pairing')?.addEventListener('click', () => { shell?.closePauseOverlay(); shell?.openPairingScreen(); });
-  document.getElementById('btn-pause-menu')?.addEventListener('click', () => { shell?.closePauseOverlay(); gameManager?.teardown(); });
+  document.getElementById('btn-pause-menu')?.addEventListener('click', () => { shell?.closePauseOverlay(); gameManager?.teardown(); interaction?.setGameActive(false); });
   document.getElementById('btn-pause-close')?.addEventListener('click', () => { shell?.closePauseOverlay(); gameManager?.resume(); });
   document.getElementById('btn-calib-back')?.addEventListener('click', () => { interaction?.stopCalibrationRoutine(); shell?.closeCalibrationScreen(); });
+
+  // Controller Test Diagnostic Modal Bindings
+  const diagOverlay = document.getElementById('controller-test-overlay');
+  const openDiag = () => {
+    shell?.closeSettingsScreen();
+    shell?.closePairingScreen();
+    shell?.closePauseOverlay();
+    diagOverlay?.classList.add('open');
+    audioManager.playSelect();
+  };
+
+  document.getElementById('btn-settings-ctrl-test')?.addEventListener('click', openDiag);
+  document.getElementById('btn-pause-ctrl-test')?.addEventListener('click', openDiag);
+  document.getElementById('btn-pairing-ctrl-test')?.addEventListener('click', openDiag);
+
+  document.getElementById('btn-ctrl-test-close')?.addEventListener('click', () => {
+    diagOverlay?.classList.remove('open');
+    audioManager.playBack();
+  });
+
+  diagOverlay?.querySelectorAll('[data-ct-haptic]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const waveform = btn.getAttribute('data-ct-haptic') as HapticWaveformType | null;
+      if (waveform && networkClient) {
+        networkClient.send(createMessage<HapticFeedbackCommand>({
+          type: 'COMMAND_HAPTIC',
+          pattern: [30],
+          waveform
+        }));
+        audioManager.playSelect();
+        appendLog(`[Haptic] Triggered test waveform: ${waveform}`);
+      }
+    });
+  });
 
   document.getElementById('btn-pairing-test-vibrate')?.addEventListener('click', () => {
     if (networkClient) {
@@ -320,13 +514,21 @@ async function boot(): Promise<void> {
   }
   shell?.updateAmbienceUI(audioManager.isAmbienceMuted());
 
+  const boundsGuide = document.createElement('div');
+  boundsGuide.id = 'debug-clamp-bounds';
+  boundsGuide.style.cssText = 'position: absolute; inset: 0; pointer-events: none; border: 3px dashed rgba(56, 189, 248, 0.6); box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.2); z-index: 9999; display: none;';
+  stageEl.appendChild(boundsGuide);
+
   // 60 FPS Game Loop
   const tickGame = () => {
+    const pos = interaction?.getPipeline().getPosition();
+    if (pos && debugOverlay) {
+      debugOverlay.updatePointer(pos.x, pos.y, pos.rawX ?? pos.x, pos.rawY ?? pos.y);
+    }
+
     if (gameManager?.isGameRunning()) {
-      const pos = interaction?.getPipeline().getPosition();
       const bitmask = interaction?.getBitmask() ?? 0;
       const isMouseDown = interaction?.getIsMouseDown() ?? false;
-
       const motion = interaction?.getLatestMotion();
 
       gameManager.update({

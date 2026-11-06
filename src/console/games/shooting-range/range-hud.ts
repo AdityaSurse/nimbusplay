@@ -95,7 +95,7 @@ export class RangeHUD {
     this.accuracyText.anchor.set(0.5); this.accuracyText.x = 960; this.accuracyText.y = 540 - 15;
     this.gameOverContainer.addChild(this.accuracyText);
 
-    this.newBestLabel = new Text({ text: '★ NEW HIGH SCORE ★', style: new TextStyle({ fontFamily: 'Nunito, sans-serif', fontSize: 16, fontWeight: '900', fill: 0x16a34a }) });
+    this.newBestLabel = new Text({ text: 'NEW HIGH SCORE', style: new TextStyle({ fontFamily: 'Nunito, sans-serif', fontSize: 16, fontWeight: '900', fill: 0x16a34a }) });
     this.newBestLabel.anchor.set(0.5); this.newBestLabel.x = 960; this.newBestLabel.y = 540 + 20;
     this.newBestLabel.visible = false;
     this.gameOverContainer.addChild(this.newBestLabel);

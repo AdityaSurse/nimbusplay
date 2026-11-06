@@ -13,7 +13,10 @@ import {
   MeshStandardMaterial,
   Mesh,
   PlaneGeometry,
-  BoxGeometry
+  BoxGeometry,
+  CylinderGeometry,
+  CanvasTexture,
+  RepeatWrapping
 } from 'three';
 import type { TrackSample } from './types.js';
 
@@ -56,6 +59,45 @@ export class TrackSpline {
     this.buildCurbs();
     this.buildGrassInfield();
     this.buildGliderRamp();
+    this.buildTireBarriers();
+  }
+
+  private createAsphaltTexture(): CanvasTexture | null {
+    if (typeof document === 'undefined') return null;
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(0, 0, 512, 512);
+
+    const imgData = ctx.getImageData(0, 0, 512, 512);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const noise = (Math.random() - 0.5) * 18;
+      data[i] = Math.max(0, Math.min(255, data[i] + noise));
+      data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // Edge stripes
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(16, 0, 12, 512);
+    ctx.fillRect(512 - 28, 0, 12, 512);
+
+    // Dashed center line
+    ctx.fillStyle = '#facc15';
+    for (let y = 0; y < 512; y += 64) {
+      ctx.fillRect(250, y, 12, 38);
+    }
+
+    const tex = new CanvasTexture(canvas);
+    tex.wrapS = RepeatWrapping;
+    tex.wrapT = RepeatWrapping;
+    tex.repeat.set(1, 30);
+    return tex;
   }
 
   private precomputeSplineData(): void {
@@ -74,7 +116,7 @@ export class TrackSpline {
 
   private buildRoadMesh(): void {
     const positions: number[] = [];
-    const colors: number[] = [];
+    const uvs: number[] = [];
     const halfW = this.roadWidth * 0.5;
 
     for (let i = 0; i <= this.samplesCount; i++) {
@@ -85,8 +127,8 @@ export class TrackSpline {
       const right = pt.clone().addScaledVector(binormal, halfW);
 
       positions.push(left.x, left.y + 0.05, left.z, right.x, right.y + 0.05, right.z);
-      const c = (i % 6) < 3 ? 0.20 : 0.16;
-      colors.push(c, c, c + 0.02, c, c, c + 0.02);
+      const v = i / 10;
+      uvs.push(0, v, 1, v);
     }
 
     const indices: number[] = [];
@@ -97,11 +139,16 @@ export class TrackSpline {
 
     const geo = new BufferGeometry();
     geo.setAttribute('position', new Float32BufferAttribute(positions, 3));
-    geo.setAttribute('color', new Float32BufferAttribute(colors, 3));
+    geo.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
     geo.setIndex(indices);
     geo.computeVertexNormals();
 
-    const roadMesh = new Mesh(geo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.85 }));
+    const asphaltMap = this.createAsphaltTexture();
+    const roadMat = asphaltMap
+      ? new MeshStandardMaterial({ map: asphaltMap, roughness: 0.82, metalness: 0.15 })
+      : new MeshStandardMaterial({ color: 0x1e293b, roughness: 0.82, metalness: 0.15 });
+
+    const roadMesh = new Mesh(geo, roadMat);
     roadMesh.receiveShadow = true;
     this.trackGroup.add(roadMesh);
   }
@@ -171,6 +218,29 @@ export class TrackSpline {
     rampMesh.rotation.y = angle;
     rampMesh.rotation.x = -0.15; // incline
     this.trackGroup.add(rampMesh);
+  }
+
+  private buildTireBarriers(): void {
+    const tireGeo = new CylinderGeometry(0.55, 0.55, 0.45, 10);
+    const redMat = new MeshStandardMaterial({ color: 0xdc2626, roughness: 0.85 });
+    const whiteMat = new MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.85 });
+
+    const barrierIndices = [38, 40, 42, 94, 96, 98, 124, 126, 128];
+    const halfW = this.roadWidth * 0.5 + this.curbWidth + 0.9;
+
+    for (const idx of barrierIndices) {
+      const pt = this.cachedPoints[idx];
+      const bin = this.cachedBinormals[idx];
+      const pos = pt.clone().addScaledVector(bin, halfW);
+
+      for (let stack = 0; stack < 3; stack++) {
+        const mat = (idx + stack) % 2 === 0 ? redMat : whiteMat;
+        const tire = new Mesh(tireGeo, mat);
+        tire.position.set(pos.x, pos.y + stack * 0.45 + 0.22, pos.z);
+        tire.castShadow = true;
+        this.trackGroup.add(tire);
+      }
+    }
   }
 
   public getClosestTrackSample(pos: Vector3): TrackSample {

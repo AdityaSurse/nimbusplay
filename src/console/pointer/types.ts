@@ -4,12 +4,12 @@
  */
 
 export interface PointerSettings {
-  sensitivity: number;        // Multiplier: 0.5 to 3.0 (default: 1.2)
+  sensitivity: number;        // Multiplier: 0.5 to 3.0 (default: 1.5)
   minCutoff: number;          // One Euro min cutoff in Hz: 0.5 to 3.0 (default: 1.2)
   beta: number;               // One Euro beta speed coefficient: 0.001 to 0.02 (default: 0.008)
   dCutoff: number;            // One Euro derivative cutoff in Hz (default: 1.0)
-  deadZone: number;           // Angular deadzone threshold in deg/s (default: 0.6)
-  edgeSoftMargin: number;     // Soft stop margin in pixels (default: 24)
+  deadZone: number;           // Angular deadzone threshold in deg/s (default: 0.5)
+  edgeSoftMargin: number;     // Edge margin (0 = hard clamp at boundary)
 }
 
 export interface GyroBiasCalibration {
@@ -24,6 +24,8 @@ export interface PointerPosition {
   vx: number;
   vy: number;
   isRecentered: boolean;
+  rawX?: number;
+  rawY?: number;
 }
 
 export interface ViewportBounds {

@@ -119,6 +119,41 @@
     <!-- Dedicated Game Canvas Viewport Layer (Full 16:9 Immersion Window) -->
     <div id="game-container"></div>
 
+    <!-- In-Game Floating Control Cluster (Persistent Edge Controls) -->
+    <div id="in-game-cluster" class="in-game-cluster">
+      <button id="btn-cluster-pause" class="cluster-btn in-game-ctrl" title="Pause / Resume Game" aria-label="Pause or Resume">
+        <span id="cluster-pause-icon" class="material-symbols-outlined" style="font-size: 18px;">pause</span>
+        <span id="cluster-pause-label">Pause</span>
+      </button>
+      <button id="btn-cluster-switch" class="cluster-btn in-game-ctrl" title="Switch Game" aria-label="Switch Game">
+        <span class="material-symbols-outlined" style="font-size: 18px;">grid_view</span>
+        <span>Switch</span>
+      </button>
+      <button id="btn-cluster-menu" class="cluster-btn in-game-ctrl" title="Exit to Menu" aria-label="Exit to Menu">
+        <span class="material-symbols-outlined" style="font-size: 18px;">home</span>
+        <span>Menu</span>
+      </button>
+    </div>
+
+    <!-- Wii-Style Game Picker Overlay -->
+    <div id="switch-game-overlay" class="modal-overlay">
+      <div class="switch-game-modal-pod">
+        <div class="switch-game-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="material-symbols-outlined" style="font-size: 28px; color: var(--color-primary);">grid_view</span>
+            <h2 style="font-size: 26px; font-weight: 800; color: var(--color-on-surface); margin: 0;">Switch Game</h2>
+          </div>
+          <button id="btn-switch-close" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 18px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+            <span>Close</span>
+          </button>
+        </div>
+        <div class="switch-game-grid" id="switch-game-grid">
+          <!-- Populated dynamically with all 5 games with vector art -->
+        </div>
+      </div>
+    </div>
+
     <!-- ==================== MODALS & SCREEN OVERLAYS ==================== -->
 
     <!-- 1. Channel Launch Dialog Modal -->
@@ -248,10 +283,16 @@
               Waiting for incoming packets...
             </div>
 
-            <button id="btn-pairing-test-vibrate" class="pill-btn pill-btn-primary" style="height: 48px; font-size: 15px;">
-              <span class="material-symbols-outlined" style="font-size: 20px;">vibration</span>
-              <span>Send Haptic Ping</span>
-            </button>
+            <div style="display: flex; gap: 8px;">
+              <button id="btn-pairing-test-vibrate" class="pill-btn pill-btn-primary" style="flex: 1; height: 48px; font-size: 14px;">
+                <span class="material-symbols-outlined" style="font-size: 20px;">vibration</span>
+                <span>Send Haptic Ping</span>
+              </button>
+              <button id="btn-pairing-ctrl-test" class="pill-btn pill-btn-secondary" style="flex: 1; height: 48px; font-size: 14px;">
+                <span class="material-symbols-outlined" style="font-size: 20px; color: #006688;">videogame_asset</span>
+                <span>Controller Test</span>
+              </button>
+            </div>
           </div>
 
         </div>
@@ -291,6 +332,14 @@
             <div style="display: flex; align-items: center; gap: 14px;">
               <span class="material-symbols-outlined" style="font-size: 24px; color: #006688;">sensors</span>
               <span style="font-size: 18px; font-weight: 800;">Controller Pairing</span>
+            </div>
+            <span class="material-symbols-outlined" style="font-size: 24px;">chevron_right</span>
+          </button>
+
+          <button id="btn-pause-ctrl-test" class="pill-btn pill-btn-secondary" style="justify-content: space-between; padding: 0 28px; height: 60px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <span class="material-symbols-outlined" style="font-size: 24px; color: #006688;">videogame_asset</span>
+              <span style="font-size: 18px; font-weight: 800;">Controller Test & Diagnostics</span>
             </div>
             <span class="material-symbols-outlined" style="font-size: 24px;">chevron_right</span>
           </button>
@@ -430,6 +479,19 @@
               </span>
             </label>
           </div>
+
+          <!-- 3D Graphics Quality Selector -->
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f9; padding: 12px 16px; border-radius: 12px; border: 1px solid #d8e2ea;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #111d28;">3D Graphics Quality (Turbo Circuit)</div>
+              <div style="font-size: 11px; color: #6b7785; font-weight: 600; margin-top: 2px;">Shadow map resolution, particle counts & render scale</div>
+            </div>
+            <select id="setting-graphics-quality" style="padding: 6px 12px; font-size: 13px; font-weight: 700; border-radius: 8px; border: 1px solid #c3ced9; background: #ffffff; color: #006688; cursor: pointer;">
+              <option value="high">High (2048px Shadows, 100% FX)</option>
+              <option value="medium">Medium (1024px Shadows, 65% FX)</option>
+              <option value="low">Low (Shadows Off, 35% FX)</option>
+            </select>
+          </div>
         </div>
 
         <!-- Action Row -->
@@ -443,6 +505,10 @@
               <span class="material-symbols-outlined" style="font-size: 18px;">my_location</span>
               <span>Recenter</span>
             </button>
+            <button id="btn-settings-ctrl-test" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 16px; font-size: 13px;">
+              <span class="material-symbols-outlined" style="font-size: 18px; color: #006688;">videogame_asset</span>
+              <span>Controller Test</span>
+            </button>
             <button id="btn-settings-guide" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 16px; font-size: 13px;">
               <span class="material-symbols-outlined" style="font-size: 18px;">menu_book</span>
               <span>Quick Guide</span>
@@ -451,6 +517,80 @@
           <button id="btn-settings-reset" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 16px; font-size: 13px; color: #51606a;">
             Reset Defaults
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5b. Controller Test Diagnostic Screen Overlay -->
+    <div id="controller-test-overlay" class="modal-overlay">
+      <div class="modal-dialog-pod" style="max-width: 840px; padding: 32px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border-seam); padding-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="material-symbols-outlined" style="font-size: 28px; color: #006688;">videogame_asset</span>
+            <div>
+              <h2 style="font-size: 24px; font-weight: 800; color: #111d28; line-height: 1.2;">Controller Diagnostics & Haptics</h2>
+              <p style="font-size: 13px; color: #51606a; margin: 0;">Live Wand telemetry, button contacts, and physical vibration tests.</p>
+            </div>
+          </div>
+          <button id="btn-ctrl-test-close" class="pill-btn pill-btn-secondary" style="height: 42px; padding: 0 20px; font-size: 14px;">
+            Close
+          </button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;">
+          <!-- Telemetry & Link Status -->
+          <div style="background: #edf4ff; border-radius: 16px; padding: 18px; border: 1px solid #d0deec; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 800; color: #51606a; text-transform: uppercase;">Connection Link</span>
+              <span id="ct-transport-badge" class="badge" style="background: rgba(0, 102, 136, 0.15); color: #006688; font-weight: 800; padding: 3px 12px; border-radius: 999px; font-size: 12px;">WEBSOCKET</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div style="background: white; border-radius: 12px; padding: 10px; border: 1px solid #cfd8e0;">
+                <div style="font-size: 11px; color: #6b7785; font-weight: 700;">ROUND TRIP (RTT)</div>
+                <div id="ct-rtt-val" style="font-size: 18px; font-weight: 800; color: #006688; margin-top: 2px;">-- ms</div>
+              </div>
+              <div style="background: white; border-radius: 12px; padding: 10px; border: 1px solid #cfd8e0;">
+                <div style="font-size: 11px; color: #6b7785; font-weight: 700;">INPUT LATENCY</div>
+                <div id="ct-lat-val" style="font-size: 18px; font-weight: 800; color: #16a34a; margin-top: 2px;">&lt; 25 ms</div>
+              </div>
+            </div>
+            <div style="background: white; border-radius: 12px; padding: 12px; border: 1px solid #cfd8e0;">
+              <div style="font-size: 11px; color: #6b7785; font-weight: 700; margin-bottom: 6px;">ORIENTATION & ANGLES</div>
+              <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #111d28;">
+                <span>Pitch: <strong id="ct-pitch-val" style="color: #006688;">0.0°</strong></span>
+                <span>Roll: <strong id="ct-roll-val" style="color: #006688;">0.0°</strong></span>
+                <span>Yaw: <strong id="ct-yaw-val" style="color: #006688;">0.0°</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Virtual Button Contact Grid -->
+          <div style="background: #edf4ff; border-radius: 16px; padding: 18px; border: 1px solid #d0deec; display: flex; flex-direction: column; gap: 12px;">
+            <span style="font-size: 12px; font-weight: 800; color: #51606a; text-transform: uppercase;">Button Contact Matrix</span>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <div id="ct-btn-a" class="ct-btn-pill">A</div>
+              <div id="ct-btn-b" class="ct-btn-pill">B Trigger</div>
+              <div id="ct-btn-up" class="ct-btn-pill">↑ Up</div>
+              <div id="ct-btn-down" class="ct-btn-pill">↓ Down</div>
+              <div id="ct-btn-left" class="ct-btn-pill">← Left</div>
+              <div id="ct-btn-right" class="ct-btn-pill">→ Right</div>
+              <div id="ct-btn-home" class="ct-btn-pill">Home</div>
+              <div id="ct-btn-recenter" class="ct-btn-pill">Center</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Haptics Remote Trigger Bar -->
+        <div style="background: #f0f4f9; border-radius: 16px; padding: 16px; border: 1px solid #d8e2ea;">
+          <div style="font-size: 13px; font-weight: 800; color: #111d28; margin-bottom: 8px;">Test Controller Vibration Waveforms</div>
+          <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;">
+            <button data-ct-haptic="click" class="pill-btn pill-btn-secondary" style="height: 38px; font-size: 12px; font-weight: 700;">Click</button>
+            <button data-ct-haptic="slice" class="pill-btn pill-btn-secondary" style="height: 38px; font-size: 12px; font-weight: 700;">Slice</button>
+            <button data-ct-haptic="laser" class="pill-btn pill-btn-secondary" style="height: 38px; font-size: 12px; font-weight: 700;">Laser</button>
+            <button data-ct-haptic="target_hit" class="pill-btn pill-btn-secondary" style="height: 38px; font-size: 12px; font-weight: 700;">Target Hit</button>
+            <button data-ct-haptic="kart_boost" class="pill-btn pill-btn-secondary" style="height: 38px; font-size: 12px; font-weight: 700;">Boost</button>
+            <button data-ct-haptic="wall_bump" class="pill-btn pill-btn-secondary" style="height: 38px; font-size: 12px; font-weight: 700;">Wall Bump</button>
+          </div>
         </div>
       </div>
     </div>

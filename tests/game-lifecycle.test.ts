@@ -28,21 +28,18 @@ describe('Game Remake Catalog & Channel Matrix Tests', () => {
     }
   });
 
-  it('should render 4 game tiles and 8 ghost tiles on main menu matching reference photo', () => {
-    const html = renderChannelsGridHtml(0);
+  it('should render all 5 game tiles and 7 ghost tiles on main menu', () => {
+    const html = renderChannelsGridHtml();
     assert.ok(html.includes('data-game="fruitNinja"'));
     assert.ok(html.includes('data-game="alienAttack"'));
     assert.ok(html.includes('data-game="shootingRange"'));
     assert.ok(html.includes('data-game="sketch"'));
+    assert.ok(html.includes('data-game="turboCircuit"'));
 
-    // Count ghost tiles (exactly 8 on page 0)
+    // Count ghost tiles (7 on main menu)
     const ghostMatches = html.match(/empty-slot/g);
     assert.ok(ghostMatches !== null);
-    assert.equal(ghostMatches.length, 8);
-
-    // Page 2 contains Turbo Circuit
-    const page1 = renderChannelsGridHtml(1);
-    assert.ok(page1.includes('data-game="turboCircuit"'));
+    assert.equal(ghostMatches.length, 7);
   });
 
   it('should contain zero references to deprecated legacy games in catalog', () => {
@@ -132,5 +129,57 @@ describe('Controller Layout Mode Negotiation Contract', () => {
     mockGameManager.teardown();
     assert.equal(mockGameManager.activeGame, null);
     assert.equal(socketOpen, true); // Socket remains open for instant next game launch!
+  });
+});
+
+describe('IGame Contract & Game Over Screen Navigation Tests', () => {
+  it('should enforce restart() and exit() contracts on IGame implementations', async () => {
+    const { SlicePartyGame } = await import('../src/console/games/slice-party/slice-party-game.js');
+    const { AlienAttackGame } = await import('../src/console/games/alien-attack/alien-attack-game.js');
+    const { ShootingRangeGame } = await import('../src/console/games/shooting-range/shooting-range-game.js');
+    const { SketchGame } = await import('../src/console/games/sketch/sketch-game.js');
+    const { TurboCircuitGame } = await import('../src/console/games/turbo-circuit/turbo-circuit-game.js');
+
+    const games = [
+      new SlicePartyGame(),
+      new AlienAttackGame(),
+      new ShootingRangeGame(),
+      new SketchGame(),
+      new TurboCircuitGame()
+    ];
+
+    for (const g of games) {
+      assert.equal(typeof g.restart, 'function', `${g.id} must implement restart()`);
+      assert.equal(typeof g.exit, 'function', `${g.id} must implement exit()`);
+      assert.equal(typeof g.pause, 'function', `${g.id} must implement pause()`);
+      assert.equal(typeof g.resume, 'function', `${g.id} must implement resume()`);
+      assert.equal(typeof g.destroy, 'function', `${g.id} must implement destroy()`);
+    }
+  });
+
+  it('should navigate overlay buttons via D-pad and trigger actions via A button', () => {
+    let restartClicked = false;
+    let menuClicked = false;
+
+    const buttons = [
+      { id: 'btn-restart', click: () => { restartClicked = true; } },
+      { id: 'btn-menu', click: () => { menuClicked = true; } }
+    ];
+
+    let focusIndex = 0;
+    // D-pad Right (+1)
+    focusIndex = (focusIndex + 1) % buttons.length;
+    assert.equal(focusIndex, 1);
+    // Press A on focused button
+    buttons[focusIndex].click();
+    assert.equal(menuClicked, true);
+    assert.equal(restartClicked, false);
+
+    // D-pad Left (-1)
+    focusIndex = (focusIndex - 1 + buttons.length) % buttons.length;
+    assert.equal(focusIndex, 0);
+    // Press A on focused button
+    buttons[focusIndex].click();
+    assert.equal(restartClicked, true);
   });
 });

@@ -108,9 +108,26 @@ export interface RecenterCommand extends BaseMessage {
   type: 'COMMAND_RECENTER';
 }
 
+export type HapticWaveformType = 'click' | 'slice' | 'laser' | 'target_hit' | 'kart_boost' | 'wall_bump';
+
 export interface HapticFeedbackCommand extends BaseMessage {
   type: 'COMMAND_HAPTIC';
   pattern: number[];
+  waveform?: HapticWaveformType;
+}
+
+export interface WebRtcSignalMessage extends BaseMessage {
+  type: 'RTC_SIGNAL';
+  fromRole: 'console' | 'controller';
+  signal: {
+    type: 'offer' | 'answer' | 'candidate';
+    sdp?: string;
+    candidate?: {
+      candidate: string;
+      sdpMid: string | null;
+      sdpMLineIndex: number | null;
+    };
+  };
 }
 
 export type LayoutMode = 'portrait' | 'landscape' | 'landscape-racing';
@@ -119,6 +136,34 @@ export interface LayoutModeCommand extends BaseMessage {
   type: 'COMMAND_LAYOUT_MODE';
   mode: LayoutMode;
   gameId?: string;
+}
+
+export interface PauseGameCommand extends BaseMessage {
+  type: 'COMMAND_PAUSE';
+}
+
+export interface ResumeGameCommand extends BaseMessage {
+  type: 'COMMAND_RESUME';
+}
+
+export interface RestartGameCommand extends BaseMessage {
+  type: 'COMMAND_RESTART';
+}
+
+export interface ExitToMenuCommand extends BaseMessage {
+  type: 'COMMAND_EXIT_MENU';
+}
+
+export interface SwitchGameCommand extends BaseMessage {
+  type: 'COMMAND_SWITCH_GAME';
+  gameId: string;
+}
+
+export interface GameStateSyncMessage extends BaseMessage {
+  type: 'STATE_GAME_SYNC';
+  isGameRunning: boolean;
+  isPaused: boolean;
+  activeGameId?: string;
 }
 
 export type StandardMessage =
@@ -130,7 +175,14 @@ export type StandardMessage =
   | MotionInputFrame
   | RecenterCommand
   | HapticFeedbackCommand
-  | LayoutModeCommand;
+  | LayoutModeCommand
+  | PauseGameCommand
+  | ResumeGameCommand
+  | RestartGameCommand
+  | ExitToMenuCommand
+  | SwitchGameCommand
+  | GameStateSyncMessage
+  | WebRtcSignalMessage;
 
 export type NimbusNetworkMessage = StandardMessage | CompactMotionPacket;
 

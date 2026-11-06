@@ -31,22 +31,17 @@ export class TurboHUD {
 
     // 1. Top-Left: Held Item Slot & Roulette
     this.itemBoxEl = document.createElement('div');
-    this.itemBoxEl.style.cssText = `
-      position: absolute; left: 48px; top: 36px; width: 88px; height: 88px;
-      border-radius: 20px; background: rgba(15, 23, 42, 0.65); border: 2.5px solid rgba(255,255,255,0.4);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(8px);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-    `;
+    this.itemBoxEl.style.cssText = 'position: absolute; left: 48px; top: 36px; width: 88px; height: 88px; border-radius: 20px; background: rgba(15, 23, 42, 0.65); border: 2.5px solid rgba(255,255,255,0.4); box-shadow: 0 8px 24px rgba(0,0,0,0.5); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center;';
     this.itemIconEl = document.createElement('div');
-    this.itemIconEl.style.cssText = `font-size: 40px; display: flex; align-items: center; justify-content: center;`;
+    this.itemIconEl.style.cssText = 'font-size: 40px; display: flex; align-items: center; justify-content: center;';
     this.itemBoxEl.appendChild(this.itemIconEl);
     this.container.appendChild(this.itemBoxEl);
 
     // 2. Bottom-Left: Coins and Lap Counter
     const telemetry = document.createElement('div');
-    telemetry.style.cssText = `position: absolute; left: 48px; bottom: 36px; display: flex; flex-direction: column; gap: 6px;`;
+    telemetry.style.cssText = 'position: absolute; left: 48px; bottom: 36px; display: flex; flex-direction: column; gap: 6px;';
     this.coinsEl = document.createElement('div');
-    this.coinsEl.style.cssText = `font-size: 26px; font-weight: 900; color: #fde047; text-shadow: 0 2px 8px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 8px;`;
+    this.coinsEl.style.cssText = 'font-size: 26px; font-weight: 900; color: #fde047; text-shadow: 0 2px 8px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 8px;';
     this.lapEl = document.createElement('div');
     this.lapEl.style.cssText = `font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: 1.5px; text-shadow: 0 2px 8px rgba(0,0,0,0.8);`;
     telemetry.appendChild(this.coinsEl);
@@ -92,6 +87,8 @@ export class TurboHUD {
 
     // 6. Race Results Modal
     this.resultsModalEl = document.createElement('div');
+    this.resultsModalEl.id = 'results-modal';
+    this.resultsModalEl.className = 'game-modal-overlay';
     this.resultsModalEl.style.cssText = `
       position: absolute; inset: 0; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px);
       display: none; flex-direction: column; align-items: center; justify-content: center; pointer-events: auto; z-index: 100;
@@ -112,7 +109,7 @@ export class TurboHUD {
 
     // 2. Speed, Coins, and Laps
     this.speedEl.textContent = `${Math.round(Math.abs(player.speed) * 3.6)} KM/H`;
-    this.coinsEl.innerHTML = `<span style="font-size: 28px;">🟡</span><span>x0${player.coins}</span>`;
+    this.coinsEl.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="vertical-align: middle;"><circle cx="12" cy="12" r="10" fill="#fbbf24" stroke="#d97706" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="#f59e0b"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="900" fill="#78350f">N</text></svg><span>x0${player.coins}</span>`;
     const lapNum = Math.min(3, player.currentLap);
     this.lapEl.innerHTML = lapNum === 3
       ? `<span style="color: #ef4444; animation: pulse 1s infinite;">FINAL LAP!</span>`
@@ -125,18 +122,24 @@ export class TurboHUD {
     this.drawMinimap(racers);
   }
 
+  private static readonly ITEM_SVGS: Record<string, string> = {
+    boost: '<svg viewBox="0 0 32 32" width="34" height="34" fill="none"><path d="M16 2 L22 14 L18 14 L22 28 L10 16 L14 16 Z" fill="#f97316" stroke="#fff" stroke-width="1.5"/></svg>',
+    rocket: '<svg viewBox="0 0 32 32" width="34" height="34" fill="none"><circle cx="16" cy="16" r="10" fill="#a855f7" stroke="#fff" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="#f43f5e"/></svg>',
+    oil: '<svg viewBox="0 0 32 32" width="34" height="34" fill="none"><ellipse cx="16" cy="18" rx="11" ry="7" fill="#15803d" stroke="#22c55e" stroke-width="2"/></svg>',
+    shield: '<svg viewBox="0 0 32 32" width="34" height="34" fill="none"><path d="M16 3 L26 8 V16 C26 22 16 28 16 28 C16 28 6 22 6 16 V8 Z" fill="#0284c7" stroke="#38bdf8" stroke-width="2"/></svg>'
+  };
+
   private renderItemSlot(player: KartPhysicsState): void {
     if (player.isItemRoulette) {
-      const icons = ['🚀', '🔮', '🟢', '🛡️'];
-      this.rouletteIndex = (this.rouletteIndex + 1) % icons.length;
-      this.itemIconEl.textContent = icons[this.rouletteIndex];
+      const keys = ['boost', 'rocket', 'oil', 'shield'];
+      this.rouletteIndex = (this.rouletteIndex + 1) % keys.length;
+      this.itemIconEl.innerHTML = TurboHUD.ITEM_SVGS[keys[this.rouletteIndex]] ?? '';
       this.itemBoxEl.style.borderColor = '#facc15';
     } else if (player.heldItem) {
-      const iconMap: Record<string, string> = { boost: '🚀', rocket: '🔮', oil: '🟢', shield: '🛡️' };
-      this.itemIconEl.textContent = iconMap[player.heldItem] ?? '';
+      this.itemIconEl.innerHTML = TurboHUD.ITEM_SVGS[player.heldItem] ?? '';
       this.itemBoxEl.style.borderColor = '#38bdf8';
     } else {
-      this.itemIconEl.textContent = '';
+      this.itemIconEl.innerHTML = '';
       this.itemBoxEl.style.borderColor = 'rgba(255,255,255,0.25)';
     }
   }
@@ -190,6 +193,7 @@ export class TurboHUD {
 
   public showResults(racers: RacerProfile[]): void {
     this.centerBannerEl.style.opacity = '0';
+    this.resultsModalEl.classList.add('open');
     this.resultsModalEl.style.display = 'flex';
     const tbody = this.resultsModalEl.querySelector('#results-tbody');
     if (!tbody) return;
@@ -210,22 +214,23 @@ export class TurboHUD {
   private buildResultsModal(onRaceAgain: () => void, onBackToMenu: () => void): void {
     this.resultsModalEl.innerHTML = `
       <div style="background: rgba(30, 41, 59, 0.95); border: 2px solid rgba(255,255,255,0.2); border-radius: 24px; padding: 32px 40px; box-shadow: 0 12px 36px rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; max-width: 580px; width: 90%;">
-        <h2 style="font-size: 36px; font-weight: 900; font-style: italic; color: #facc15; margin: 0 0 16px 0; letter-spacing: 2px;">🏆 RACE RESULTS 🏆</h2>
+        <h2 style="font-size: 32px; font-weight: 900; font-style: italic; color: #facc15; margin: 0 0 16px 0; letter-spacing: 2px;">RACE RESULTS</h2>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 18px;">
           <thead><tr style="border-bottom: 2px solid rgba(255,255,255,0.2); color: #94a3b8;"><th style="padding: 6px;">POS</th><th style="padding: 6px;">RACER</th><th style="padding: 6px;">LAPS</th></tr></thead>
           <tbody id="results-tbody"></tbody>
         </table>
         <div style="display: flex; gap: 16px;">
-          <button id="btn-race-again" style="padding: 12px 28px; background: linear-gradient(135deg, #0284c7, #06b6d4); color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer;">RACE AGAIN</button>
-          <button id="btn-back-menu" style="padding: 12px 28px; background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.4); border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer;">BACK TO MENU</button>
+          <button id="btn-race-again" class="pill-btn game-btn game-btn-restart" style="padding: 12px 28px; background: linear-gradient(135deg, #0284c7, #06b6d4); color: white; border: none; border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer;">RACE AGAIN</button>
+          <button id="btn-back-menu" class="pill-btn game-btn game-btn-menu" style="padding: 12px 28px; background: rgba(255,255,255,0.15); color: white; border: 1.5px solid rgba(255,255,255,0.4); border-radius: 14px; font-size: 18px; font-weight: 800; cursor: pointer;">BACK TO MENU</button>
         </div>
       </div>
     `;
-    this.resultsModalEl.querySelector('#btn-race-again')?.addEventListener('click', () => { this.resultsModalEl.style.display = 'none'; onRaceAgain(); });
-    this.resultsModalEl.querySelector('#btn-back-menu')?.addEventListener('click', () => { this.resultsModalEl.style.display = 'none'; onBackToMenu(); });
+    this.resultsModalEl.querySelector('#btn-race-again')?.addEventListener('click', () => { this.hideResults(); onRaceAgain(); });
+    this.resultsModalEl.querySelector('#btn-back-menu')?.addEventListener('click', () => { this.hideResults(); onBackToMenu(); });
   }
 
   public hideResults(): void {
+    this.resultsModalEl.classList.remove('open');
     this.resultsModalEl.style.display = 'none';
   }
 

@@ -14,6 +14,7 @@ import { AlienHUD } from './alien-hud.js';
 import { gameSfx } from '../../audio/game-sfx.js';
 import { audioManager } from '../../audio/audio-manager.js';
 import { BUTTON_MASKS } from '../../../shared/protocol.js';
+import { GameEndModal } from '../common/game-end-modal.js';
 
 export class AlienAttackGame implements IGame {
   public readonly id = 'alienAttack';
@@ -22,6 +23,7 @@ export class AlienAttackGame implements IGame {
   private app: Application | null = null;
   private gameStage = new Container();
   private options: GameOptions | null = null;
+  private endModal: GameEndModal | null = null;
 
   private backdrop!: SpaceBackdrop;
   private playerShip!: PlayerShip;
@@ -87,6 +89,8 @@ export class AlienAttackGame implements IGame {
     });
     this.gameStage.addChild(this.hud.container);
 
+    this.endModal = new GameEndModal(container);
+
     // 2. Request Landscape Flight Deck mode on mobile controller
     this.options.setLayoutMode?.('landscape');
 
@@ -114,7 +118,14 @@ export class AlienAttackGame implements IGame {
 
       if (isDead) {
         this.isGameOver = true;
-        this.hud.showGameOver();
+        this.endModal?.show({
+          title: 'MISSION FAILED',
+          score: this.hud.getScore(),
+          accentColor: '#ef4444',
+          restartLabel: 'Retry',
+          onRestart: () => this.restartGame(),
+          onExit: () => this.exit()
+        });
       }
     }
   }
@@ -220,6 +231,7 @@ export class AlienAttackGame implements IGame {
   }
 
   public restartGame(): void {
+    this.endModal?.hide();
     this.isGameOver = false;
     this.isPaused = false;
     this.lastWaveAnnounced = 1;
@@ -230,9 +242,20 @@ export class AlienAttackGame implements IGame {
     audioManager.playLaunchChime();
   }
 
+  public restart(): void {
+    this.restartGame();
+  }
+
+  public exit(): void {
+    this.options?.onExitToMenu();
+  }
+
   public destroy(): void {
     // Return phone controller to standard portrait wand
     this.options?.setLayoutMode?.('portrait');
+
+    this.endModal?.destroy();
+    this.endModal = null;
 
     window.removeEventListener('keydown', this.keydownHandler);
     window.removeEventListener('keyup', this.keyupHandler);

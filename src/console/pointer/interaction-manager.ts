@@ -45,6 +45,8 @@ export class InteractionManager {
   private isGameActive = false;
   private homePressStart = 0;
   private activeChannelIndex = 0;
+  private lastSequence = 0;
+  private lastFrameTime = 0;
   private latestMotion: MotionSample = {
     rotationRate: { alpha: 0, beta: 0, gamma: 0 },
     acceleration: { x: 0, y: 0, z: 9.8 }
@@ -62,19 +64,15 @@ export class InteractionManager {
     this.settingsManager = new SettingsManager();
     const initialSettings = this.settingsManager.getSettings();
 
-    const stageWidth = this.stageEl.clientWidth || 1920;
-    const stageHeight = this.stageEl.clientHeight || 1080;
-
+    // Canonical 16:9 stage domain: always 1920 x 1080
     this.pipeline = new PointerPipeline(
-      { width: stageWidth, height: stageHeight },
+      { width: 1920, height: 1080 },
       initialSettings
     );
 
     // Load saved calibration if present
     const savedCalib = CalibrationManager.loadPersistedCalibration();
-    if (savedCalib) {
-      this.pipeline.setCalibration(savedCalib);
-    }
+    if (savedCalib) this.pipeline.setCalibration(savedCalib);
 
     this.calibration = new CalibrationManager();
     this.calibrationUi = new CalibrationUiManager(this.calibration, this.pipeline, {
@@ -84,10 +82,14 @@ export class InteractionManager {
 
     this.bindSettingsUI();
     this.bindMouseFallback();
+    this.startPredictionLoop();
   }
 
-  public setGameActive(active: boolean): void {
+  public setGameActive(active: boolean, gameId?: string): void {
     this.isGameActive = active;
+    const settings = this.settingsManager.setActiveGame(active ? gameId : 'global');
+    this.pipeline.updateSettings(settings);
+
     if (active && this.hoveredElement) {
       this.hoveredElement.classList.remove('is-hovered');
       this.hoveredElement = null;
@@ -106,8 +108,9 @@ export class InteractionManager {
     return this.latestMotion;
   }
 
-  public updateViewport(width: number, height: number): void {
-    this.pipeline.setViewport({ width, height });
+  public updateViewport(_width: number, _height: number): void {
+    // Stage coordinate space remains strictly canonical 1920x1080
+    this.pipeline.setViewport({ width: 1920, height: 1080 });
   }
 
   public getPipeline(): PointerPipeline {
@@ -123,6 +126,11 @@ export class InteractionManager {
 
     if ('t' in packet && packet.t === 'F') {
       const c = packet as CompactMotionPacket;
+      // Latest-wins packet filtering: discard out-of-order packets
+      if (c.s <= this.lastSequence) {
+        return;
+      }
+      this.lastSequence = c.s;
       bitmask = c.b;
       sample = {
         rotationRate: { alpha: c.r[0], beta: c.r[1], gamma: c.r[2] },
@@ -130,21 +138,20 @@ export class InteractionManager {
       };
     } else if ('buttons' in packet) {
       const f = packet as MotionInputFrame;
-      sample = {
-        rotationRate: { ...f.rotationRate },
-        acceleration: { ...f.acceleration }
-      };
-      if (f.buttons.a) bitmask |= BUTTON_MASKS.A;
-      if (f.buttons.b) bitmask |= BUTTON_MASKS.B;
-      if (f.buttons.dpadUp) bitmask |= BUTTON_MASKS.DPAD_UP;
-      if (f.buttons.dpadDown) bitmask |= BUTTON_MASKS.DPAD_DOWN;
-      if (f.buttons.dpadLeft) bitmask |= BUTTON_MASKS.DPAD_LEFT;
-      if (f.buttons.dpadRight) bitmask |= BUTTON_MASKS.DPAD_RIGHT;
-      if (f.buttons.home) bitmask |= BUTTON_MASKS.HOME;
-      if (f.buttons.recenter) bitmask |= BUTTON_MASKS.RECENTER;
+      sample = { rotationRate: { ...f.rotationRate }, acceleration: { ...f.acceleration } };
+      const b = f.buttons;
+      if (b.a) bitmask |= BUTTON_MASKS.A;
+      if (b.b) bitmask |= BUTTON_MASKS.B;
+      if (b.dpadUp) bitmask |= BUTTON_MASKS.DPAD_UP;
+      if (b.dpadDown) bitmask |= BUTTON_MASKS.DPAD_DOWN;
+      if (b.dpadLeft) bitmask |= BUTTON_MASKS.DPAD_LEFT;
+      if (b.dpadRight) bitmask |= BUTTON_MASKS.DPAD_RIGHT;
+      if (b.home) bitmask |= BUTTON_MASKS.HOME;
+      if (b.recenter) bitmask |= BUTTON_MASKS.RECENTER;
     }
 
     this.latestMotion = sample;
+    this.lastFrameTime = performance.now();
 
     // 1. If currently on Calibration screen, pass sample to calibrator
     if (this.calibrationUi.getIsCalibrating()) {
@@ -152,36 +159,47 @@ export class InteractionManager {
     }
 
     // 2. Process motion sample through pipeline
-    const pos = this.pipeline.processMotionSample(sample, performance.now());
+    const pos = this.pipeline.processMotionSample(sample, this.lastFrameTime);
     this.updatePointerVisuals(pos.x, pos.y);
 
     // 3. Handle Controller Buttons
     this.handleButtons(bitmask);
   }
 
-  public updatePointerVisuals(stageX: number, stageY: number): void {
-    this.pointerEl.style.transform = `translate3d(${stageX}px, ${stageY}px, 0) rotate(-12deg)`;
-    this.pointerEl.style.setProperty('--ptr-x', `${stageX}px`);
-    this.pointerEl.style.setProperty('--ptr-y', `${stageY}px`);
-
-    // Element hit testing
-    if (this.isGameActive) {
-      const openModal = document.querySelector('.modal-overlay.open');
-      if (!openModal) {
-        if (this.hoveredElement) {
-          this.hoveredElement.classList.remove('is-hovered');
-          this.hoveredElement = null;
-        }
-        return;
+  private startPredictionLoop(): void {
+    const loop = (now: number) => {
+      // If > 18ms elapsed since last physical packet and not using mouse, extrapolate cursor
+      if (!this.isMouseDown && this.lastFrameTime > 0 && now - this.lastFrameTime > 18 && now - this.lastFrameTime < 80) {
+        const predicted = this.pipeline.predict(now);
+        this.updatePointerVisuals(predicted.x, predicted.y);
       }
-    }
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+
+  public updatePointerVisuals(stageX: number, stageY: number): void {
+    const stageWidth = this.stageEl.clientWidth || 1920;
+    const stageHeight = this.stageEl.clientHeight || 1080;
+    const domX = (stageX / 1920) * stageWidth;
+    const domY = (stageY / 1080) * stageHeight;
+
+    this.pointerEl.style.transform = `translate3d(${domX}px, ${domY}px, 0) rotate(-12deg)`;
+    this.pointerEl.style.setProperty('--ptr-x', `${domX}px`);
+    this.pointerEl.style.setProperty('--ptr-y', `${domY}px`);
 
     const stageRect = this.stageEl.getBoundingClientRect();
-    const screenX = stageRect.left + (stageX / (this.stageEl.clientWidth || 1920)) * stageRect.width;
-    const screenY = stageRect.top + (stageY / (this.stageEl.clientHeight || 1080)) * stageRect.height;
+    const screenX = stageRect.left + (stageX / 1920) * stageRect.width;
+    const screenY = stageRect.top + (stageY / 1080) * stageRect.height;
 
     const hit = document.elementFromPoint(screenX, screenY);
-    const interactive = hit?.closest('.channel-tile, .pill-btn, .bumper-btn, .system-disk-btn, button, a') as HTMLElement | null;
+    let interactive = hit?.closest('.channel-tile, .pill-btn, .bumper-btn, .system-disk-btn, .game-btn, .in-game-ctrl, button, a') as HTMLElement | null;
+
+    if (this.isGameActive && interactive) {
+      if (!interactive.closest('.modal-overlay.open, .game-modal-overlay, #game-container, #in-game-cluster, #switch-game-overlay')) {
+        interactive = null;
+      }
+    }
 
     if (interactive !== this.hoveredElement) {
       if (this.hoveredElement) {
@@ -203,8 +221,9 @@ export class InteractionManager {
     // A Button (Primary Select / Click)
     if (pressedNow & BUTTON_MASKS.A) {
       this.pointerEl.classList.add('active-click');
-      if (this.hoveredElement) {
-        this.hoveredElement.click();
+      const target = this.hoveredElement || (document.activeElement as HTMLElement | null);
+      if (target && typeof target.click === 'function') {
+        target.click();
       }
     }
     if (releasedNow & BUTTON_MASKS.A) {
@@ -235,29 +254,64 @@ export class InteractionManager {
     }
 
     // D-Pad Navigation
-    if (pressedNow & BUTTON_MASKS.DPAD_UP) this.navigateGrid(-4);
-    if (pressedNow & BUTTON_MASKS.DPAD_DOWN) this.navigateGrid(4);
-    if (pressedNow & BUTTON_MASKS.DPAD_LEFT) this.navigateGrid(-1);
-    if (pressedNow & BUTTON_MASKS.DPAD_RIGHT) this.navigateGrid(1);
+    if (pressedNow & BUTTON_MASKS.DPAD_UP) this.handleDpad(-4);
+    if (pressedNow & BUTTON_MASKS.DPAD_DOWN) this.handleDpad(4);
+    if (pressedNow & BUTTON_MASKS.DPAD_LEFT) this.handleDpad(-1);
+    if (pressedNow & BUTTON_MASKS.DPAD_RIGHT) this.handleDpad(1);
 
     this.prevBitmask = bitmask;
   }
 
-  private triggerBackAction(): void {
-    const overlays = [
-      { id: 'calibration-overlay', close: () => this.callbacks.closeCalibration() },
-      { id: 'settings-overlay', close: () => this.callbacks.closeSettings() },
-      { id: 'pairing-overlay', close: () => this.callbacks.closePairing() },
-      { id: 'launch-dialog-overlay', close: () => this.callbacks.closeLaunchDialog() },
-      { id: 'pause-overlay', close: () => this.callbacks.closePause() }
-    ];
+  private handleDpad(delta: number): void {
+    const activeOverlay = document.querySelector('.modal-overlay.open, .game-modal-overlay.open, #results-modal.open, #switch-game-overlay.open');
+    if (activeOverlay) {
+      const buttons = Array.from(activeOverlay.querySelectorAll('button:not([disabled]), .pill-btn:not([disabled]), a:not([disabled])')) as HTMLElement[];
+      if (buttons.length > 0) {
+        let idx = buttons.findIndex((b) => b === this.hoveredElement || b.classList.contains('is-hovered') || document.activeElement === b);
+        const step = delta > 0 ? 1 : -1;
+        idx = idx === -1 ? 0 : (idx + step + buttons.length) % buttons.length;
 
-    for (const ov of overlays) {
-      const el = document.getElementById(ov.id);
-      if (el && el.classList.contains('open')) {
-        ov.close();
+        const targetBtn = buttons[idx];
+        if (targetBtn) {
+          if (this.hoveredElement) this.hoveredElement.classList.remove('is-hovered');
+          this.hoveredElement = targetBtn;
+          targetBtn.classList.add('is-hovered');
+          targetBtn.focus();
+          audioManager.playHoverTick();
+
+          const stageRect = this.stageEl.getBoundingClientRect();
+          const btnRect = targetBtn.getBoundingClientRect();
+          const tx = Math.max(0, Math.min(1920, ((btnRect.left + btnRect.width / 2 - stageRect.left) / stageRect.width) * 1920));
+          const ty = Math.max(0, Math.min(1080, ((btnRect.top + btnRect.height / 2 - stageRect.top) / stageRect.height) * 1080));
+          this.pipeline.setMousePosition(tx, ty);
+          this.updatePointerVisuals(tx, ty);
+        }
         return;
       }
+    }
+
+    if (!this.isGameActive) {
+      this.navigateGrid(delta);
+    }
+  }
+
+  private triggerBackAction(): void {
+    const gameModal = document.querySelector('.game-modal-overlay.open, #results-modal.open');
+    if (gameModal) {
+      const menuBtn = gameModal.querySelector('#btn-game-modal-menu, #btn-back-menu, .game-btn-menu') as HTMLElement | null;
+      if (menuBtn) { menuBtn.click(); return; }
+    }
+
+    const overlays: [string, () => void][] = [
+      ['calibration-overlay', () => this.callbacks.closeCalibration()],
+      ['settings-overlay', () => this.callbacks.closeSettings()],
+      ['pairing-overlay', () => this.callbacks.closePairing()],
+      ['launch-dialog-overlay', () => this.callbacks.closeLaunchDialog()],
+      ['pause-overlay', () => this.callbacks.closePause()]
+    ];
+
+    for (const [id, close] of overlays) {
+      if (document.getElementById(id)?.classList.contains('open')) { close(); return; }
     }
   }
 
@@ -275,63 +329,44 @@ export class InteractionManager {
     if (targetTile) {
       const stageRect = this.stageEl.getBoundingClientRect();
       const tileRect = targetTile.getBoundingClientRect();
-      const targetStageX = ((tileRect.left + tileRect.width / 2 - stageRect.left) / stageRect.width) * (this.stageEl.clientWidth || 1920);
-      const targetStageY = ((tileRect.top + tileRect.height / 2 - stageRect.top) / stageRect.height) * (this.stageEl.clientHeight || 1080);
-
-      this.pipeline.setMousePosition(targetStageX, targetStageY);
-      this.updatePointerVisuals(targetStageX, targetStageY);
+      const tx = Math.max(0, Math.min(1920, ((tileRect.left + tileRect.width / 2 - stageRect.left) / stageRect.width) * 1920));
+      const ty = Math.max(0, Math.min(1080, ((tileRect.top + tileRect.height / 2 - stageRect.top) / stageRect.height) * 1080));
+      this.pipeline.setMousePosition(tx, ty);
+      this.updatePointerVisuals(tx, ty);
     }
   }
 
   private bindSettingsUI(): void {
     SettingsUiBinder.bind(this.settingsManager, this.pipeline, {
       recenterPointer: () => this.recenterPointer(),
-      openCalibration: () => {
-        this.callbacks.closeSettings();
-        this.callbacks.openCalibration();
-      },
+      openCalibration: () => { this.callbacks.closeSettings(); this.callbacks.openCalibration(); },
       closeSettings: () => this.callbacks.closeSettings()
     });
   }
 
-  public startCalibrationRoutine(): void {
-    this.calibrationUi.startRoutine();
-  }
-
-  public stopCalibrationRoutine(): void {
-    this.calibrationUi.stopRoutine();
-  }
+  public startCalibrationRoutine(): void { this.calibrationUi.startRoutine(); }
+  public stopCalibrationRoutine(): void { this.calibrationUi.stopRoutine(); }
 
   private bindMouseFallback(): void {
     window.addEventListener('mousemove', (e: MouseEvent) => {
       const stageRect = this.stageEl.getBoundingClientRect();
-      const x = ((e.clientX - stageRect.left) / stageRect.width) * (this.stageEl.clientWidth || 1920);
-      const y = ((e.clientY - stageRect.top) / stageRect.height) * (this.stageEl.clientHeight || 1080);
-
+      const x = Math.max(0, Math.min(1920, ((e.clientX - stageRect.left) / stageRect.width) * 1920));
+      const y = Math.max(0, Math.min(1080, ((e.clientY - stageRect.top) / stageRect.height) * 1080));
       this.pipeline.setMousePosition(x, y);
       this.updatePointerVisuals(x, y);
     });
 
     window.addEventListener('mousedown', (e: MouseEvent) => {
-      if (e.button === 0) {
-        this.isMouseDown = true;
-        this.pointerEl.classList.add('active-click');
-      }
+      if (e.button === 0) { this.isMouseDown = true; this.pointerEl.classList.add('active-click'); }
     });
 
     window.addEventListener('mouseup', (e: MouseEvent) => {
-      if (e.button === 0) {
-        this.isMouseDown = false;
-        this.pointerEl.classList.remove('active-click');
-      }
+      if (e.button === 0) { this.isMouseDown = false; this.pointerEl.classList.remove('active-click'); }
     });
 
     window.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        this.recenterPointer();
-      } else if (e.code === 'Escape' || e.code === 'KeyH') {
-        this.callbacks.togglePause();
-      }
+      if (e.code === 'Space') this.recenterPointer();
+      else if (e.code === 'Escape' || e.code === 'KeyH') this.callbacks.togglePause();
     });
   }
 }

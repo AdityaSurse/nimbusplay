@@ -151,7 +151,7 @@ describe('PointerPipeline Integration & Boundary Tests', () => {
     }
 
     assert.ok(pos.x <= 1920, `Cursor must not exceed viewport width, got ${pos.x}`);
-    assert.ok(pos.x >= 1900, `Cursor should be near right edge, got ${pos.x}`);
+    assert.equal(pos.x, 1920, `Cursor should reach exact right edge (1920), got ${pos.x}`);
   });
 
   it('should instantly recenter to viewport center on recenter()', () => {
@@ -187,36 +187,56 @@ describe('PointerPipeline Integration & Boundary Tests', () => {
     assert.ok(deltaHigh > deltaLow * 1.7, `Expected high sensitivity to move ~2x further: high=${deltaHigh}, low=${deltaLow}`);
   });
 
-  it('should clamp cursor cleanly on all 4 screen edges without NaN or overflow', () => {
+  it('should clamp cursor cleanly to exact boundary edges and reach all 4 corners', () => {
     const pipeline = new PointerPipeline(viewport, { deadZone: 0.1, sensitivity: 3.0 });
 
-    // Extreme up/left
-    const sampleUpLeft = {
-      rotationRate: { alpha: 500, beta: 500, gamma: 0 },
+    // 1. Top-Left Corner: Drive hard yaw-left and pitch-up
+    const sampleTopLeft = {
+      rotationRate: { alpha: 300, beta: 300, gamma: 0 },
       acceleration: { x: 0, y: 0, z: 9.8 }
     };
-
     for (let i = 1; i <= 60; i++) {
-      pipeline.processMotionSample(sampleUpLeft, i * 16.6);
+      pipeline.processMotionSample(sampleTopLeft, i * 16.6);
     }
-
     const posTopLeft = pipeline.getPosition();
-    assert.ok(posTopLeft.x >= 0 && posTopLeft.x <= 50, `X clamped near 0: ${posTopLeft.x}`);
-    assert.ok(posTopLeft.y >= 0 && posTopLeft.y <= 50, `Y clamped near 0: ${posTopLeft.y}`);
+    assert.equal(posTopLeft.x, 0, `Top-Left corner X must reach exact 0, got ${posTopLeft.x}`);
+    assert.equal(posTopLeft.y, 0, `Top-Left corner Y must reach exact 0, got ${posTopLeft.y}`);
 
-    // Extreme down/right
-    const sampleDownRight = {
-      rotationRate: { alpha: -500, beta: -500, gamma: 0 },
+    // 2. Top-Right Corner: Drive hard yaw-right and keep pitch-up
+    const sampleTopRight = {
+      rotationRate: { alpha: -300, beta: 300, gamma: 0 },
       acceleration: { x: 0, y: 0, z: 9.8 }
     };
-
     for (let i = 61; i <= 120; i++) {
-      pipeline.processMotionSample(sampleDownRight, i * 16.6);
+      pipeline.processMotionSample(sampleTopRight, i * 16.6);
     }
+    const posTopRight = pipeline.getPosition();
+    assert.equal(posTopRight.x, 1920, `Top-Right corner X must reach exact 1920, got ${posTopRight.x}`);
+    assert.equal(posTopRight.y, 0, `Top-Right corner Y must reach exact 0, got ${posTopRight.y}`);
 
+    // 3. Bottom-Left Corner: Drive hard yaw-left and pitch-down
+    const sampleBottomLeft = {
+      rotationRate: { alpha: 300, beta: -300, gamma: 0 },
+      acceleration: { x: 0, y: 0, z: 9.8 }
+    };
+    for (let i = 121; i <= 180; i++) {
+      pipeline.processMotionSample(sampleBottomLeft, i * 16.6);
+    }
+    const posBottomLeft = pipeline.getPosition();
+    assert.equal(posBottomLeft.x, 0, `Bottom-Left corner X must reach exact 0, got ${posBottomLeft.x}`);
+    assert.equal(posBottomLeft.y, 1080, `Bottom-Left corner Y must reach exact 1080, got ${posBottomLeft.y}`);
+
+    // 4. Bottom-Right Corner: Drive hard yaw-right and pitch-down
+    const sampleBottomRight = {
+      rotationRate: { alpha: -300, beta: -300, gamma: 0 },
+      acceleration: { x: 0, y: 0, z: 9.8 }
+    };
+    for (let i = 181; i <= 240; i++) {
+      pipeline.processMotionSample(sampleBottomRight, i * 16.6);
+    }
     const posBottomRight = pipeline.getPosition();
-    assert.ok(posBottomRight.x >= 1870 && posBottomRight.x <= 1920, `X clamped near 1920: ${posBottomRight.x}`);
-    assert.ok(posBottomRight.y >= 1030 && posBottomRight.y <= 1080, `Y clamped near 1080: ${posBottomRight.y}`);
+    assert.equal(posBottomRight.x, 1920, `Bottom-Right corner X must reach exact 1920, got ${posBottomRight.x}`);
+    assert.equal(posBottomRight.y, 1080, `Bottom-Right corner Y must reach exact 1080, got ${posBottomRight.y}`);
   });
 
   it('should allow mouse fallback position override and update smoothly', () => {

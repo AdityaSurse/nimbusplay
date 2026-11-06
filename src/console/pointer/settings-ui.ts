@@ -22,6 +22,18 @@ export class SettingsUiBinder {
     const sliderSens = document.getElementById('setting-sensitivity') as HTMLInputElement | null;
     const sliderSmooth = document.getElementById('setting-smoothing') as HTMLInputElement | null;
     const sliderDead = document.getElementById('setting-deadzone') as HTMLInputElement | null;
+    const selectQuality = document.getElementById('setting-graphics-quality') as HTMLSelectElement | null;
+
+    if (selectQuality && typeof localStorage !== 'undefined') {
+      const savedQ = localStorage.getItem('nimbusplay_graphics_quality') || 'high';
+      selectQuality.value = savedQ;
+      selectQuality.addEventListener('change', () => {
+        const val = selectQuality.value;
+        if (val === 'low' || val === 'medium' || val === 'high') {
+          localStorage.setItem('nimbusplay_graphics_quality', val);
+        }
+      });
+    }
 
     const labelSens = document.getElementById('label-val-sensitivity');
     const labelSmooth = document.getElementById('label-val-smoothing');

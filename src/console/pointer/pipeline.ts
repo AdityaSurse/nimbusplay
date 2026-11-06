@@ -5,8 +5,8 @@
  * Strictly typed with zero `any`.
  */
 
-import { AimMapper } from './aim-mapper.js';
 import { OneEuroFilter2D } from './one-euro-filter.js';
+import { SensorFusion } from './sensor-fusion.js';
 import type { 
   PointerSettings, 
   GyroBiasCalibration, 
@@ -16,12 +16,12 @@ import type {
 } from './types.js';
 
 export const DEFAULT_POINTER_SETTINGS: PointerSettings = {
-  sensitivity: 1.2,
+  sensitivity: 1.5,
   minCutoff: 1.2,
   beta: 0.008,
   dCutoff: 1.0,
-  deadZone: 0.6,
-  edgeSoftMargin: 24
+  deadZone: 0.5,
+  edgeSoftMargin: 0
 };
 
 export class PointerPipeline {
@@ -33,8 +33,11 @@ export class PointerPipeline {
   private filteredX: number;
   private filteredY: number;
   private filter: OneEuroFilter2D;
+  private sensorFusion = new SensorFusion();
   private lastTimestampMs = 0;
   private isRecentered = false;
+  private currentVx = 0;
+  private currentVy = 0;
 
   constructor(viewport: ViewportBounds, customSettings?: Partial<PointerSettings>) {
     this.viewport = { ...viewport };
@@ -91,6 +94,9 @@ export class PointerPipeline {
     this.filteredX = this.rawX;
     this.filteredY = this.rawY;
     this.filter.reset(this.rawX, this.rawY);
+    this.sensorFusion.reset();
+    this.currentVx = 0;
+    this.currentVy = 0;
     this.isRecentered = true;
 
     return {
@@ -98,8 +104,30 @@ export class PointerPipeline {
       y: this.filteredY,
       vx: 0,
       vy: 0,
-      isRecentered: true
+      isRecentered: true,
+      rawX: this.rawX,
+      rawY: this.rawY
     };
+  }
+
+  public predict(targetTimestampMs: number): PointerPosition {
+    if (this.lastTimestampMs > 0 && targetTimestampMs > this.lastTimestampMs) {
+      const dtPred = Math.min((targetTimestampMs - this.lastTimestampMs) / 1000, 0.05);
+      const decay = Math.pow(0.92, dtPred / 0.016);
+      const predX = Math.max(0, Math.min(this.viewport.width, this.filteredX + this.currentVx * dtPred * decay));
+      const predY = Math.max(0, Math.min(this.viewport.height, this.filteredY + this.currentVy * dtPred * decay));
+
+      return {
+        x: predX,
+        y: predY,
+        vx: this.currentVx * decay,
+        vy: this.currentVy * decay,
+        isRecentered: false,
+        rawX: this.rawX,
+        rawY: this.rawY
+      };
+    }
+    return this.getPosition();
   }
 
   public processMotionSample(sample: MotionSample, timestampMs: number): PointerPosition {
@@ -109,12 +137,12 @@ export class PointerPipeline {
     }
     this.lastTimestampMs = timestampMs;
 
-    // 1. Gravity-compensated aim mapping
-    const aim = AimMapper.mapToAim(sample.rotationRate, sample.acceleration);
+    // 1. Gravity-stabilized sensor fusion with complementary filter
+    const fused = this.sensorFusion.update(sample.rotationRate, sample.acceleration, dt);
 
     // 2. Subtract calibrated gyro bias drift
-    const unscaledYaw = aim.yawRate - this.calibration.biasYaw;
-    const unscaledPitch = aim.pitchRate - this.calibration.biasPitch;
+    const unscaledYaw = fused.yawRate - this.calibration.biasYaw;
+    const unscaledPitch = fused.pitchRate - this.calibration.biasPitch;
 
     // 3. Radial continuous deadzone
     const magnitude = Math.sqrt(unscaledYaw * unscaledYaw + unscaledPitch * unscaledPitch);
@@ -127,40 +155,34 @@ export class PointerPipeline {
       effPitch = unscaledPitch * scale;
     }
 
-    // 4. Sensitivity scaler (60 deg sweeps entire 1920 width at 1.0 sensitivity)
-    const pxPerDeg = (this.viewport.width / 50.0) * this.settings.sensitivity;
-    let dx = effYaw * dt * pxPerDeg;
-    let dy = -effPitch * dt * pxPerDeg; // Invert: pitch up (positive rate) moves cursor up (-Y)
+    // 4. Sensitivity scaler (42 deg sweeps full width at 1.0 sensitivity)
+    const pxPerDeg = (this.viewport.width / 42.0) * this.settings.sensitivity;
+    const dx = effYaw * dt * pxPerDeg;
+    const dy = -effPitch * dt * pxPerDeg; // Invert: pitch up moves cursor up (-Y)
 
-    // 5. Soft-stop edge damping
-    const margin = this.settings.edgeSoftMargin;
-    if (this.rawX < margin && dx < 0) {
-      const ratio = Math.max(0, this.rawX / margin);
-      dx *= ratio * ratio;
-    } else if (this.rawX > this.viewport.width - margin && dx > 0) {
-      const ratio = Math.max(0, (this.viewport.width - this.rawX) / margin);
-      dx *= ratio * ratio;
-    }
-
-    if (this.rawY < margin && dy < 0) {
-      const ratio = Math.max(0, this.rawY / margin);
-      dy *= ratio * ratio;
-    } else if (this.rawY > this.viewport.height - margin && dy > 0) {
-      const ratio = Math.max(0, (this.viewport.height - this.rawY) / margin);
-      dy *= ratio * ratio;
-    }
-
-    // 6. Integrate to raw position and clamp
+    // 5. Hard boundary clamp (no edge insets or soft damping)
     this.rawX = Math.max(0, Math.min(this.viewport.width, this.rawX + dx));
     this.rawY = Math.max(0, Math.min(this.viewport.height, this.rawY + dy));
 
-    // 7. Adaptive One Euro low-pass filtering
+    // 6. Adaptive One Euro low-pass filtering with exact boundary snapping
     const prevFilteredX = this.filteredX;
     const prevFilteredY = this.filteredY;
 
     const filtered = this.filter.filter(this.rawX, this.rawY, dt);
-    this.filteredX = Math.max(0, Math.min(this.viewport.width, filtered.x));
-    this.filteredY = Math.max(0, Math.min(this.viewport.height, filtered.y));
+    let fx = filtered.x;
+    let fy = filtered.y;
+
+    if (this.rawX <= 0 || fx < 0.001) fx = 0;
+    else if (this.rawX >= this.viewport.width || fx > this.viewport.width - 0.001) fx = this.viewport.width;
+
+    if (this.rawY <= 0 || fy < 0.001) fy = 0;
+    else if (this.rawY >= this.viewport.height || fy > this.viewport.height - 0.001) fy = this.viewport.height;
+
+    this.filteredX = Math.max(0, Math.min(this.viewport.width, fx));
+    this.filteredY = Math.max(0, Math.min(this.viewport.height, fy));
+
+    this.currentVx = (this.filteredX - prevFilteredX) / dt;
+    this.currentVy = (this.filteredY - prevFilteredY) / dt;
 
     const wasRecentered = this.isRecentered;
     this.isRecentered = false;
@@ -168,9 +190,11 @@ export class PointerPipeline {
     return {
       x: this.filteredX,
       y: this.filteredY,
-      vx: (this.filteredX - prevFilteredX) / dt,
-      vy: (this.filteredY - prevFilteredY) / dt,
-      isRecentered: wasRecentered
+      vx: this.currentVx,
+      vy: this.currentVy,
+      isRecentered: wasRecentered,
+      rawX: this.rawX,
+      rawY: this.rawY
     };
   }
 
@@ -189,7 +213,9 @@ export class PointerPipeline {
       y: this.filteredY,
       vx: 0,
       vy: 0,
-      isRecentered: false
+      isRecentered: false,
+      rawX: this.rawX,
+      rawY: this.rawY
     };
   }
 
@@ -199,7 +225,9 @@ export class PointerPipeline {
       y: this.filteredY,
       vx: 0,
       vy: 0,
-      isRecentered: this.isRecentered
+      isRecentered: this.isRecentered,
+      rawX: this.rawX,
+      rawY: this.rawY
     };
   }
 }

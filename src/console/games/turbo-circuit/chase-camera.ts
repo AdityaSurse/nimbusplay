@@ -20,9 +20,16 @@ export class ChaseCamera {
 
   private currentTarget = new Vector3();
   private currentCamPos = new Vector3();
+  private shakeTimer = 0;
+  private shakeIntensity = 0;
 
   constructor(aspect: number) {
     this.camera = new PerspectiveCamera(this.baseFov, aspect, 0.1, 800);
+  }
+
+  public triggerShake(duration = 0.35, intensity = 0.4): void {
+    this.shakeTimer = duration;
+    this.shakeIntensity = intensity;
   }
 
   public update(kart: KartPhysicsState, dt: number): void {
@@ -54,6 +61,14 @@ export class ChaseCamera {
     }
 
     this.camera.position.copy(this.currentCamPos);
+
+    if (this.shakeTimer > 0) {
+      this.shakeTimer -= dt;
+      const decay = Math.max(0, this.shakeTimer / 0.35);
+      this.camera.position.x += (Math.random() - 0.5) * this.shakeIntensity * decay;
+      this.camera.position.y += (Math.random() - 0.5) * this.shakeIntensity * decay;
+    }
+
     this.camera.lookAt(this.currentTarget);
 
     // 2. Corner banking tilt

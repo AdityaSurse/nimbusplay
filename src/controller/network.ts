@@ -10,10 +10,14 @@ import {
   type JoinRoomAck, 
   type PeerStatusUpdate, 
   type PingMessage, 
-  type PongMessage 
+  type PongMessage,
+  type WebRtcSignalMessage,
+  createMessage
 } from '../shared/protocol.js';
+import { NimbusDataChannelPeer } from '../shared/webrtc.js';
 
 export type ControllerNetworkStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
+export type TransportType = 'websocket' | 'webrtc';
 
 export interface ControllerNetworkCallbacks {
   onStatusChange: (status: ControllerNetworkStatus, details?: string) => void;
@@ -21,6 +25,7 @@ export interface ControllerNetworkCallbacks {
   onConsoleStatus: (connected: boolean) => void;
   onMessage: (message: NimbusNetworkMessage) => void;
   onLatencyUpdate: (rttMs: number) => void;
+  onTransportChange?: (transport: TransportType) => void;
 }
 
 export class ControllerNetworkClient {
@@ -32,6 +37,8 @@ export class ControllerNetworkClient {
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private isExplicitlyClosed = false;
+  private rtcPeer: NimbusDataChannelPeer | null = null;
+  private currentTransport: TransportType = 'websocket';
 
   constructor(wsUrl: string, roomId: string, callbacks: ControllerNetworkCallbacks) {
     this.wsUrl = wsUrl;
@@ -80,9 +87,20 @@ export class ControllerNetworkClient {
     };
   }
 
+  public getTransportType(): TransportType {
+    return this.currentTransport;
+  }
+
   public send(msg: NimbusNetworkMessage): void {
+    const raw = JSON.stringify(msg);
+    // Fast path: try WebRTC p2p DataChannel
+    if (this.rtcPeer && this.rtcPeer.isOpen()) {
+      const ok = this.rtcPeer.send(raw);
+      if (ok) return;
+    }
+    // Fallback: WebSocket relay
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(JSON.stringify(msg));
+      this.socket.send(raw);
     }
   }
 
@@ -96,6 +114,9 @@ export class ControllerNetworkClient {
   public disconnect(): void {
     this.isExplicitlyClosed = true;
     this.stopHeartbeat();
+    this.rtcPeer?.close();
+    this.rtcPeer = null;
+    this.setTransport('websocket');
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -105,6 +126,45 @@ export class ControllerNetworkClient {
       this.socket = null;
     }
     this.callbacks.onStatusChange('disconnected', 'Explicitly disconnected');
+  }
+
+  private setTransport(t: TransportType): void {
+    if (this.currentTransport !== t) {
+      this.currentTransport = t;
+      this.callbacks.onTransportChange?.(t);
+    }
+  }
+
+  private initWebRtc(): void {
+    if (!NimbusDataChannelPeer.isSupported()) return;
+    this.rtcPeer?.close();
+    this.rtcPeer = new NimbusDataChannelPeer('controller', {
+      sendSignal: (signal) => {
+        const msg = createMessage<WebRtcSignalMessage>({
+          type: 'RTC_SIGNAL',
+          fromRole: 'controller',
+          signal
+        });
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+          this.socket.send(JSON.stringify(msg));
+        }
+      },
+      onOpen: () => {
+        this.setTransport('webrtc');
+      },
+      onClose: () => {
+        this.setTransport('websocket');
+      },
+      onMessage: (raw) => {
+        try {
+          const parsed = JSON.parse(raw) as NimbusNetworkMessage;
+          this.handleMessage(parsed);
+        } catch { /* ignore */ }
+      }
+    });
+    this.rtcPeer.start().catch(() => {
+      this.setTransport('websocket');
+    });
   }
 
   private sendJoinRoom(): void {
@@ -129,13 +189,32 @@ export class ControllerNetworkClient {
         const ack = msg as JoinRoomAck;
         if (ack.success) {
           this.callbacks.onRoomJoined(ack.roomId, ack.peerConnected);
+          if (ack.peerConnected) {
+            this.initWebRtc();
+          }
         }
         break;
       }
 
       case 'PEER_STATUS': {
         const status = msg as PeerStatusUpdate;
-        this.callbacks.onConsoleStatus(status.status === 'connected');
+        const connected = status.status === 'connected';
+        this.callbacks.onConsoleStatus(connected);
+        if (connected) {
+          this.initWebRtc();
+        } else {
+          this.rtcPeer?.close();
+          this.rtcPeer = null;
+          this.setTransport('websocket');
+        }
+        break;
+      }
+
+      case 'RTC_SIGNAL': {
+        const rtcMsg = msg as WebRtcSignalMessage;
+        if (rtcMsg.fromRole === 'console' && this.rtcPeer) {
+          this.rtcPeer.handleSignal(rtcMsg.signal);
+        }
         break;
       }
 

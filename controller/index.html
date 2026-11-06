@@ -113,7 +113,7 @@
   </header>
 
   <!-- Main Controller Viewport -->
-  <main class="flex flex-col relative w-full pt-14 pb-safe bg-surface flex-1">
+  <main class="flex flex-col relative w-full pt-14 pb-20 bg-surface flex-1">
     
     <!-- Quick Status & Sensor Info Card -->
     <div class="px-4 py-2.5 flex items-center justify-between bg-surface-container-lowest/90 backdrop-blur-md rounded-2xl mx-4 mb-2.5 shadow-[0_4px_16px_rgba(120,140,160,0.12)]">
@@ -140,6 +140,9 @@
           </div>
           <span class="text-[11px] font-bold text-on-surface">95%</span>
         </div>
+        <button id="btn-open-diagnostics" class="p-1.5 rounded-full bg-surface-container-high text-primary hover:bg-surface-container-highest active:scale-95 transition-transform" title="Controller Diagnostics" aria-label="Controller Diagnostics">
+          <span class="material-symbols-outlined text-[18px]">build_circle</span>
+        </button>
       </div>
     </div>
 
@@ -462,6 +465,147 @@
         <button id="btn-confirm-calibration" class="w-full py-3 bg-gradient-to-r from-primary to-primary-container text-white font-black text-sm uppercase tracking-wider rounded-2xl shadow-lg active:scale-95 transition-transform cursor-pointer">
           CALIBRATE & RACE
         </button>
+      </div>
+    </div>
+
+    <!-- Persistent Quick Game Controls Bar (Accessible in Portrait and Landscape) -->
+    <nav id="persistent-game-controls" class="fixed bottom-0 inset-x-0 z-40 bg-surface-container-lowest/90 backdrop-blur-lg border-t border-slate-200/80 px-4 py-2 flex items-center justify-around shadow-[0_-4px_16px_rgba(0,0,0,0.06)] pb-safe">
+      <button id="ctrl-btn-pause" class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-2xl bg-primary text-white font-black text-xs shadow-md active:scale-95 transition-transform min-w-[92px] min-h-[44px]">
+        <span id="ctrl-pause-icon" class="material-symbols-outlined text-[18px]">pause</span>
+        <span id="ctrl-pause-text">PAUSE</span>
+      </button>
+      <button id="ctrl-btn-switch" class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-2xl bg-surface-container-high text-on-surface font-black text-xs shadow-sm active:scale-95 transition-transform min-w-[92px] min-h-[44px]">
+        <span class="material-symbols-outlined text-[18px] text-primary">grid_view</span>
+        <span>SWITCH</span>
+      </button>
+      <button id="ctrl-btn-menu" class="flex items-center justify-center gap-1.5 px-4 py-2 rounded-2xl bg-slate-100 text-slate-700 font-black text-xs border border-slate-300 shadow-sm active:scale-95 transition-transform min-w-[92px] min-h-[44px]">
+        <span class="material-symbols-outlined text-[18px]">home</span>
+        <span>MENU</span>
+      </button>
+    </nav>
+
+    <!-- Mobile Switch Game Drawer / Modal -->
+    <div id="ctrl-switch-drawer" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex-col items-center justify-end p-4">
+      <div class="bg-surface-container-lowest rounded-3xl p-5 shadow-2xl max-w-md w-full flex flex-col gap-3 border border-white/40 mb-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[22px]">grid_view</span>
+            <span class="text-sm font-black uppercase text-on-surface">Select Game</span>
+          </div>
+          <button id="btn-close-drawer" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+        <div class="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto">
+          <button data-switch-game="fruitNinja" class="w-full p-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-400 text-white font-black text-sm flex items-center gap-3 shadow active:scale-98">
+            <span class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center font-bold">1</span>
+            <span>Fruit Ninja</span>
+          </button>
+          <button data-switch-game="alienAttack" class="w-full p-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-green-400 text-white font-black text-sm flex items-center gap-3 shadow active:scale-98">
+            <span class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center font-bold">2</span>
+            <span>Alien Attack</span>
+          </button>
+          <button data-switch-game="shootingRange" class="w-full p-3 rounded-2xl bg-gradient-to-r from-blue-600 to-sky-400 text-white font-black text-sm flex items-center gap-3 shadow active:scale-98">
+            <span class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center font-bold">3</span>
+            <span>Shooting Range</span>
+          </button>
+          <button data-switch-game="sketch" class="w-full p-3 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-500 text-white font-black text-sm flex items-center gap-3 shadow active:scale-98">
+            <span class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center font-bold">4</span>
+            <span>Sketch</span>
+          </button>
+          <button data-switch-game="turboCircuit" class="w-full p-3 rounded-2xl bg-gradient-to-r from-red-500 to-teal-500 text-white font-black text-sm flex items-center gap-3 shadow active:scale-98">
+            <span class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center font-bold">5</span>
+            <span>Turbo Circuit</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controller Test Diagnostic Screen Modal -->
+    <div id="controller-test-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+      <div class="bg-surface rounded-3xl w-full max-w-sm max-h-[90vh] overflow-y-auto p-5 shadow-2xl flex flex-col gap-4 border border-outline-variant/40">
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[22px]">videogame_asset</span>
+            <h3 class="font-black text-base text-on-surface">Controller Diagnostics</h3>
+          </div>
+          <button id="btn-close-diagnostics" class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-tertiary">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+
+        <!-- Live Telemetry Card -->
+        <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col gap-2">
+          <div class="flex items-center justify-between text-xs font-bold text-tertiary">
+            <span>LIVE ANGLES & TILT</span>
+            <span id="diag-transport-pill" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 uppercase font-black">WEBSOCKET</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-surface rounded-xl p-2 border border-outline-variant/30">
+              <div class="text-[10px] text-tertiary font-bold">PITCH (X)</div>
+              <div id="diag-val-pitch" class="text-sm font-black text-primary">0.0°</div>
+            </div>
+            <div class="bg-surface rounded-xl p-2 border border-outline-variant/30">
+              <div class="text-[10px] text-tertiary font-bold">ROLL (Y)</div>
+              <div id="diag-val-roll" class="text-sm font-black text-primary">0.0°</div>
+            </div>
+            <div class="bg-surface rounded-xl p-2 border border-outline-variant/30">
+              <div class="text-[10px] text-tertiary font-bold">YAW (Z)</div>
+              <div id="diag-val-yaw" class="text-sm font-black text-primary">0.0°</div>
+            </div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-tertiary px-1 pt-1">
+            <span>Latency / RTT: <strong id="diag-rtt-val" class="text-on-surface">-- ms</strong></span>
+            <span>Frames: <strong id="diag-frames-val" class="text-on-surface">#0</strong></span>
+          </div>
+        </div>
+
+        <!-- Active Buttons Tester -->
+        <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col gap-2">
+          <span class="text-xs font-bold text-tertiary">BUTTON CONTACT MATRIX</span>
+          <div class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-black">
+            <div id="diag-btn-a" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">A</div>
+            <div id="diag-btn-b" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">B</div>
+            <div id="diag-btn-up" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">UP</div>
+            <div id="diag-btn-down" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">DOWN</div>
+            <div id="diag-btn-left" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">LEFT</div>
+            <div id="diag-btn-right" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">RIGHT</div>
+            <div id="diag-btn-home" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">HOME</div>
+            <div id="diag-btn-recenter" class="p-1.5 rounded-lg bg-surface text-tertiary border border-outline-variant/30 transition-colors">CENTER</div>
+          </div>
+        </div>
+
+        <!-- Haptic Waveform Test Triggers -->
+        <div class="bg-surface-container-low rounded-2xl p-3 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-tertiary">HAPTIC WAVEFORMS</span>
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-on-surface">
+              <input type="checkbox" id="diag-toggle-haptics" checked class="accent-primary" />
+              <span>Enabled</span>
+            </label>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <button data-test-haptic="click" class="p-2 rounded-xl bg-surface text-primary font-bold text-xs shadow-sm active:scale-95 border border-outline-variant/40">
+              Click
+            </button>
+            <button data-test-haptic="slice" class="p-2 rounded-xl bg-surface text-primary font-bold text-xs shadow-sm active:scale-95 border border-outline-variant/40">
+              Slice
+            </button>
+            <button data-test-haptic="laser" class="p-2 rounded-xl bg-surface text-primary font-bold text-xs shadow-sm active:scale-95 border border-outline-variant/40">
+              Laser
+            </button>
+            <button data-test-haptic="target_hit" class="p-2 rounded-xl bg-surface text-primary font-bold text-xs shadow-sm active:scale-95 border border-outline-variant/40">
+              Target Hit
+            </button>
+            <button data-test-haptic="kart_boost" class="p-2 rounded-xl bg-surface text-primary font-bold text-xs shadow-sm active:scale-95 border border-outline-variant/40">
+              Boost
+            </button>
+            <button data-test-haptic="wall_bump" class="p-2 rounded-xl bg-surface text-primary font-bold text-xs shadow-sm active:scale-95 border border-outline-variant/40">
+              Wall Bump
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 

@@ -17,6 +17,7 @@ import { DojoBackdrop } from './dojo-backdrop.js';
 import { FRUIT_DEFS, type FruitType } from './fruit-graphics.js';
 import { audioManager } from '../../audio/audio-manager.js';
 import { BUTTON_MASKS } from '../../../shared/protocol.js';
+import { GameEndModal } from '../common/game-end-modal.js';
 
 export class SlicePartyGame implements IGame {
   public readonly id = 'fruitNinja';
@@ -25,6 +26,7 @@ export class SlicePartyGame implements IGame {
   private app: Application | null = null;
   private gameStage: Container = new Container();
   private options: GameOptions | null = null;
+  private endModal: GameEndModal | null = null;
 
   // Layered Subsystems
   private backdrop!: DojoBackdrop;
@@ -89,6 +91,8 @@ export class SlicePartyGame implements IGame {
       onExit: () => options.onExitToMenu()
     });
     this.gameStage.addChild(this.hud.container);
+
+    this.endModal = new GameEndModal(container);
 
     audioManager.initOnGesture();
     audioManager.playLaunchChime();
@@ -165,6 +169,9 @@ export class SlicePartyGame implements IGame {
     this.isGameOver = true;
     if (this.comboTimer) clearTimeout(this.comboTimer);
 
+    this.endModal?.destroy();
+    this.endModal = null;
+
     this.entityManager.clear();
     this.splatters.clear();
     this.particles.clear();
@@ -176,6 +183,14 @@ export class SlicePartyGame implements IGame {
       canvas.remove();
       this.app = null;
     }
+  }
+
+  public restart(): void {
+    this.restartGame();
+  }
+
+  public exit(): void {
+    this.options?.onExitToMenu();
   }
 
   private testFruitCollisions(p1: { x: number; y: number }, p2: { x: number; y: number }): void {
@@ -242,6 +257,13 @@ export class SlicePartyGame implements IGame {
       this.hud?.addStrike();
     }
     this.isGameOver = true;
+    this.endModal?.show({
+      title: 'GAME OVER',
+      score: this.hud?.getScore() ?? 0,
+      accentColor: '#ea580c',
+      onRestart: () => this.restartGame(),
+      onExit: () => this.exit()
+    });
   }
 
   private handleFruitMissed(_fruit: FruitEntity): void {
@@ -251,6 +273,13 @@ export class SlicePartyGame implements IGame {
     this.options?.sendHaptic([40, 30, 40]);
     if (strikes >= 3) {
       this.isGameOver = true;
+      this.endModal?.show({
+        title: 'GAME OVER',
+        score: this.hud?.getScore() ?? 0,
+        accentColor: '#ea580c',
+        onRestart: () => this.restartGame(),
+        onExit: () => this.exit()
+      });
     }
   }
 
@@ -291,6 +320,7 @@ export class SlicePartyGame implements IGame {
   }
 
   private restartGame(): void {
+    this.endModal?.hide();
     this.entityManager.clear();
     this.splatters.clear();
     this.particles.clear();

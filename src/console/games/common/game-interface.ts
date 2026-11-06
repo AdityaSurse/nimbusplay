@@ -31,6 +31,8 @@ export interface IGame {
   render(): void;
   pause(): void;
   resume(): void;
+  restart(): void;
+  exit(): void;
   destroy(): void;
 }
 
