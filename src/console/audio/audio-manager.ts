@@ -90,32 +90,16 @@ export class AudioManager {
     gameSfx.playLaserFire();
   }
 
-  public playChargedBlast(): void {
-    gameSfx.playChargedBlast();
-  }
-
-  public playChargeHum(progress: number): void {
-    gameSfx.playChargeHum(progress);
-  }
-
   public playAlienExplosion(): void {
     gameSfx.playAlienExplosion();
   }
 
-  public playBossHit(): void {
-    gameSfx.playBossHit();
+  public playBullseyeBell(): void {
+    gameSfx.playBullseyeBell();
   }
 
-  public playShieldDeflect(): void {
-    gameSfx.playShieldDeflect();
-  }
-
-  public playPowerupCollect(): void {
-    gameSfx.playPowerupCollect();
-  }
-
-  public playBowlingPinHit(): void {
-    gameSfx.playBowlingPinHit();
+  public playCarnivalPop(): void {
+    gameSfx.playCarnivalPop();
   }
 }
 

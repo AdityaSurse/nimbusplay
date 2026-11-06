@@ -466,8 +466,8 @@ flowchart LR
     classDef active fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#1e40af;
     classDef future fill:#f8fafc,stroke:#64748b,stroke-width:2px,color:#334155;
 
-    R0["✔ Phase R0: Reference Spec & Master Architecture"]:::done --> R1["Phase R1: Menu 4-Tile Grid & Direct QR Dock"]:::active
-    R1 --> R2["Phase R2: Controller Landscape Flight Mode"]:::future
+    R0["✔ Phase R0: Reference Spec & Master Architecture"]:::done --> R1["✔ Phase R1: Menu 4-Tile Grid & Direct QR Dock"]:::done
+    R1 --> R2["Phase R2: Controller Landscape Flight Mode"]:::active
     R2 --> R3["Phase R3: Fruit Ninja Cedar Wall & Slicing Remake"]:::future
     R3 --> R4["Phase R4: Alien Attack 3D Rail Cosmic Shooter"]:::future
     R4 --> R5["Phase R5: Shooting Range Carnival Targets"]:::future
@@ -796,10 +796,12 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [x] Author comprehensive `docs/GAME_REFERENCE.md` detailing all 4 games and comparison matrix.
   - [x] Update `docs/ARCHITECTURE.md` and `README.md` with colorful Mermaid diagrams and updated roadmap.
   - [x] Deprecate Star Defender and Bowl Blitz from the active plan.
-- [ ] **Phase R1: Channel Matrix Remake & Direct QR Dock**
-  - [ ] Reconfigure 4×3 Channel Grid so top row houses 4 colored gradient tiles (Fruit Ninja, Alien Attack, Shooting Range, Sketch).
-  - [ ] Render 8 frosted glass empty channel cards for lower rows.
-  - [ ] Embed live pairing QR code canvas directly into the bottom-right shelf dock.
+- [x] **Phase R1: Channel Matrix Remake & Direct QR Dock**
+  - [x] Reconfigure 4×3 Channel Grid so top row houses 4 colored gradient tiles (Fruit Ninja, Alien Attack, Shooting Range, Sketch).
+  - [x] Render 8 frosted glass empty channel cards for lower rows.
+  - [x] Embed live pairing QR code canvas directly into the bottom-right shelf dock.
+  - [x] Hand pointer displays cyan Player 1 badge with white "1".
+  - [x] Remove legacy Star Defender and Bowl Blitz channels and code.
 - [ ] **Phase R2: Controller Landscape Flight Mode & Layout Switcher**
   - [ ] Implement `SET_LAYOUT` protocol message (`mode: 'portrait' | 'landscape'`).
   - [ ] Build two-handed horizontal landscape flight yoke UI for Alien Attack.

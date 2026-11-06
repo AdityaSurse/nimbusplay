@@ -6,8 +6,6 @@
 
 import type { IGame, GameInputState, GameOptions } from './common/game-interface.js';
 import { SlicePartyGame } from './slice-party/slice-party-game.js';
-import { StarDefenderGame } from './star-defender/star-defender-game.js';
-import { BowlBlitzGame } from './bowl-blitz/bowl-blitz-game.js';
 
 export class GameManager {
   private activeGame: IGame | null = null;
@@ -35,16 +33,12 @@ export class GameManager {
     }
 
     let game: IGame | null = null;
-    if (gameId === 'sliceParty') {
+    if (gameId === 'fruitNinja' || gameId === 'sliceParty') {
       game = new SlicePartyGame();
-    } else if (gameId === 'starDefender') {
-      game = new StarDefenderGame();
-    } else if (gameId === 'bowlBlitz') {
-      game = new BowlBlitzGame();
     }
 
     if (!game) {
-      console.warn(`[GameManager] Unknown game id: ${gameId}`);
+      console.warn(`[GameManager] Game not yet loaded or unknown id: ${gameId}`);
       return false;
     }
 

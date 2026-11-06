@@ -17,89 +17,72 @@ export interface GameMetadata {
 }
 
 export const GAMES_CATALOG: Record<string, GameMetadata> = {
-  sliceParty: {
-    id: 'sliceParty',
-    title: 'Slice Party',
-    category: 'Party / Motion Action',
-    rating: 'E (Everyone)',
-    revision: 'Rev 1.02',
-    bannerGradient: 'linear-gradient(135deg, #ffe6b3 0%, #ffedd5 50%, #d6f4ff 100%)',
-    description: 'Fling, flick, and slice flying exotic melons, citrus wheels, and berries with precision wand slashing. Watch out for volatile party bombs!',
-    artHtml: CHANNEL_ART.sliceParty
-  },
-  starDefender: {
-    id: 'starDefender',
-    title: 'Star Defender',
-    category: 'Arcade / Aim & Shoot',
+  fruitNinja: {
+    id: 'fruitNinja',
+    title: 'Fruit Ninja',
+    category: 'Action / Slice Arcade',
     rating: 'E (Everyone)',
     revision: 'Rev 1.00',
-    bannerGradient: 'linear-gradient(180deg, #1b2b3a 0%, #101b24 60%, #080d12 100%)',
-    description: 'Aim crosshairs at invading alien fighter fleets with the pointer and unleash rapid laser salvos with the B trigger to defend the orbital ring.',
-    artHtml: CHANNEL_ART.starDefender
+    bannerGradient: 'linear-gradient(145deg, #ea580c 0%, #f59e0b 60%, #facc15 100%)',
+    description: 'Slash flying watermelons, citrus wheels, and berries with fast wand sweeps! Slice multi-fruit combos for bonus points, but beware of party bombs.',
+    artHtml: CHANNEL_ART.fruitNinja
   },
-  bowlBlitz: {
-    id: 'bowlBlitz',
-    title: 'Bowl Blitz',
-    category: 'Sports / Motion Bowling',
+  alienAttack: {
+    id: 'alienAttack',
+    title: 'Alien Attack',
+    category: 'Arcade / 3D Rail Shooter',
     rating: 'E (Everyone)',
-    revision: 'Rev 1.05',
-    bannerGradient: 'linear-gradient(135deg, #e3efff 0%, #cce0f5 50%, #b3cde3 100%)',
-    description: 'Hold B, swing your arm forward and release at peak acceleration. Add wrist spin to curve the bowling ball directly into the pocket for a strike!',
-    artHtml: CHANNEL_ART.bowlBlitz
+    revision: 'Rev 1.00',
+    bannerGradient: 'linear-gradient(145deg, #15803d 0%, #16a34a 50%, #4ade80 100%)',
+    description: 'Pilot your delta starship through cosmic nebulae into deep space! Steer with horizontal phone tilt and blast descending alien saucers with dual plasma lasers.',
+    artHtml: CHANNEL_ART.alienAttack
+  },
+  shootingRange: {
+    id: 'shootingRange',
+    title: 'Shooting Range',
+    category: 'Carnival / Precision Target',
+    rating: 'E (Everyone)',
+    revision: 'Rev 1.00',
+    bannerGradient: 'linear-gradient(145deg, #1d4ed8 0%, #2563eb 50%, #38bdf8 100%)',
+    description: 'Aim your wand pointer at pop-up bullseye targets across sunny carnival hills! Tap A for hitscan shots and rack up high scores against the clock.',
+    artHtml: CHANNEL_ART.shootingRange
+  },
+  sketch: {
+    id: 'sketch',
+    title: 'Sketch',
+    category: 'Creative / Digital Easel',
+    rating: 'E (Everyone)',
+    revision: 'Rev 1.00',
+    bannerGradient: 'linear-gradient(145deg, #7e22ce 0%, #a855f7 50%, #ec4899 100%)',
+    description: 'An interactive drawing canvas! Pick vibrant ink colors from the palette and paint smooth vector curves by holding the A button.',
+    artHtml: CHANNEL_ART.sketch
   }
 };
 
 export function renderChannelsGridHtml(): string {
   return `
-    <!-- Slot 1: Slice Party -->
-    <div class="channel-tile group" data-action="launch" data-game="sliceParty">
-      <div class="tile-specular-glare"></div>
-      ${CHANNEL_ART.sliceParty}
-      <div class="tile-bottom-banner"><span class="tile-bottom-text">Disc Channel</span></div>
+    <!-- Top Row: 4 Colorful Glossy Game Tiles -->
+    <div class="channel-tile game-tile group" data-action="launch" data-game="fruitNinja" data-slot="1">
+      ${CHANNEL_ART.fruitNinja}
     </div>
 
-    <!-- Slot 2: Star Defender -->
-    <div class="channel-tile group" data-action="launch" data-game="starDefender">
-      <div class="tile-specular-glare"></div>
-      ${CHANNEL_ART.starDefender}
-      <div class="tile-bottom-banner"><span class="tile-bottom-text">Arcade</span></div>
+    <div class="channel-tile game-tile group" data-action="launch" data-game="alienAttack" data-slot="2">
+      ${CHANNEL_ART.alienAttack}
     </div>
 
-    <!-- Slot 3: Bowl Blitz -->
-    <div class="channel-tile group" data-action="launch" data-game="bowlBlitz">
-      <div class="tile-specular-glare"></div>
-      ${CHANNEL_ART.bowlBlitz}
-      <div class="tile-bottom-banner"><span class="tile-bottom-text">Sports Hub</span></div>
+    <div class="channel-tile game-tile group" data-action="launch" data-game="shootingRange" data-slot="3">
+      ${CHANNEL_ART.shootingRange}
     </div>
 
-    <!-- Slot 4: Settings -->
-    <div class="channel-tile group" data-action="settings">
-      <div class="tile-specular-glare"></div>
-      ${CHANNEL_ART.settings}
-      <div class="tile-bottom-banner"><span class="tile-bottom-text">System v3.4</span></div>
+    <div class="channel-tile game-tile group" data-action="launch" data-game="sketch" data-slot="4">
+      ${CHANNEL_ART.sketch}
     </div>
 
-    <!-- Slot 5: Controller Sync -->
-    <div class="channel-tile group" data-action="pairing">
-      <div class="tile-specular-glare"></div>
-      ${CHANNEL_ART.controllerSync}
-      <div class="tile-bottom-banner"><span class="tile-bottom-text">Wireless Link</span></div>
-    </div>
-
-    <!-- Slot 6: Pointer Tuning -->
-    <div class="channel-tile group" data-action="calibration">
-      <div class="tile-specular-glare"></div>
-      ${CHANNEL_ART.calibration}
-      <div class="tile-bottom-banner"><span class="tile-bottom-text">Sensor Bar</span></div>
-    </div>
-
-    <!-- Slots 7 to 12: Empty Slots -->
-    ${Array.from({ length: 6 }).map((_, i) => `
-      <div class="channel-tile empty-slot group" data-slot="${i + 7}">
-        <div class="tile-specular-glare"></div>
-        ${CHANNEL_ART.emptySlot}
+    <!-- Rows 2 & 3: 8 Faint Ghost Tiles -->
+    ${Array.from({ length: 8 }).map((_, i) => `
+      <div class="channel-tile ghost-tile empty-slot group" data-slot="${i + 5}">
+        ${CHANNEL_ART.ghostTile}
       </div>
     `).join('')}
   `;
 }
-

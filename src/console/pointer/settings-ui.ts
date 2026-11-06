@@ -22,16 +22,10 @@ export class SettingsUiBinder {
     const sliderSens = document.getElementById('setting-sensitivity') as HTMLInputElement | null;
     const sliderSmooth = document.getElementById('setting-smoothing') as HTMLInputElement | null;
     const sliderDead = document.getElementById('setting-deadzone') as HTMLInputElement | null;
-    const toggleAimAssist = document.getElementById('setting-aim-assist') as HTMLInputElement | null;
-    const toggleBowlingMeter = document.getElementById('setting-bowling-meter') as HTMLInputElement | null;
 
     const labelSens = document.getElementById('label-val-sensitivity');
     const labelSmooth = document.getElementById('label-val-smoothing');
     const labelDead = document.getElementById('label-val-deadzone');
-    const sliderBgAimAssist = document.getElementById('slider-aim-assist');
-    const knobAimAssist = document.getElementById('knob-aim-assist');
-    const sliderBgBowlingMeter = document.getElementById('slider-bowling-meter');
-    const knobBowlingMeter = document.getElementById('knob-bowling-meter');
 
     const btnReset = document.getElementById('btn-settings-reset');
     const btnRecenter = document.getElementById('btn-settings-recenter');
@@ -45,21 +39,6 @@ export class SettingsUiBinder {
     if (labelSens) labelSens.textContent = `${cur.sensitivity.toFixed(1)}x`;
     if (labelSmooth) labelSmooth.textContent = `${cur.minCutoff.toFixed(1)} Hz`;
     if (labelDead) labelDead.textContent = `${cur.deadZone.toFixed(1)} deg/s`;
-
-    const updateAimAssistVisual = (enabled: boolean) => {
-      if (toggleAimAssist) toggleAimAssist.checked = enabled;
-      if (sliderBgAimAssist) sliderBgAimAssist.style.backgroundColor = enabled ? '#006688' : '#bdc8d0';
-      if (knobAimAssist) knobAimAssist.style.left = enabled ? '22px' : '3px';
-    };
-
-    const updateBowlingMeterVisual = (enabled: boolean) => {
-      if (toggleBowlingMeter) toggleBowlingMeter.checked = enabled;
-      if (sliderBgBowlingMeter) sliderBgBowlingMeter.style.backgroundColor = enabled ? '#006688' : '#bdc8d0';
-      if (knobBowlingMeter) knobBowlingMeter.style.left = enabled ? '22px' : '3px';
-    };
-
-    updateAimAssistVisual(cur.aimAssist ?? true);
-    updateBowlingMeterVisual(cur.bowlingPowerMeter ?? false);
 
     sliderSens?.addEventListener('input', () => {
       const val = parseFloat(sliderSens.value);
@@ -82,20 +61,6 @@ export class SettingsUiBinder {
       pipeline.updateSettings({ deadZone: val });
     });
 
-    toggleAimAssist?.addEventListener('change', () => {
-      const enabled = toggleAimAssist.checked;
-      updateAimAssistVisual(enabled);
-      settingsManager.update({ aimAssist: enabled });
-      pipeline.updateSettings({ aimAssist: enabled });
-    });
-
-    toggleBowlingMeter?.addEventListener('change', () => {
-      const enabled = toggleBowlingMeter.checked;
-      updateBowlingMeterVisual(enabled);
-      settingsManager.update({ bowlingPowerMeter: enabled });
-      pipeline.updateSettings({ bowlingPowerMeter: enabled });
-    });
-
     btnReset?.addEventListener('click', () => {
       const def = settingsManager.resetToDefaults();
       if (sliderSens) sliderSens.value = def.sensitivity.toString();
@@ -104,8 +69,6 @@ export class SettingsUiBinder {
       if (labelSens) labelSens.textContent = `${def.sensitivity.toFixed(1)}x`;
       if (labelSmooth) labelSmooth.textContent = `${def.minCutoff.toFixed(1)} Hz`;
       if (labelDead) labelDead.textContent = `${def.deadZone.toFixed(1)} deg/s`;
-      updateAimAssistVisual(def.aimAssist ?? true);
-      updateBowlingMeterVisual(def.bowlingPowerMeter ?? false);
       pipeline.updateSettings(def);
     });
 
@@ -117,4 +80,3 @@ export class SettingsUiBinder {
     btnClose?.addEventListener('click', () => callbacks.closeSettings());
   }
 }
-

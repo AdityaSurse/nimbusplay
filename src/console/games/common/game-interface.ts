@@ -1,6 +1,6 @@
 /**
  * NimbusPlay — Standard Game Interface & Contracts
- * Every game module (Slice Party, Star Defender, Bowl Blitz) implements IGame.
+ * Every game module (Fruit Ninja, Alien Attack, Shooting Range, Sketch) implements IGame.
  * Strictly typed with zero `any`.
  */
 

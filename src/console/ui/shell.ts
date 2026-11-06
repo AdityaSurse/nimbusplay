@@ -32,6 +32,7 @@ export class ConsoleShell {
     this.activeRoomCode = roomCode;
     this.pairingUrl = url;
     this.renderPairingQr();
+    this.renderDockQr();
   }
 
   public openLaunchDialog(gameId: string): void {
@@ -89,10 +90,7 @@ export class ConsoleShell {
 
   public openSettingsScreen(): void {
     const overlay = document.getElementById('settings-overlay');
-    if (overlay) {
-      overlay.classList.add('open');
-      audioManager.playSelect();
-    }
+    if (overlay) { overlay.classList.add('open'); audioManager.playSelect(); }
   }
 
   public closeSettingsScreen(): void {
@@ -103,10 +101,7 @@ export class ConsoleShell {
 
   public openCalibrationScreen(): void {
     const overlay = document.getElementById('calibration-overlay');
-    if (overlay) {
-      overlay.classList.add('open');
-      audioManager.playSelect();
-    }
+    if (overlay) { overlay.classList.add('open'); audioManager.playSelect(); }
   }
 
   public closeCalibrationScreen(): void {
@@ -195,12 +190,15 @@ export class ConsoleShell {
       });
     });
 
-    // Pagination Bumpers
-    const prevBtn = document.getElementById('btn-page-prev');
-    const nextBtn = document.getElementById('btn-page-next');
+    const dockQr = document.getElementById('dock-qr-link');
+    dockQr?.addEventListener('click', () => this.openPairingScreen());
 
-    prevBtn?.addEventListener('click', () => this.changePage(-1));
-    nextBtn?.addEventListener('click', () => this.changePage(1));
+    document.getElementById('btn-page-prev')?.addEventListener('click', () => this.changePage(-1));
+    document.getElementById('btn-page-next')?.addEventListener('click', () => this.changePage(1));
+  }
+
+  public renderDockQr(): void {
+    this.drawQr('dock-qr-canvas', 'dock-qr-code', 72);
   }
 
   public renderReconnectQr(): void {
@@ -215,7 +213,7 @@ export class ConsoleShell {
 
   private drawQr(canvasId: string, codeId: string, width: number): void {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null;
-    const codeEl = document.getElementById(codeId);
+    const codeEl = codeId ? document.getElementById(codeId) : null;
     if (codeEl) codeEl.textContent = this.activeRoomCode;
     if (canvas && this.pairingUrl) {
       QRCode.toCanvas(canvas, this.pairingUrl, {
@@ -230,17 +228,12 @@ export class ConsoleShell {
 
   private initKeyboardShortcuts(): void {
     window.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key.toLowerCase() === 'h') {
-        this.togglePauseOverlay();
-      } else if (e.key.toLowerCase() === 'c') {
-        this.openCalibrationScreen();
-      } else if (e.key.toLowerCase() === 'p') {
-        this.openPairingScreen();
-      } else if (e.key === 'ArrowLeft') {
-        this.changePage(-1);
-      } else if (e.key === 'ArrowRight') {
-        this.changePage(1);
-      }
+      const key = e.key.toLowerCase();
+      if (e.key === 'Escape' || key === 'h') this.togglePauseOverlay();
+      else if (key === 'c') this.openCalibrationScreen();
+      else if (key === 'p') this.openPairingScreen();
+      else if (e.key === 'ArrowLeft') this.changePage(-1);
+      else if (e.key === 'ArrowRight') this.changePage(1);
     });
   }
 }

@@ -54,9 +54,10 @@ const SLIDES: OnboardingSlide[] = [
     description: 'Launch games directly from the Channel Matrix and immerse yourself in classic motion gaming.',
     icon: 'sports_esports',
     tips: [
-      'Slice Party: Hold B and swing the wand to cut flying fruits',
-      'Star Defender: Aim crosshairs with pointer, tap A or hold B to fire',
-      'Bowl Blitz: Hold B, swing forward, release B to throw with wrist spin'
+      'Fruit Ninja: Hold B and swing the wand to slice flying fruits',
+      'Alien Attack: Hold phone sideways like a flight yoke to steer & shoot',
+      'Shooting Range: Aim crosshairs with pointer, tap A to hit targets',
+      'Sketch: Point at easel and hold A to draw smooth calligraphy'
     ]
   }
 ];

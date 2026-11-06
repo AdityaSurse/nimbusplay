@@ -15,34 +15,6 @@ export class SettingsManager {
     this.currentSettings = this.load();
   }
 
-  public static isAimAssistEnabled(): boolean {
-    if (typeof localStorage === 'undefined') return true;
-    try {
-      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<PointerSettings>;
-        return parsed.aimAssist !== false;
-      }
-    } catch {
-      // Fallback
-    }
-    return true;
-  }
-
-  public static isBowlingPowerMeterEnabled(): boolean {
-    if (typeof localStorage === 'undefined') return false;
-    try {
-      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<PointerSettings>;
-        return parsed.bowlingPowerMeter === true;
-      }
-    } catch {
-      // Fallback
-    }
-    return false;
-  }
-
   public getSettings(): PointerSettings {
     return { ...this.currentSettings };
   }
@@ -84,4 +56,3 @@ export class SettingsManager {
     }
   }
 }
-

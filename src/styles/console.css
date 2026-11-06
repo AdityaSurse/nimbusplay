@@ -31,7 +31,7 @@ html, body {
   max-width: calc(100vh * 16 / 9);
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: linear-gradient(180deg, #f4f6f8 0%, #e3e9ef 100%);
+  background: linear-gradient(180deg, #f8f9fb 0%, #edf0f4 100%);
   box-shadow: 0 0 90px rgba(0, 0, 0, 0.9);
 }
 
@@ -52,8 +52,8 @@ html, body {
   width: 100%;
   height: 38%;
   pointer-events: none;
-  opacity: 0.18;
-  color: var(--color-secondary-fixed);
+  opacity: 0.08;
+  color: #cbd5e1;
   z-index: 1;
 }
 
@@ -242,10 +242,10 @@ html, body {
 /* 4x3 Channel Matrix Grid */
 .channel-viewport {
   position: absolute;
-  top: 80px;
+  top: 84px;
   bottom: 145px;
-  left: 96px;
-  right: 96px;
+  left: 104px;
+  right: 104px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -260,17 +260,14 @@ html, body {
   gap: 20px;
   width: 100%;
   max-width: 1200px;
-  aspect-ratio: 16 / 9.8;
+  aspect-ratio: 16 / 9.6;
 }
 
-/* Channel Card Tile */
+/* Base Channel Card Tile */
 .channel-tile {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 10;
   border-radius: 20px;
-  background: linear-gradient(180deg, var(--color-surface-container-lowest) 0%, var(--color-surface-container-low) 100%);
-  box-shadow: inset 0 2px 0 0 #ffffff, 0 6px 14px rgba(120, 140, 160, 0.22);
-  border: 1px solid var(--color-border-seam);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -278,70 +275,110 @@ html, body {
   outline: 3px solid transparent;
 }
 
+/* 4 Top-Row Playable Game Cards */
+.channel-tile.game-tile {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.04);
+}
+
+.channel-tile.game-tile:hover,
+.channel-tile.game-tile.focused,
+.channel-tile.game-tile.is-hovered {
+  transform: scale(1.05) translateY(-3px);
+  outline: 3.5px solid #3cb4e7;
+  box-shadow: 0 16px 34px rgba(60, 180, 231, 0.38), 0 6px 14px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  animation: tileFloat 3s ease-in-out infinite;
+}
+
+/* Rows 2 & 3: Faint Empty Ghost Tiles */
+.channel-tile.ghost-tile {
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.025);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.channel-tile.ghost-tile:hover,
+.channel-tile.ghost-tile.is-hovered {
+  animation: none;
+  transform: scale(1.015);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+  outline-color: rgba(200, 210, 220, 0.4);
+}
+
+.ghost-tile-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(240, 244, 248, 0.35) 100%);
+}
+
+.ghost-specular-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, transparent 45%);
+}
+
+/* Channel Card Body & Content Cluster */
+.channel-card-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 12px 14px;
+  overflow: hidden;
+}
+
 /* Glass Specular Refraction Layer */
 .tile-specular-glare {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.15) 35%, transparent 65%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.15) 38%, transparent 60%);
   z-index: 5;
 }
 
-/* Focus & Hover State */
-.channel-tile:hover,
-.channel-tile.focused,
-.channel-tile.is-hovered {
-  transform: scale(1.04);
-  outline: 3.5px solid var(--color-primary-container);
-  box-shadow: inset 0 2px 0 0 #ffffff, 0 12px 28px rgba(60, 180, 231, 0.38);
-  z-index: 20;
-  animation: tileFloat 3s ease-in-out infinite;
-}
-
-@keyframes tileFloat {
-  0%, 100% { transform: scale(1.04) translateY(0); }
-  50% { transform: scale(1.04) translateY(-3px); }
-}
-
-/* Channel Title Footer Banner */
-.tile-bottom-banner {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(4px);
+.channel-icon-cluster {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-top: 1px solid rgba(207, 216, 224, 0.6);
-  z-index: 6;
+  z-index: 2;
+  transform: translateY(2px);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.tile-bottom-text {
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-primary);
+.channel-svg-icon {
+  width: 50px;
+  height: 50px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+  transition: transform 0.2s ease;
+}
+
+.channel-tile.game-tile:hover .channel-svg-icon {
+  transform: scale(1.1);
+}
+
+.channel-label-box {
+  z-index: 2;
   text-align: center;
+  width: 100%;
+}
+
+.channel-label-text {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   line-height: 1.2;
-}
-
-/* Empty Tile Slot */
-.channel-tile.empty-slot {
-  background: var(--color-empty-slot);
-  box-shadow: inset 0 3px 6px rgba(120, 140, 160, 0.18);
-  border-color: rgba(207, 216, 224, 0.6);
-}
-
-.channel-tile.empty-slot:hover,
-.channel-tile.empty-slot.is-hovered {
-  animation: none;
-  transform: scale(1.02);
-  outline-color: var(--color-outline-variant);
-  box-shadow: 0 4px 12px rgba(120, 140, 160, 0.2);
+  display: block;
 }
 
 /* Pagination Dots */
@@ -444,12 +481,15 @@ html, body {
 
 /* Center Clock HUD */
 .center-clock-hud {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  transform: translateY(-8px);
+  pointer-events: none;
 }
 
 .clock-date {
@@ -469,6 +509,70 @@ html, body {
   color: var(--color-tertiary);
   font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+/* Bottom-Right Live Pairing QR Dock Card */
+.dock-qr-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px 8px 10px;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(207, 216, 224, 0.9);
+  box-shadow: 0 6px 18px rgba(120, 140, 160, 0.22);
+  text-decoration: none;
+  cursor: pointer !important;
+  transition: transform 0.16s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.16s ease, border-color 0.16s ease;
+  z-index: 10;
+}
+
+.dock-qr-card:hover,
+.dock-qr-card.is-hovered {
+  transform: scale(1.06);
+  box-shadow: 0 10px 26px rgba(60, 180, 231, 0.4);
+  border-color: #3cb4e7;
+}
+
+.dock-qr-canvas-wrap {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.dock-qr-canvas-wrap canvas {
+  width: 72px !important;
+  height: 72px !important;
+  display: block;
+}
+
+.dock-qr-meta {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dock-qr-title {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.dock-qr-code {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #006688;
+  line-height: 1;
 }
 
 /* Modal Overlay Views (Launch Dialog, Pairing, Calibration, Pause) */
@@ -797,8 +901,8 @@ html, body {
 /* Bottom Tray Ambience Audio Button */
 .ambience-pill-btn {
   position: absolute;
-  right: 280px;
-  bottom: 48px;
+  left: 175px;
+  bottom: 50px;
   height: 40px;
   padding: 0 16px;
   border-radius: var(--radius-pill);

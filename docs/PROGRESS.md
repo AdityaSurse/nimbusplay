@@ -27,7 +27,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | Phase | Description | Status | Target Date | Completed Date | Sign-off |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Phase R0** | Reference Analysis, Video Breakdown & Master Architecture | **Complete** | 2026-11-06 | 2026-11-06 | Approved |
-| **Phase R1** | Channel Matrix Remake (4-Tile Top Row) & Direct QR Dock | Not Started | — | — | — |
+| **Phase R1** | Channel Matrix Remake (4-Tile Top Row) & Direct QR Dock | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R2** | Controller Dynamic Layout Mode (Landscape Flight Yoke) | Not Started | — | — | — |
 | **Phase R3** | Game 1: Fruit Ninja (Cedar Planks, `X X X` Strikes & Splatters) | Not Started | — | — | — |
 | **Phase R4** | Game 2: Alien Attack (3D Cosmic Rail Shooter & Dual Thumb) | Not Started | — | — | — |
@@ -311,4 +311,42 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] Landscape flight yoke and two-handed controller model specified for Alien Attack.
   - [x] Direct QR code placement on firmware bottom shelf specified.
   - [x] Assumptions explicitly documented.
+
+---
+
+### Phase R1: Channel Matrix Remake (4-Tile Top Row) & Direct QR Dock
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/console/ui/artwork.ts`: Replaced legacy artwork with 4 glossy gradient game cards and faint ghost tiles matching `/design/reference/reel-menu.png`:
+    - **Fruit Ninja**: Orange to yellow gradient (`#ea580c` to `#facc15`), white watermelon slice SVG, white label.
+    - **Alien Attack**: Green gradient (`#15803d` to `#4ade80`), white alien invader sprite SVG, white label.
+    - **Shooting Range**: Blue gradient (`#1d4ed8` to `#38bdf8`), white concentric target bullseye SVG, white label.
+    - **Sketch**: Purple to pink gradient (`#7e22ce` to `#ec4899`), white artist palette SVG, white label.
+    - **Ghost Tiles**: Faint translucent frosted cards (`rgba(255, 255, 255, 0.48)`) filling rows 2 and 3 (8 ghost slots).
+  - `src/console/ui/catalog.ts`: Restructured 4×3 grid with 4 playable games on top row and 8 empty ghost tiles; catalog updated with rich descriptions and gradient banners.
+  - `src/console/ui/shell.ts`: Added `renderDockQr()` rendering live pairing QR code to `#dock-qr-canvas` in bottom shelf; added one-click QR badge pairing dialog trigger.
+  - `index.html`:
+    - Sculpted bottom shelf updated to feature center digital clock HUD and bottom-right live pairing QR dock badge (`#dock-qr-link`).
+    - Hand pointer updated: Player 1 circular cyan badge (`#3CB4E7`) with bold white "1" rendered cleanly on top of glove cuff layer.
+    - Removed legacy `setting-aim-assist` and `setting-bowling-meter` toggle markup.
+  - `src/styles/console.css`:
+    - Very light white/grey background (`#f8f9fb` to `#edf0f4`) with subtle wave contours (`opacity: 0.08`).
+    - Soft tile shadows (`box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08)`).
+    - Glossy game card styling with specular glare and white typography.
+    - Bottom-right live pairing QR card badge with hover elevation.
+  - **Removed Legacy Code**:
+    - Deleted `src/console/games/star-defender/` and `src/console/games/bowl-blitz/`.
+    - Deleted `tests/star-defender.test.ts` and `tests/bowling.test.ts`.
+    - Deleted `src/console/audio/star-sfx.ts`.
+    - Cleaned legacy audio and pointer settings references.
+- **Verification Criteria**:
+  - [x] Authentic 4-tile top-row channel matrix matching `/design/reference/reel-menu.png`.
+  - [x] Rows 2 & 3 render 8 faint empty ghost tiles.
+  - [x] Hand pointer displays cyan Player 1 badge with white "1".
+  - [x] Live pairing QR code renders directly in the bottom-right corner of the firmware shelf.
+  - [x] Digital clock remains centered on the bottom curved bar.
+  - [x] 27/27 unit tests pass across 7 test suites in <100ms (`npm test`).
+  - [x] TypeScript strict compilation passes with zero errors (`npx tsc --noEmit`).
+  - [x] Production build succeeds in <1.5s (`npm run build`).
+  - [x] All file line counts adhere strictly to guidelines (<250 lines per module).
 

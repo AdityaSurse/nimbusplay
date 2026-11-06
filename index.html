@@ -93,18 +93,12 @@
         </svg>
 
         <div class="tray-content-row">
-          <!-- Left Disk: System Settings & Pairing -->
-          <a href="#" id="disk-settings" class="system-disk-btn" aria-label="System Settings & Controller Pairing">
+          <!-- Left Disk: System Settings & Options -->
+          <a href="#" id="disk-settings" class="system-disk-btn" aria-label="System Settings & Options">
             <div class="system-disk-inner">
-              <span class="material-symbols-outlined" style="font-size: 42px;">settings</span>
+              <span class="material-symbols-outlined" style="font-size: 38px;">settings</span>
             </div>
           </a>
-
-          <!-- Center Live Real-Time Clock HUD -->
-          <div class="center-clock-hud">
-            <span class="clock-date">SUN 11/19</span>
-            <span class="clock-time">14:28</span>
-          </div>
 
           <!-- Ambience Music Mute/Unmute Pill Button -->
           <button id="btn-toggle-ambience" class="ambience-pill-btn" aria-label="Toggle Background Ambience">
@@ -112,12 +106,22 @@
             <span id="ambience-label">Music: On</span>
           </button>
 
-          <!-- Right Disk: Message Board / Pause HUD -->
-          <a href="#" id="disk-messages" class="system-disk-btn" aria-label="Pause Menu / Quick Overlay">
-            <div class="system-disk-inner">
-              <span class="material-symbols-outlined" style="font-size: 42px;">mail</span>
+          <!-- Center Live Real-Time Clock HUD -->
+          <div class="center-clock-hud">
+            <span class="clock-date">SUN 11/19</span>
+            <span class="clock-time">14:28</span>
+          </div>
+
+          <!-- Bottom-Right Live Pairing QR Dock Badge -->
+          <div id="dock-qr-link" class="dock-qr-card" title="Scan with phone camera to connect Wand">
+            <div class="dock-qr-canvas-wrap">
+              <canvas id="dock-qr-canvas" width="72" height="72"></canvas>
             </div>
-          </a>
+            <div class="dock-qr-meta">
+              <span class="dock-qr-title">PAIR PHONE</span>
+              <span id="dock-qr-code" class="dock-qr-code">----</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
@@ -423,34 +427,6 @@
             </div>
           </div>
 
-          <!-- Lead-the-Target Aim Assist Toggle -->
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f9; padding: 12px 16px; border-radius: 12px; border: 1px solid #d8e2ea;">
-            <div>
-              <div style="font-size: 14px; font-weight: 700; color: #111d28;">Lead-the-Target Aim Assist</div>
-              <div style="font-size: 11px; color: #6b7785; font-weight: 600; margin-top: 2px;">Predictive reticle intercept in Star Defender</div>
-            </div>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
-              <input type="checkbox" id="setting-aim-assist" checked style="opacity: 0; width: 0; height: 0;">
-              <span id="slider-aim-assist" style="position: absolute; inset: 0; background-color: #006688; border-radius: 24px; transition: 0.2s;">
-                <span id="knob-aim-assist" style="position: absolute; content: ''; height: 18px; width: 18px; left: 22px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>
-              </span>
-            </label>
-          </div>
-
-          <!-- Bowl Blitz Fallback: Pointer-Aim + Power Meter Toggle -->
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f9; padding: 12px 16px; border-radius: 12px; border: 1px solid #d8e2ea;">
-            <div>
-              <div style="font-size: 14px; font-weight: 700; color: #111d28;">Bowl Blitz: Power Meter Mode</div>
-              <div style="font-size: 11px; color: #6b7785; font-weight: 600; margin-top: 2px;">Pointer-aim & power-meter fallback throw</div>
-            </div>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
-              <input type="checkbox" id="setting-bowling-meter" style="opacity: 0; width: 0; height: 0;">
-              <span id="slider-bowling-meter" style="position: absolute; inset: 0; background-color: #bdc8d0; border-radius: 24px; transition: 0.2s;">
-                <span id="knob-bowling-meter" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>
-              </span>
-            </label>
-          </div>
-
           <!-- Background Audio Ambience Toggle -->
           <div style="display: flex; justify-content: space-between; align-items: center; background: #f0f4f9; padding: 12px 16px; border-radius: 12px; border: 1px solid #d8e2ea;">
             <div>
@@ -590,16 +566,16 @@
 
     <!-- Custom P1 Hand Glove Cursor (Follows Mouse with Sub-pixel Precision) -->
     <div id="hand-pointer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="54" height="54" fill="none">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="56" height="56" fill="none">
         <filter id="hand-shadow" x="-30%" y="-20%" width="160%" height="160%">
-          <feDropShadow dx="1" dy="3" stdDeviation="3" flood-color="#4A5663" flood-opacity="0.35"/>
+          <feDropShadow dx="1.5" dy="3.5" stdDeviation="3" flood-color="#334155" flood-opacity="0.32"/>
         </filter>
-        <!-- Player 1 cyan indicator ring -->
-        <circle cx="24" cy="40" r="6" fill="#3CB4E7" stroke="#FFFFFF" stroke-width="1.5"/>
-        <text x="24" y="43" text-anchor="middle" font-family="'Nunito', sans-serif" font-weight="900" font-size="7" fill="#FFFFFF">1</text>
         <!-- Open glove pointer hand -->
         <path d="M 19 14 C 19 11.5 20.5 10 22 10 C 23.5 10 25 11.5 25 14 L 25 21 C 25 21 26 19 28 19 C 29.5 19 30.5 20.2 30.5 22 C 30.5 22 31.5 20.5 33 20.5 C 34.5 20.5 35.5 21.8 35.5 23.5 L 35.5 26 C 35.5 24.8 36.8 24 38 24 C 39.5 24 40.5 25.2 40.5 27 C 40.5 32 37 36 33 38 C 29 40 21 40 17 35 C 13.5 30.5 13 25 14 22 C 14.5 20.5 16 20.5 17 22 L 19 24.5 Z" fill="#FFFFFF" stroke="#8A96A3" stroke-width="1.8" stroke-linejoin="round" filter="url(#hand-shadow)"/>
         <path d="M 22 17 L 22 25 M 27.5 22 L 27.5 26 M 33 23 L 33 27" stroke="#CFD8E0" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- Player 1 cyan circular badge with bold white '1' rendered clearly on top of glove cuff -->
+        <circle cx="26" cy="34" r="7" fill="#3CB4E7" stroke="#FFFFFF" stroke-width="1.6"/>
+        <text x="26" y="37" text-anchor="middle" font-family="'Nunito', -apple-system, sans-serif" font-weight="900" font-size="9" fill="#FFFFFF">1</text>
       </svg>
     </div>
 

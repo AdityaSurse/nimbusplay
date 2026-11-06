@@ -1,11 +1,10 @@
 /**
  * NimbusPlay — Procedural Game Sound Effects Synthesizer
- * Synthesizes dynamic game audio effects for Slice Party and Bowl Blitz.
+ * Synthesizes dynamic game audio effects for Fruit Ninja and future remake games.
  * Strictly typed with zero `any`. Target < 250 lines.
  */
 
 import { audioContextManager } from './audio-context.js';
-import { starSfx } from './star-sfx.js';
 
 export class GameSfxSynthesizer {
   /**
@@ -151,39 +150,109 @@ export class GameSfxSynthesizer {
     osc.stop(now + 0.36);
   }
 
-  // Delegate Star Defender SFX to starSfx module
-  public playLaserFire(): void { starSfx.playLaserFire(); }
-  public playChargedBlast(): void { starSfx.playChargedBlast(); }
-  public playChargeHum(progress: number): void { starSfx.playChargeHum(progress); }
-  public playAlienExplosion(): void { starSfx.playAlienExplosion(); }
-  public playBossHit(): void { starSfx.playBossHit(); }
-  public playShieldDeflect(): void { starSfx.playShieldDeflect(); }
-  public playPowerupCollect(): void { starSfx.playPowerupCollect(); }
-
   /**
-   * Bowling Pin Collision: Multi-tone resonant pulse
+   * Laser blaster: pitch-swept square pulse
    */
-  public playBowlingPinHit(): void {
+  public playLaserFire(): void {
     const ctx = audioContextManager.ensureContext();
     const master = audioContextManager.getMasterGain();
     if (!ctx || !master || audioContextManager.isMuted()) return;
 
     const now = ctx.currentTime;
-    [480, 720, 1140, 1420].forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now);
-      osc.frequency.exponentialRampToValueAtTime(freq * 0.75, now + 0.18);
+    const osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(2200, now);
+    osc.frequency.exponentialRampToValueAtTime(280, now + 0.065);
 
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.28 / (idx + 1), now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
 
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(now);
-      osc.stop(now + 0.24);
-    });
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  /**
+   * Alien explosion: crunchy noise burst
+   */
+  public playAlienExplosion(): void {
+    const ctx = audioContextManager.ensureContext();
+    const master = audioContextManager.getMasterGain();
+    const noiseBuffer = audioContextManager.getNoiseBuffer();
+    if (!ctx || !master || !noiseBuffer || audioContextManager.isMuted()) return;
+
+    const now = ctx.currentTime;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(600, now);
+    filter.frequency.exponentialRampToValueAtTime(120, now + 0.2);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(master);
+    noise.start(now);
+    noise.stop(now + 0.23);
+  }
+
+  /**
+   * Bullseye bell ping (Shooting Range)
+   */
+  public playBullseyeBell(): void {
+    const ctx = audioContextManager.ensureContext();
+    const master = audioContextManager.getMasterGain();
+    if (!ctx || !master || audioContextManager.isMuted()) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1760, now);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(now);
+    osc.stop(now + 0.52);
+  }
+
+  /**
+   * Air rifle / carnival pop (Shooting Range)
+   */
+  public playCarnivalPop(): void {
+    const ctx = audioContextManager.ensureContext();
+    const master = audioContextManager.getMasterGain();
+    const noiseBuffer = audioContextManager.getNoiseBuffer();
+    if (!ctx || !master || !noiseBuffer || audioContextManager.isMuted()) return;
+
+    const now = ctx.currentTime;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2000, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.35, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(master);
+    noise.start(now);
+    noise.stop(now + 0.07);
   }
 }
 
