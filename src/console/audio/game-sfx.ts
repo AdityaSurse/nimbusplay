@@ -32,9 +32,7 @@ export class GameSfxSynthesizer {
     gain.gain.linearRampToValueAtTime(0.25, now + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
 
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(master);
+    noise.connect(filter).connect(gain).connect(master);
     noise.start(now);
     noise.stop(now + 0.14);
   }
@@ -57,28 +55,44 @@ export class GameSfxSynthesizer {
     const oscGain = ctx.createGain();
     oscGain.gain.setValueAtTime(0.4, now);
     oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
-    osc.connect(oscGain);
-    oscGain.connect(master);
+    osc.connect(oscGain).connect(master);
     osc.start(now);
     osc.stop(now + 0.11);
 
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
-
     const filter = ctx.createBiquadFilter();
     filter.type = 'highpass';
     filter.frequency.setValueAtTime(1800, now);
-
     const noiseGain = ctx.createGain();
     noiseGain.gain.setValueAtTime(0.3, now);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-
-    noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(master);
+    noise.connect(filter).connect(noiseGain).connect(master);
     noise.start(now);
     noise.stop(now + 0.06);
+  }
+
+  /**
+   * Strike miss buzz: low alert tone when fruit is dropped
+   */
+  public playStrikeBuzz(): void {
+    const ctx = audioContextManager.ensureContext();
+    const master = audioContextManager.getMasterGain();
+    if (!ctx || !master || audioContextManager.isMuted()) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(75, now + 0.14);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.28, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+    osc.connect(gain).connect(master);
+    osc.start(now);
+    osc.stop(now + 0.16);
   }
 
   /**
@@ -99,27 +113,20 @@ export class GameSfxSynthesizer {
     const oscGain = ctx.createGain();
     oscGain.gain.setValueAtTime(0.6, now);
     oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
-    osc.connect(oscGain);
-    oscGain.connect(master);
+    osc.connect(oscGain).connect(master);
     osc.start(now);
     osc.stop(now + 0.52);
 
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
-
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(1200, now);
     filter.frequency.exponentialRampToValueAtTime(80, now + 0.4);
-
     const noiseGain = ctx.createGain();
     noiseGain.gain.setValueAtTime(0.65, now);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
-
-    noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(master);
+    noise.connect(filter).connect(noiseGain).connect(master);
     noise.start(now);
     noise.stop(now + 0.5);
   }
@@ -144,8 +151,7 @@ export class GameSfxSynthesizer {
     gain.gain.setValueAtTime(0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
 
-    osc.connect(gain);
-    gain.connect(master);
+    osc.connect(gain).connect(master);
     osc.start(now);
     osc.stop(now + 0.36);
   }
@@ -168,8 +174,7 @@ export class GameSfxSynthesizer {
     gain.gain.setValueAtTime(0.2, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
 
-    osc.connect(gain);
-    gain.connect(master);
+    osc.connect(gain).connect(master);
     osc.start(now);
     osc.stop(now + 0.08);
   }
@@ -186,7 +191,6 @@ export class GameSfxSynthesizer {
     const now = ctx.currentTime;
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
-
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(600, now);
@@ -196,61 +200,43 @@ export class GameSfxSynthesizer {
     gain.gain.setValueAtTime(0.4, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(master);
+    noise.connect(filter).connect(gain).connect(master);
     noise.start(now);
     noise.stop(now + 0.23);
   }
 
-  /**
-   * Bullseye bell ping (Shooting Range)
-   */
   public playBullseyeBell(): void {
     const ctx = audioContextManager.ensureContext();
     const master = audioContextManager.getMasterGain();
     if (!ctx || !master || audioContextManager.isMuted()) return;
-
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(1760, now);
-
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-
-    osc.connect(gain);
-    gain.connect(master);
+    osc.connect(gain).connect(master);
     osc.start(now);
     osc.stop(now + 0.52);
   }
 
-  /**
-   * Air rifle / carnival pop (Shooting Range)
-   */
   public playCarnivalPop(): void {
     const ctx = audioContextManager.ensureContext();
     const master = audioContextManager.getMasterGain();
     const noiseBuffer = audioContextManager.getNoiseBuffer();
     if (!ctx || !master || !noiseBuffer || audioContextManager.isMuted()) return;
-
     const now = ctx.currentTime;
     const noise = ctx.createBufferSource();
     noise.buffer = noiseBuffer;
-
     const filter = ctx.createBiquadFilter();
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(2000, now);
     filter.frequency.exponentialRampToValueAtTime(300, now + 0.05);
-
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.35, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(master);
+    noise.connect(filter).connect(gain).connect(master);
     noise.start(now);
     noise.stop(now + 0.07);
   }

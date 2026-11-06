@@ -86,6 +86,10 @@ export class AudioManager {
     gameSfx.playComboChime(comboCount);
   }
 
+  public playStrikeBuzz(): void {
+    gameSfx.playStrikeBuzz();
+  }
+
   public playLaserFire(): void {
     gameSfx.playLaserFire();
   }

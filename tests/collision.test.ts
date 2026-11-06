@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { SliceCollision } from '../src/console/games/slice-party/collision.js';
+import { FRUIT_DEFS, type FruitType } from '../src/console/games/slice-party/fruit-graphics.js';
 
 describe('SliceCollision Swept-Segment vs Circle Tests', () => {
   const circleCenter = { x: 500, y: 500 };
@@ -51,6 +52,17 @@ describe('SliceCollision Swept-Segment vs Circle Tests', () => {
 
     const res = SliceCollision.testSegmentCircle(p1, p2, circleCenter, radius);
     assert.equal(res.hit, false);
+  });
+
+  it('should define all 5 reference fruit types and bomb with positive radius and valid juice colors', () => {
+    const requiredTypes: FruitType[] = ['watermelon', 'orange', 'lemon', 'strawberry', 'apple', 'bomb'];
+    for (const t of requiredTypes) {
+      assert.ok(FRUIT_DEFS[t], `Missing definition for ${t}`);
+      assert.ok(FRUIT_DEFS[t].radius > 30, `${t} radius should be > 30`);
+      assert.ok(FRUIT_DEFS[t].juiceColor > 0, `${t} juiceColor should be positive hex`);
+    }
+    assert.equal(FRUIT_DEFS.bomb.points, 0);
+    assert.equal(FRUIT_DEFS.watermelon.points, 1);
   });
 });
 

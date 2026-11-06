@@ -1,7 +1,7 @@
 /**
- * NimbusPlay — Slice Party Fruit & Bomb Entity Physics
- * Parabolic projectile trajectories, rotational spin, and split halves dynamics.
- * Strictly typed with zero `any`.
+ * NimbusPlay — Fruit Ninja Entity Physics & Manager
+ * Parabolic trajectories, rotational spin, split halves dynamics, and missed fruit detection.
+ * Strictly typed with zero `any`. Target < 250 lines.
  */
 
 import { Container, Graphics } from 'pixi.js';
@@ -37,7 +37,7 @@ export class FruitEntity {
     this.updateTransform();
   }
 
-  public update(dt: number, gravity = 820): void {
+  public update(dt: number, gravity = 1050): void {
     this.vy += gravity * dt;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
@@ -45,8 +45,7 @@ export class FruitEntity {
 
     this.updateTransform();
 
-    // Fallen below screen
-    if (this.y > 1200 && this.vy > 0) {
+    if (this.y > 1180 && this.vy > 0) {
       this.isDead = true;
     }
   }
@@ -90,7 +89,7 @@ export class SlicedHalfEntity {
     this.updateTransform();
   }
 
-  public update(dt: number, gravity = 880): void {
+  public update(dt: number, gravity = 1100): void {
     this.vy += gravity * dt;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
@@ -135,33 +134,30 @@ export class EntityManager {
     this.container.removeChild(fruit.graphics);
     fruit.graphics.destroy();
 
-    // Perpendicular separation impulse
     const perpX = -Math.sin(cutAngle);
     const perpY = Math.cos(cutAngle);
-    const impulseSpeed = 220 + Math.random() * 80;
+    const impulseSpeed = 240 + Math.random() * 90;
 
-    // Half 1
     const half1 = new SlicedHalfEntity(
       fruit.type,
       1,
-      fruit.x - perpX * 10,
-      fruit.y - perpY * 10,
+      fruit.x - perpX * 12,
+      fruit.y - perpY * 12,
       fruit.vx - perpX * impulseSpeed,
       fruit.vy - perpY * impulseSpeed,
       cutAngle,
-      -3.5 + Math.random() * -2
+      -3.8 + Math.random() * -2
     );
 
-    // Half 2
     const half2 = new SlicedHalfEntity(
       fruit.type,
       2,
-      fruit.x + perpX * 10,
-      fruit.y + perpY * 10,
+      fruit.x + perpX * 12,
+      fruit.y + perpY * 12,
       fruit.vx + perpX * impulseSpeed,
       fruit.vy + perpY * impulseSpeed,
       cutAngle + Math.PI,
-      3.5 + Math.random() * 2
+      3.8 + Math.random() * 2
     );
 
     this.halves.push(half1, half2);
@@ -169,19 +165,20 @@ export class EntityManager {
     this.container.addChild(half2.graphics);
   }
 
-  public update(dt: number): void {
-    // Update active fruits
+  public update(dt: number, onFruitMissed?: (fruit: FruitEntity) => void): void {
     for (let i = this.fruits.length - 1; i >= 0; i--) {
       const f = this.fruits[i];
       f.update(dt);
       if (f.isDead) {
+        if (!f.isSliced && f.type !== 'bomb') {
+          onFruitMissed?.(f);
+        }
         this.container.removeChild(f.graphics);
         f.graphics.destroy();
         this.fruits.splice(i, 1);
       }
     }
 
-    // Update split halves
     for (let i = this.halves.length - 1; i >= 0; i--) {
       const h = this.halves[i];
       h.update(dt);
@@ -207,4 +204,3 @@ export class EntityManager {
     this.halves = [];
   }
 }
-

@@ -468,7 +468,7 @@ flowchart LR
 
     R0["✔ Phase R0: Reference Spec & Master Architecture"]:::done --> R1["✔ Phase R1: Menu 4-Tile Grid & Direct QR Dock"]:::done
     R1 --> R2["Phase R2: Controller Landscape Flight Mode"]:::active
-    R2 --> R3["Phase R3: Fruit Ninja Cedar Wall & Slicing Remake"]:::future
+    R2 --> R3["✔ Phase R3: Fruit Ninja Cedar Wall & Slicing Remake"]:::done
     R3 --> R4["Phase R4: Alien Attack 3D Rail Cosmic Shooter"]:::future
     R4 --> R5["Phase R5: Shooting Range Carnival Targets"]:::future
     R5 --> R6["Phase R6: Sketch Interactive Whiteboard"]:::future
@@ -806,10 +806,13 @@ NimbusPlay faithfully recreates the authentic 4-game reference demonstrated in `
   - [ ] Implement `SET_LAYOUT` protocol message (`mode: 'portrait' | 'landscape'`).
   - [ ] Build two-handed horizontal landscape flight yoke UI for Alien Attack.
   - [ ] Implement roll/pitch flight steering filter.
-- [ ] **Phase R3: Game 1 — Fruit Ninja Remake**
-  - [ ] Authentic vertical timber cedar wood plank backdrop with dark recessed seams.
-  - [ ] Watermelon score icon with `BEST` subtitle and 3 bold red `X X X` strike markers.
-  - [ ] Persistent sticky juice splatters on wooden planks.
+- [x] **Phase R3: Game 1 — Fruit Ninja Remake**
+  - [x] Authentic vertical timber cedar wood plank backdrop with dark recessed seams.
+  - [x] Watermelon score icon with `BEST` subtitle and 3 bold red `X X X` strike markers.
+  - [x] Persistent sticky juice splatters on wooden planks.
+  - [x] 5 reference fruits (watermelon, orange, lemon, strawberry, apple) + original bombs.
+  - [x] Holding A button to slice with glowing blade trail.
+  - [x] Missing intact fruit costs a strike; bombs end game immediately.
 - [ ] **Phase R4: Game 2 — Alien Attack (3D Cosmic Rail Shooter)**
   - [ ] Forward-scrolling 3D rail-shooter perspective with warp starfield and glowing nebula.
   - [ ] Large Saturn-like ringed gas giant planet in upper-right quadrant.

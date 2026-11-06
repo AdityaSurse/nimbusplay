@@ -1,7 +1,7 @@
 /**
- * NimbusPlay — Slice Party Dojo Wood Table & Wall Backdrop
- * 100% original procedural vector art for a Fruit-Ninja-style wooden dojo table.
- * Zero external image dependencies. Strictly typed with zero `any`.
+ * NimbusPlay — Fruit Ninja Vertical Cedar Planks Backdrop
+ * Full-screen warm brown vertical wooden plank wall with natural grain, knots, and gouges.
+ * Zero external image dependencies. Strictly typed with zero `any`. Target < 250 lines.
  */
 
 import { Container, Graphics } from 'pixi.js';
@@ -23,109 +23,88 @@ export class DojoBackdrop {
     const g = this.g;
     g.clear();
 
-    // 1. Solid deep mahogany wood base (100% opaque, covers entire canvas)
-    g.rect(0, 0, this.width, this.height).fill(0x241108);
+    // 1. Deep roasted timber base backing
+    g.rect(0, 0, this.width, this.height).fill(0x220f06);
 
-    // 2. Horizontal Hardwood Dojo Planks (6 broad planks)
-    const plankCount = 6;
-    const plankHeight = this.height / plankCount;
-    const plankColors = [
-      0x472512, // Rich dark amber cedar
-      0x542c16, // Golden teak tone
-      0x3e1f0e, // Deep roasted walnut
-      0x4d2814, // Warm reddish mahogany
-      0x432311, // Dark chestnut
-      0x36190b  // Shadowed base timber
+    // 2. Vertical Hardwood Cedar Planks (10 broad vertical planks)
+    const plankCount = 10;
+    const plankWidth = this.width / plankCount;
+    const plankTones = [
+      0x764322, // Warm golden cedar
+      0x864e29, // Rich honey amber
+      0x6b391b, // Dark roasted chestnut
+      0x7f4925, // Toasted teak
+      0x8b542c, // Cinnamon mahogany
+      0x723e1f, // Deep cedar
+      0x844d27, // Golden amber
+      0x794523, // Warm teak
+      0x89522a, // Light cedar
+      0x6d3a1c  // Roasted walnut
     ];
 
     for (let i = 0; i < plankCount; i++) {
-      const y = i * plankHeight;
-      const color = plankColors[i % plankColors.length];
+      const x = i * plankWidth;
+      const color = plankTones[i % plankTones.length];
 
-      // Plank body
-      g.rect(0, y, this.width, plankHeight).fill(color);
+      // Plank rectangular body
+      g.rect(x, 0, plankWidth, this.height).fill(color);
 
-      // Fine horizontal wood grain striations
-      const grainCount = 9;
+      // Fine vertical woodgrain striations running top to bottom
+      const grainCount = 10;
       for (let j = 1; j <= grainCount; j++) {
-        const grainY = y + (plankHeight / (grainCount + 1)) * j;
-        const waveAmp = 2.5 + (j % 3) * 1.5;
-        const grainColor = j % 2 === 0 ? 0x2e1509 : 0x5e331b;
-        const grainAlpha = 0.22 + (j % 3) * 0.08;
+        const grainX = x + (plankWidth / (grainCount + 1)) * j;
+        const waveAmp = 3.0 + (j % 3) * 2.5;
+        const isDark = j % 2 === 0;
+        const grainColor = isDark ? 0x3d1c0c : 0xa46638;
+        const grainAlpha = isDark ? 0.22 : 0.18;
 
-        g.moveTo(0, grainY);
+        g.moveTo(grainX, 0);
         g.bezierCurveTo(
-          this.width * 0.25, grainY + waveAmp,
-          this.width * 0.75, grainY - waveAmp,
-          this.width, grainY
+          grainX + waveAmp, this.height * 0.33,
+          grainX - waveAmp, this.height * 0.66,
+          grainX, this.height
         ).stroke({ width: 1.2, color: grainColor, alpha: grainAlpha });
       }
 
-      // Natural wood knot swirl on select planks
-      if (i === 1 || i === 4) {
-        const knotX = i === 1 ? 460 : 1420;
-        const knotY = y + plankHeight * 0.52;
+      // Natural wood knot swirl on select vertical planks
+      if (i === 1 || i === 4 || i === 8) {
+        const knotX = x + plankWidth * 0.52;
+        const knotY = i === 1 ? 320 : i === 4 ? 680 : 410;
         // Concentric grain rings around knot
-        g.ellipse(knotX, knotY, 38, 18).stroke({ width: 1.5, color: 0x261006, alpha: 0.45 });
-        g.ellipse(knotX, knotY, 26, 12).stroke({ width: 1.5, color: 0x61351c, alpha: 0.5 });
-        g.ellipse(knotX, knotY, 14, 7).fill(0x220e05);
+        g.ellipse(knotX, knotY, 20, 42).stroke({ width: 1.4, color: 0x240f06, alpha: 0.45 });
+        g.ellipse(knotX, knotY, 14, 28).stroke({ width: 1.4, color: 0x5a2f16, alpha: 0.5 });
+        g.ellipse(knotX, knotY, 7, 16).fill(0x200c04);
       }
 
-      // Plank seam: dark shadow groove + lower highlight bevel
+      // Vertical plank seam: dark groove + right-side bevel highlight
       if (i > 0) {
-        // Deep groove
-        g.rect(0, y - 2, this.width, 4).fill(0x160803);
-        // Bevel top edge highlight
-        g.rect(0, y + 2, this.width, 1.5).fill({ color: 0x7c4524, alpha: 0.45 });
+        g.rect(x - 2, 0, 4, this.height).fill(0x140703);
+        g.rect(x + 2, 0, 1.5, this.height).fill({ color: 0x9f6035, alpha: 0.42 });
       }
     }
 
-    // 3. Blade Gouge Scars & Slash Cuts (Authentic Fruit Ninja cutting table wear)
-    const slashes = [
-      { x1: 280, y1: 240, x2: 440, y2: 380 },
-      { x1: 720, y1: 610, x2: 890, y2: 490 },
-      { x1: 1180, y1: 320, x2: 1350, y2: 460 },
-      { x1: 1540, y1: 680, x2: 1690, y2: 560 },
-      { x1: 860, y1: 180, x2: 1040, y2: 310 }
+    // 3. Authentic cutting table gouge scars running across boards
+    const cuts = [
+      { x1: 260, y1: 280, x2: 440, y2: 410 },
+      { x1: 720, y1: 640, x2: 910, y2: 520 },
+      { x1: 1160, y1: 290, x2: 1360, y2: 430 },
+      { x1: 1510, y1: 710, x2: 1690, y2: 590 },
+      { x1: 840, y1: 210, x2: 1040, y2: 340 }
     ];
 
-    for (let k = 0; k < slashes.length; k++) {
-      const s = slashes[k];
-      // Dark incision shadow
-      g.moveTo(s.x1, s.y1).lineTo(s.x2, s.y2).stroke({ width: 2.2, color: 0x140602, alpha: 0.75 });
-      // Chipped wood highlight edge
-      g.moveTo(s.x1 + 1, s.y1 - 1).lineTo(s.x2 + 1, s.y2 - 1).stroke({ width: 1.0, color: 0x8a4d29, alpha: 0.4 });
+    for (let k = 0; k < cuts.length; k++) {
+      const c = cuts[k];
+      g.moveTo(c.x1, c.y1).lineTo(c.x2, c.y2).stroke({ width: 2.2, color: 0x140703, alpha: 0.75 });
+      g.moveTo(c.x1 + 1, c.y1 - 1).lineTo(c.x2 + 1, c.y2 - 1).stroke({ width: 1.0, color: 0xa46638, alpha: 0.4 });
     }
 
-    // 4. Dojo Perimeter Timber Trim & Brass Mount Brackets
-    // Top border rail
-    g.rect(0, 0, this.width, 18).fill(0x1d0c05);
-    g.rect(0, 18, this.width, 2).fill({ color: 0x6e3b1c, alpha: 0.5 });
+    // 4. Subtle perimeter dark vignette (boosts fruit saturation contrast)
+    g.rect(0, 0, 120, this.height).fill({ color: 0x0a0401, alpha: 0.42 });
+    g.rect(this.width - 120, 0, 120, this.height).fill({ color: 0x0a0401, alpha: 0.42 });
+    g.rect(0, 0, this.width, 70).fill({ color: 0x0a0401, alpha: 0.35 });
+    g.rect(0, this.height - 80, this.width, 80).fill({ color: 0x0a0401, alpha: 0.4 });
 
-    // Bottom cutting counter table ledge
-    g.rect(0, this.height - 42, this.width, 42).fill(0x1a0a04);
-    g.rect(0, this.height - 42, this.width, 3).fill(0x6e3b1c);
-    g.rect(0, this.height - 39, this.width, 2).fill(0x0f0502);
-
-    // Decorative corner brass bracket plates
-    const bracketSize = 48;
-    // Top-Left
-    g.poly([0, 0, bracketSize, 0, 0, bracketSize]).fill(0x855823).stroke({ width: 2, color: 0xb5843c });
-    g.circle(14, 14, 3).fill(0x1a0a04);
-    // Top-Right
-    g.poly([this.width, 0, this.width - bracketSize, 0, this.width, bracketSize]).fill(0x855823).stroke({ width: 2, color: 0xb5843c });
-    g.circle(this.width - 14, 14, 3).fill(0x1a0a04);
-
-    // 5. Ambient Dojo Center Spotlight & Dark Vignette
-    // Center warm lantern glow
-    g.circle(this.width / 2, this.height / 2, 650).fill({ color: 0x9e5428, alpha: 0.12 });
-    g.circle(this.width / 2, this.height / 2, 420).fill({ color: 0xb36332, alpha: 0.08 });
-
-    // Perimeter edge vignettes (darkening borders to enhance fruit contrast)
-    g.rect(0, 0, 160, this.height).fill({ color: 0x0a0401, alpha: 0.45 });
-    g.rect(this.width - 160, 0, 160, this.height).fill({ color: 0x0a0401, alpha: 0.45 });
-    g.rect(0, 0, this.width, 90).fill({ color: 0x0a0401, alpha: 0.35 });
-    g.rect(0, this.height - 110, this.width, 110).fill({ color: 0x0a0401, alpha: 0.45 });
+    // 5. Center warm light pool
+    g.circle(this.width / 2, this.height / 2, 600).fill({ color: 0xb56534, alpha: 0.10 });
   }
 }
-

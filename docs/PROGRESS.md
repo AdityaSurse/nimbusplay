@@ -29,7 +29,7 @@ This log tracks implementation progress, milestones, verification notes, and blo
 | **Phase R0** | Reference Analysis, Video Breakdown & Master Architecture | **Complete** | 2026-11-06 | 2026-11-06 | Approved |
 | **Phase R1** | Channel Matrix Remake (4-Tile Top Row) & Direct QR Dock | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R2** | Controller Dynamic Layout Mode (Landscape Flight Yoke) | Not Started | — | — | — |
-| **Phase R3** | Game 1: Fruit Ninja (Cedar Planks, `X X X` Strikes & Splatters) | Not Started | — | — | — |
+| **Phase R3** | Game 1: Fruit Ninja (Cedar Planks, `X X X` Strikes & Splatters) | **Complete** | 2026-11-06 | 2026-11-06 | Verified |
 | **Phase R4** | Game 2: Alien Attack (3D Cosmic Rail Shooter & Dual Thumb) | Not Started | — | — | — |
 | **Phase R5** | Game 3: Shooting Range (Carnival Sky, Grass & Bullseyes) | Not Started | — | — | — |
 | **Phase R6** | Game 4: Sketch (Interactive Whiteboard & Spline Ink) | Not Started | — | — | — |
@@ -349,4 +349,37 @@ This log tracks implementation progress, milestones, verification notes, and blo
   - [x] TypeScript strict compilation passes with zero errors (`npx tsc --noEmit`).
   - [x] Production build succeeds in <1.5s (`npm run build`).
   - [x] All file line counts adhere strictly to guidelines (<250 lines per module).
+
+---
+
+### Phase R3: Game 1 — Fruit Ninja Remake
+- **Status**: Complete / Verified
+- **Key Deliverables**:
+  - `src/console/games/slice-party/dojo-backdrop.ts`: Rebuilt wooden wall with full-screen warm brown vertical cedar timber planks, vertical woodgrain striations, wood knot rings, dark recessed seams, bevel highlights, authentic cutting table scars, and ambient center light pool.
+  - `src/console/games/slice-party/fruit-graphics.ts`: 100% original procedural vector artwork for 5 reference fruits (`watermelon`, `orange`, `lemon`, `strawberry`, `apple`) and `bomb`. Implemented both intact (`drawWhole`) and cut half (`drawHalf`) sprites with rinds, pith, pulp, seeds, and stems.
+  - `src/console/games/slice-party/splatter-decals.ts`: Dedicated `SplatterDecalSystem` rendering organic sticky juice splatters in the fruit's color directly onto the cedar wood behind cuts. Splatters persist on the wood for ~4 seconds before fading out smoothly.
+  - `src/console/games/slice-party/blade-trail.ts`: Glowing dual-layer blade ribbon with luminous cyan outer glow and white-hot sharp core following the pointer.
+  - `src/console/games/slice-party/hud.ts`: Authentic Fruit Ninja HUD:
+    - Top-left: Small watermelon wedge icon + score numeral & `BEST: <score>` tracker.
+    - Top-right: Three strike `X X X` markers. Missed intact fruits cost a strike, turning the marker bright crimson red (`#ef4444`) with drop shadow. Three strikes trigger Game Over.
+    - Top-center: Floating combo banner celebrating multi-fruit cuts.
+    - Game Over dialog with Restart and Menu actions and high score persistence in `localStorage`.
+  - `src/console/games/slice-party/fruit-entity.ts`: Parabolic physics and missed fruit detection: intact fruits falling past screen bounds automatically notify the game loop and register a strike.
+  - `src/console/games/slice-party/slice-party-game.ts`: Master loop wiring A-button holding to blade slicing, swept-segment vs circle collision hit-testing, sticky splatter placement, radial juice droplet sprays, phone vibration on slices and bombs, miss buzz audio on dropped fruits, and 60 FPS locked rendering.
+  - `src/console/audio/game-sfx.ts` & `audio-manager.ts`: Added `playStrikeBuzz()` for missed fruit feedback.
+  - `tests/collision.test.ts`: Added unit tests verifying all 5 fruit types and bombs.
+- **Verification Criteria**:
+  - [x] Full-screen warm brown vertical wooden planks background matching `reel-games.png` (top-left).
+  - [x] 5 reference fruits (watermelon, orange, lemon, strawberry, apple) + bombs tossed in parabolic arcs with spin.
+  - [x] Slicing activated by moving pointer while holding A button (with B and mouse drag fallback).
+  - [x] Fruit splits into two halves with perpendicular impulse along cut normal.
+  - [x] Sticky colored juice splatters decal onto the wooden planks and fade out over time.
+  - [x] Radial juice droplet particle sprays in matching fruit colors.
+  - [x] Glowing blade trail ribbon follows swift arm movements.
+  - [x] HUD displays top-left watermelon icon + score & BEST, top-right `X X X` strikes, floating `+N` combo popups.
+  - [x] Missing intact fruit costs 1 strike with buzz sound and haptic vibration; 3 strikes trigger Game Over.
+  - [x] Bombs detonate with screen shake, audio roar, and instant Game Over.
+  - [x] 28/28 unit tests pass across 7 suites (`npm test`).
+  - [x] Strict TypeScript check and Vite production build pass cleanly with 0 errors.
+  - [x] All modules adhere strictly to line count limits (<250 lines per module, <350 lines for game loop).
 
